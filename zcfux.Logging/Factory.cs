@@ -11,6 +11,13 @@ public static class Factory
         return new BasicLogger(writer);
     }
 
+    public static ILogger FromAssembly(string assemblyName, string typeName)
+    {
+        var writer = Activator.CreateInstance(assemblyName, typeName)!.Unwrap();
+
+        return new BasicLogger((writer as IWriter)!);
+    }
+
     static IWriter CreateWriter(string name)
     {
         IWriter? writer = null;

@@ -1,6 +1,6 @@
 namespace zcfux.Logging;
 
-public sealed class Factory
+public static class Factory
 {
     static readonly Lazy<IDictionary<string, Type>> Types = new(TypeLoader.GetTypes());
 

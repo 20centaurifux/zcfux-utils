@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Logging.NLog", "zcfux
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.DI", "zcfux.DI\zcfux.DI.csproj", "{7E155980-B305-4D90-8C8E-2720F0D02FD6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.DI.Test", "zcfux.DI.Test\zcfux.DI.Test.csproj", "{43AF93AD-8760-4BE8-95D8-D4B6147936AA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{7E155980-B305-4D90-8C8E-2720F0D02FD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7E155980-B305-4D90-8C8E-2720F0D02FD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E155980-B305-4D90-8C8E-2720F0D02FD6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43AF93AD-8760-4BE8-95D8-D4B6147936AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43AF93AD-8760-4BE8-95D8-D4B6147936AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43AF93AD-8760-4BE8-95D8-D4B6147936AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43AF93AD-8760-4BE8-95D8-D4B6147936AA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

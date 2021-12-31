@@ -13,9 +13,16 @@ public static class Factory
 
     public static ILogger FromAssembly(string assemblyName, string typeName)
     {
-        var writer = Activator.CreateInstance(assemblyName, typeName)!.Unwrap();
+        try
+        {
+            var writer = Activator.CreateInstance(assemblyName, typeName)!.Unwrap();
 
-        return new BasicLogger((writer as IWriter)!);
+            return new BasicLogger((writer as IWriter)!);
+        }
+        catch (Exception ex)
+        {
+            throw new FactoryException("Couldn't create writer.", ex);
+        }
     }
 
     static IWriter CreateWriter(string name)
@@ -27,6 +34,6 @@ public static class Factory
             writer = Activator.CreateInstance(t) as IWriter;
         }
 
-        return writer ?? throw new FactoryException("Writer not found.");
+        return writer ?? throw new FactoryException($"Writer `{name}' not found.");
     }
 }

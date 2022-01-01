@@ -1,4 +1,5 @@
 using System.Data;
+using System.Net.Mail;
 
 namespace zcfux.SqlMapper;
 
@@ -54,18 +55,28 @@ public static class Extensions
     }
 
     public static void Assign<T>(this IDbCommand self, T obj)
+        => self.Assign(obj, prop => $"@{prop}");
+
+    public static void Assign<T>(this IDbCommand self, T obj, Func<string, string> propToKey)
     {
         var m = Cache.Get<T>();
 
         foreach (var (name, prop) in m)
         {
-            var key = $"@{name}";
+            var key = propToKey(name);
 
             if (self.CommandText.Contains(key))
             {
+                var paramKey = $"@{name}";
+
+                if (paramKey != key)
+                {
+                    self.CommandText = self.CommandText.Replace(key, paramKey);
+                }
+
                 var param = self.CreateParameter();
 
-                param.ParameterName = key;
+                param.ParameterName = paramKey;
                 param.Value = prop.GetValue(obj) ?? DBNull.Value;
 
                 self.Parameters.Add(param);

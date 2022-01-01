@@ -268,4 +268,35 @@ public sealed class Test
             Assert.AreEqual(obj.Second, fetched.Second);
         }
     }
+
+    [Test]
+    public void AssignObjectWithCustomKeyFn()
+    {
+        var obj = new Model.Foo()
+        {
+            ID = TestContext.CurrentContext.Random.Next(),
+            A = TestContext.CurrentContext.Random.GetString(),
+            B = TestContext.CurrentContext.Random.GetString(),
+        };
+
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.CommandText = "INSERT INTO T (ID, A, B) VALUES (<ID>, <A>, <B>)";
+
+            cmd.Assign(obj, prop => $"<{prop}>");
+
+            cmd.ExecuteNonQuery();
+        }
+
+        using (var cmd = _conn.CreateCommand())
+        {
+            cmd.CommandText = "SELECT * FROM T";
+
+            var fetched = cmd.FetchOne<Model.Foo>();
+
+            Assert.AreEqual(obj.ID, fetched.ID);
+            Assert.AreEqual(obj.A, fetched.A);
+            Assert.AreEqual(obj.B, fetched.B);
+        }
+    }
 }

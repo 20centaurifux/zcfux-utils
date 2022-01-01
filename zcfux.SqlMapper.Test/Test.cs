@@ -1,3 +1,24 @@
+/***************************************************************************
+    begin........: December 2021
+    copyright....: Sebastian Fedrau
+    email........: sebastian.fedrau@gmail.com
+ ***************************************************************************/
+
+/***************************************************************************
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 3 of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with this program; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ ***************************************************************************/
 using System.Data;
 using Microsoft.Data.Sqlite;
 using NUnit.Framework;
@@ -6,7 +27,7 @@ namespace zcfux.SqlMapper.Test;
 
 public sealed class Test
 {
-    IDbConnection _conn;
+    IDbConnection _conn = default!;
 
     [SetUp]
     public void Setup()
@@ -108,7 +129,7 @@ public sealed class Test
             {
                 var obj = r.ReadAndMap<Model.Foo>();
 
-                Assert.AreEqual(id, obj.ID);
+                Assert.AreEqual(id, obj!.ID);
                 Assert.AreEqual(a, obj.A);
                 Assert.AreEqual(b, obj.B);
 
@@ -134,7 +155,7 @@ public sealed class Test
 
             var obj = cmd.FetchOne<Model.Foo>();
 
-            Assert.AreEqual(id, obj.ID);
+            Assert.AreEqual(id, obj!.ID);
             Assert.AreEqual(a, obj.A);
             Assert.AreEqual(b, obj.B);
         }
@@ -232,7 +253,7 @@ public sealed class Test
 
             var fetched = cmd.FetchOne<Model.Foo>();
 
-            Assert.AreEqual(obj.ID, fetched.ID);
+            Assert.AreEqual(obj.ID, fetched!.ID);
             Assert.AreEqual(obj.A, fetched.A);
             Assert.AreEqual(obj.B, fetched.B);
         }
@@ -263,7 +284,7 @@ public sealed class Test
 
             var fetched = cmd.FetchOne<Model.Bar>();
 
-            Assert.AreEqual(obj.Identifier, fetched.Identifier);
+            Assert.AreEqual(obj.Identifier, fetched!.Identifier);
             Assert.AreEqual(obj.First, fetched.First);
             Assert.AreEqual(obj.Second, fetched.Second);
         }
@@ -294,7 +315,7 @@ public sealed class Test
 
             var fetched = cmd.FetchOne<Model.Foo>();
 
-            Assert.AreEqual(obj.ID, fetched.ID);
+            Assert.AreEqual(obj.ID, fetched!.ID);
             Assert.AreEqual(obj.A, fetched.A);
             Assert.AreEqual(obj.B, fetched.B);
         }

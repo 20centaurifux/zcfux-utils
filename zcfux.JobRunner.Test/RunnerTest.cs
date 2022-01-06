@@ -102,16 +102,11 @@ public sealed class RunnerTest
     {
         long counter = 0;
 
-        void Done(object? sender, JobEventArgs args)
-        {
-            Interlocked.Increment(ref counter);
-        }
-
-        _runner.Done += Done;
+        _runner.Done += (s, e) => Interlocked.Increment(ref counter);
 
         _queue.Create<Jobs.Twice>();
 
-        Thread.Sleep(500 * 5);
+        Thread.Sleep(1000);
 
         var count = Interlocked.Read(ref counter);
 

@@ -28,6 +28,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Session.Test", "zcfux
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.JobRunner", "zcfux.JobRunner\zcfux.JobRunner.csproj", "{782D5329-7545-4C7F-9076-6EBA13477E97}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.JobRunner.Test", "zcfux.JobRunner.Test\zcfux.JobRunner.Test.csproj", "{8EB02A64-A417-49B2-BCB1-9B7FD0E99C81}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -90,5 +92,9 @@ Global
 		{782D5329-7545-4C7F-9076-6EBA13477E97}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{782D5329-7545-4C7F-9076-6EBA13477E97}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{782D5329-7545-4C7F-9076-6EBA13477E97}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8EB02A64-A417-49B2-BCB1-9B7FD0E99C81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EB02A64-A417-49B2-BCB1-9B7FD0E99C81}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EB02A64-A417-49B2-BCB1-9B7FD0E99C81}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EB02A64-A417-49B2-BCB1-9B7FD0E99C81}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

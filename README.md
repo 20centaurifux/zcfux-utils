@@ -10,6 +10,10 @@ This is a collection of various utilities I use in .NET projects.
 ## DI
 * Dependency injection wrapper.
 
+## JobRunner
+* Run and schedule (periodic) tasks.
+* Customizable job queue (library comes with an in-memory queue).
+
 ## Logging
 * Logging abstractions.
 

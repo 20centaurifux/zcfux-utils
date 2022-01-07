@@ -10,6 +10,9 @@ This is a collection of various utilities I use in .NET projects.
 ## Data
 * Database abstractions.
 
+## Data.Postgres
+* PostgreSQL provider.
+
 ## DI
 * Dependency injection wrapper.
 
@@ -21,7 +24,7 @@ This is a collection of various utilities I use in .NET projects.
 * Logging abstractions.
 
 ## Logging.NLog
-* NLog implementation.
+* NLog provider.
 
 ## Security
 * Password generator.

@@ -31,9 +31,60 @@ public abstract class AJobQueue
 
     internal bool Wait(int millis, CancellationToken token)
     {
-        var (timeout, peek) = GetTimeout(millis);
+        var (timeoutMillis, queueContainsDueJob) = GetTimeoutMillisAndQueueStatus(millis);
 
-        if (timeout == 0)
+        WaitUntilNextJobIsDue(timeoutMillis, token);
+
+        if (!queueContainsDueJob)
+        {
+            if (TryPeek(out var job))
+            {
+                queueContainsDueJob = job!.IsDue;
+            }
+        }
+
+        return queueContainsDueJob;
+    }
+
+    (int, bool) GetTimeoutMillisAndQueueStatus(int timeout)
+    {
+        var queueContainsDueJob = false;
+
+        if (TryPeek(out var job))
+        {
+            var millisLeft = MillisUntilBecomesDue(job!);
+
+            if (JobIsDue(millisLeft))
+            {
+                timeout = 0;
+                queueContainsDueJob = true;
+            }
+            else if (JobBecomesDueBeforeTimeout(millisLeft, timeout))
+            {
+                timeout = millisLeft;
+                queueContainsDueJob = true;
+            }
+        }
+
+        return (timeout, queueContainsDueJob);
+    }
+
+    static int MillisUntilBecomesDue(AJob job)
+    {
+        var diff = (job.NextDue! - DateTime.UtcNow);
+
+        return Convert.ToInt32(diff.Value.TotalMilliseconds);
+    }
+
+    static bool JobIsDue(int millisLeft)
+        => (millisLeft <= 0);
+
+    static bool JobBecomesDueBeforeTimeout(int millisLeft, int timeout)
+        => (millisLeft < timeout);
+
+    void WaitUntilNextJobIsDue(int millis, CancellationToken token)
+    {
+        if (millis == 0)
         {
             _event.Reset();
         }
@@ -42,35 +93,6 @@ public abstract class AJobQueue
             Task.Factory.StartNew(() => _event.WaitOne(millis), CancellationToken.None)
                 .Wait(millis, token);
         }
-
-        return !peek || (TryPeek(out var job) && job!.IsDue);
-    }
-
-    (int, bool) GetTimeout(int millis)
-        => PeekAndGetTimeout(millis).GetValueOrDefault((millis, true));
-
-    (int, bool)? PeekAndGetTimeout(int millis)
-    {
-        (int, bool)? result = null;
-
-        if (TryPeek(out var job))
-        {
-            var diff = (job!.NextDue! - DateTime.UtcNow);
-            var millisLeft = Convert.ToInt32(diff.Value.TotalMilliseconds);
-
-            if (millisLeft > 0)
-            {
-                result = (millisLeft < millis)
-                    ? (millisLeft, false)
-                    : (millis, true);
-            }
-            else
-            {
-                result = (0, false);
-            }
-        }
-
-        return result;
     }
 
     internal AJob? Pop()

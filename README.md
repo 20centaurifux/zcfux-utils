@@ -7,6 +7,9 @@ This is a collection of various utilities I use in .NET projects.
 * Exension methods to convert byte arrays to hex strings and back. 
 * BCD encoder/decoder.
 
+## Data
+* Database abstractions.
+
 ## DI
 * Dependency injection wrapper.
 

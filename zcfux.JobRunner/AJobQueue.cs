@@ -52,7 +52,7 @@ public abstract class AJobQueue
 
         if (TryPeek(out var job))
         {
-            var millisLeft = MillisUntilBecomesDue(job!);
+            var millisLeft = MillisUntilJobBecomesDue(job!);
 
             if (JobIsDue(millisLeft))
             {
@@ -69,7 +69,7 @@ public abstract class AJobQueue
         return (timeout, queueContainsDueJob);
     }
 
-    static int MillisUntilBecomesDue(AJob job)
+    static int MillisUntilJobBecomesDue(AJob job)
     {
         var diff = (job.NextDue! - DateTime.UtcNow);
 

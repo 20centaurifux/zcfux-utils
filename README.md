@@ -1,6 +1,6 @@
 # Introduction
 
-This is a collection of various utilities I use in .NET projects.
+This is a collection of various utilities and abstractions I use in .NET projects.
 
 ## Byte
 

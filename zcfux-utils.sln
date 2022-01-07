@@ -34,6 +34,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Data", "zcfux.Data\zc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Data.Postgres", "zcfux.Data.Postgres\zcfux.Data.Postgres.csproj", "{7A01F309-CE7F-4FA1-B961-4A38E116916B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Data.Test", "zcfux.Data.Test\zcfux.Data.Test.csproj", "{6345BD5C-5F43-4D21-8354-333E667D2584}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -108,5 +110,9 @@ Global
 		{7A01F309-CE7F-4FA1-B961-4A38E116916B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7A01F309-CE7F-4FA1-B961-4A38E116916B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7A01F309-CE7F-4FA1-B961-4A38E116916B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6345BD5C-5F43-4D21-8354-333E667D2584}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6345BD5C-5F43-4D21-8354-333E667D2584}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6345BD5C-5F43-4D21-8354-333E667D2584}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6345BD5C-5F43-4D21-8354-333E667D2584}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

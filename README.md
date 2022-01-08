@@ -16,6 +16,9 @@ This is a collection of various utilities and abstractions I use in .NET project
 ## DI
 * Dependency injection wrapper.
 
+## Filter
+* Exensions methods to build abstract syntax trees for querying data.
+
 ## JobRunner
 * Run and schedule (periodic) tasks.
 * Customizable job queue (library comes with an in-memory queue).

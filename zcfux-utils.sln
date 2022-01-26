@@ -40,6 +40,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Filter", "zcfux.Filte
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Filter.Test", "zcfux.Filter.Test\zcfux.Filter.Test.csproj", "{71C14B23-5CCA-45BA-8732-F286D75E1498}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.CircularBuffer", "zcfux.CircularBuffer\zcfux.CircularBuffer.csproj", "{4DCEE7B4-287C-48ED-AD93-AA19FF1CD749}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -126,5 +128,9 @@ Global
 		{71C14B23-5CCA-45BA-8732-F286D75E1498}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{71C14B23-5CCA-45BA-8732-F286D75E1498}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{71C14B23-5CCA-45BA-8732-F286D75E1498}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4DCEE7B4-287C-48ED-AD93-AA19FF1CD749}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4DCEE7B4-287C-48ED-AD93-AA19FF1CD749}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4DCEE7B4-287C-48ED-AD93-AA19FF1CD749}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4DCEE7B4-287C-48ED-AD93-AA19FF1CD749}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -7,6 +7,10 @@ This is a collection of various utilities and abstractions I use in .NET project
 * Exension methods to convert byte arrays to hex strings and back. 
 * BCD encoder/decoder.
 
+## CircularBuffer:
+
+* Generic circular buffer.
+
 ## Data
 * Database abstractions.
 

@@ -40,7 +40,7 @@ public abstract class ATrackable :
             if (prop.GetValue(this) is ATrackable trackable
                 && !ProxyUtil.IsProxy(trackable))
             {
-                var proxy = Factory.GetProxy(trackable);
+                var proxy = Factory.CreateProxy(trackable);
 
                 prop.SetValue(this, proxy);
             }

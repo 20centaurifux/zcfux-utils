@@ -28,10 +28,10 @@ public static class Factory
     static readonly ProxyGenerator Generator = new();
     static readonly IInterceptor Interceptor = new Interceptor();
 
-    public static T? GetProxy<T>(T model) where T : ATrackable
-        => GetProxy(model as ATrackable) as T;
+    public static T? CreateProxy<T>(T model) where T : ATrackable
+        => CreateProxy(model as ATrackable) as T;
 
-    public static ATrackable GetProxy(ATrackable model)
+    public static ATrackable CreateProxy(ATrackable model)
     {
         model.WrapNotifiers();
 

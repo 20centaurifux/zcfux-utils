@@ -26,7 +26,5 @@ public sealed class TrackableAttribute : Attribute
 {
     public bool Initial { get; set; }
 
-    public bool Change { get; set; } = true;
-
     public bool Anonymize { get; set; }
 }

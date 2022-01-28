@@ -19,6 +19,7 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+
 using Castle.DynamicProxy;
 
 namespace zcfux.Tracking;
@@ -38,10 +39,10 @@ internal sealed class Interceptor : IInterceptor
                 .Single(prop => prop.Name == propertyName);
 
             var attr = prop.GetCustomAttributes(typeof(TrackableAttribute), true)
-                        .Cast<TrackableAttribute>()
-                        .SingleOrDefault();
+                .Cast<TrackableAttribute>()
+                .SingleOrDefault();
 
-            if (attr is { Change: true })
+            if (attr is { })
             {
                 PropertyChanged(invocation, propertyName, attr);
             }
@@ -68,7 +69,7 @@ internal sealed class Interceptor : IInterceptor
         {
             if (value is ATrackable trackable)
             {
-                value = Factory.GetProxy(trackable);
+                value = Factory.CreateProxy(trackable);
             }
         }
 

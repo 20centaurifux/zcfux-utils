@@ -25,5 +25,5 @@ public interface IInitialProperties
 {
     internal void InitializeProperty(string propertyName, object? value);
 
-    IEnumerable<KeyValuePair<string, object?>> GetInitialProperties();
+    IReadOnlyDictionary<string, object?> GetInitialProperties();
 }

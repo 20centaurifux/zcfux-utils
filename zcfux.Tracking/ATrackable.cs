@@ -19,6 +19,7 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using System.Collections.ObjectModel;
 using Castle.DynamicProxy;
 using System.ComponentModel;
 using System.Reflection;
@@ -59,16 +60,16 @@ public abstract class ATrackable :
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
-    public IEnumerable<KeyValuePair<string, object?>> GetInitialProperties()
+    public IReadOnlyDictionary<string, object?> GetInitialProperties()
         => ProxyUtil.IsProxy(this)
-            ? _initialProperties
+            ? new ReadOnlyDictionary<string, object?>(_initialProperties)
             : throw new InvalidOperationException();
 
     #endregion
 
     #region IChangedProperties
 
-    readonly IDictionary<string, Tracking.ChangedValue> _changedProperties = new Dictionary<string, Tracking.ChangedValue>();
+    readonly IDictionary<string, ChangedValue> _changedProperties = new Dictionary<string, ChangedValue>();
 
     void IChangedProperties.ChangeProperty(string propertyName, object? value)
     {
@@ -116,7 +117,7 @@ public abstract class ATrackable :
             }
             else
             {
-                _changedProperties[prop.Name] = new Tracking.ChangedValue(entry.Old, value?.Copy());
+                _changedProperties[prop.Name] = new ChangedValue(entry.Old, value?.Copy());
             }
         }
         else
@@ -125,12 +126,12 @@ public abstract class ATrackable :
 
             if (!Equals(oldValue, value))
             {
-                _changedProperties[prop.Name] = new Tracking.ChangedValue(oldValue?.Copy(), value?.Copy());
+                _changedProperties[prop.Name] = new ChangedValue(oldValue?.Copy(), value?.Copy());
             }
         }
     }
 
-    public IEnumerable<KeyValuePair<string, Tracking.ChangedValue>> GetChangedProperties()
+    public IEnumerable<KeyValuePair<string, ChangedValue>> GetChangedProperties()
         => ProxyUtil.IsProxy(this)
             ? _changedProperties
             : throw new InvalidOperationException();

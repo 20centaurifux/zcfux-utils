@@ -33,9 +33,14 @@ public abstract class ATrackable :
 {
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    readonly Lazy<(PropertyInfo, TrackableAttribute)[]> _properties;
+
+    protected ATrackable()
+        => _properties = new Lazy<(PropertyInfo, TrackableAttribute)[]>(() => GetProperties().ToArray());
+
     public void AssignFrom(ATrackable source)
     {
-        foreach (var (prop, _) in source.GetProperties())
+        foreach (var (prop, _) in source._properties.Value)
         {
             var value = prop.GetValue(source);
 
@@ -160,7 +165,7 @@ public abstract class ATrackable :
 
     internal void WrapNotifiers()
     {
-        foreach (var (prop, _) in GetProperties())
+        foreach (var (prop, _) in _properties.Value)
         {
             if (prop.GetValue(this) is ATrackable trackable
                 && !ProxyUtil.IsProxy(trackable))
@@ -174,7 +179,7 @@ public abstract class ATrackable :
 
     internal void CloneMembers()
     {
-        foreach (var (prop, _) in GetProperties())
+        foreach (var (prop, _) in _properties.Value)
         {
             var obj = prop.GetValue(this);
 
@@ -187,7 +192,7 @@ public abstract class ATrackable :
 
     internal void CopyInitials(ATrackable other)
     {
-        foreach (var (prop, attr) in GetProperties())
+        foreach (var (prop, attr) in _properties.Value)
         {
             if (attr.Initial)
             {
@@ -200,7 +205,7 @@ public abstract class ATrackable :
 
     internal static void WatchNotifiers(ATrackable origin, ATrackable proxy)
     {
-        foreach (var (prop, _) in origin.GetProperties())
+        foreach (var (prop, _) in origin._properties.Value)
         {
             if (prop.GetValue(proxy) is INotifyPropertyChanged notifier)
             {

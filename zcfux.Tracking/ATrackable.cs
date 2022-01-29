@@ -33,44 +33,6 @@ public abstract class ATrackable :
 {
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    internal void WrapNotifiers()
-    {
-        foreach (var (prop, attr) in GetProperties())
-        {
-            if (prop.GetValue(this) is ATrackable trackable
-                && !ProxyUtil.IsProxy(trackable))
-            {
-                var proxy = Factory.CreateProxy(trackable);
-
-                prop.SetValue(this, proxy);
-            }
-        }
-    }
-
-    internal void CopyInitials(ATrackable other)
-    {
-        foreach (var (prop, attr) in GetProperties())
-        {
-            if (attr.Initial)
-            {
-                var value = prop.GetValue(this);
-
-                other._initialProperties[prop.Name] = value?.Copy();
-            }
-        }
-    }
-
-    internal static void WatchNotifiers(ATrackable origin, ATrackable proxy)
-    {
-        foreach (var (prop, _) in origin.GetProperties())
-        {
-            if (prop.GetValue(proxy) is INotifyPropertyChanged notifier)
-            {
-                notifier.PropertyChanged += proxy.NewPropertyChangedHandler(prop.Name);
-            }
-        }
-    }
-
     public void AssignFrom(ATrackable source)
     {
         foreach (var (prop, _) in source.GetProperties())
@@ -78,21 +40,6 @@ public abstract class ATrackable :
             var value = prop.GetValue(source);
 
             prop.SetValue(this, value);
-        }
-    }
-
-    IEnumerable<(PropertyInfo, TrackableAttribute)> GetProperties()
-    {
-        foreach (var prop in GetType().GetProperties())
-        {
-            var attr = prop.GetCustomAttributes(typeof(TrackableAttribute), true)
-                .Cast<TrackableAttribute>()
-                .SingleOrDefault();
-
-            if (attr != null)
-            {
-                yield return (prop, attr);
-            }
         }
     }
 
@@ -197,6 +144,79 @@ public abstract class ATrackable :
 
         PropertyChanged?.Invoke(s, new PropertyChangedEventArgs(propertyName));
     };
+
+    #endregion
+
+    #region internal
+
+    internal ATrackable ShallowCopy()
+        => (MemberwiseClone() as ATrackable)!;
+
+    internal void WrapNotifiers()
+    {
+        foreach (var (prop, _) in GetProperties())
+        {
+            if (prop.GetValue(this) is ATrackable trackable
+                && !ProxyUtil.IsProxy(trackable))
+            {
+                var proxy = Factory.CreateProxy(trackable);
+
+                prop.SetValue(this, proxy);
+            }
+        }
+    }
+
+    internal void CloneMembers()
+    {
+        foreach (var (prop, _) in GetProperties())
+        {
+            var obj = prop.GetValue(this);
+
+            if (obj is ICloneable cloneable)
+            {
+                prop.SetValue(this, cloneable.Clone());
+            }
+        }
+    }
+
+    internal void CopyInitials(ATrackable other)
+    {
+        foreach (var (prop, attr) in GetProperties())
+        {
+            if (attr.Initial)
+            {
+                var value = prop.GetValue(this);
+
+                other._initialProperties[prop.Name] = value?.Copy();
+            }
+        }
+    }
+
+    internal static void WatchNotifiers(ATrackable origin, ATrackable proxy)
+    {
+        foreach (var (prop, _) in origin.GetProperties())
+        {
+            if (prop.GetValue(proxy) is INotifyPropertyChanged notifier)
+            {
+                notifier.PropertyChanged += proxy.NewPropertyChangedHandler(prop.Name);
+            }
+        }
+    }
+
+    IEnumerable<(PropertyInfo, TrackableAttribute)> GetProperties()
+    {
+        foreach (var prop in GetType().GetProperties())
+        {
+            var attr = prop.GetCustomAttributes(typeof(TrackableAttribute), true)
+                .Cast<TrackableAttribute>()
+                .SingleOrDefault();
+
+            if (attr != null)
+            {
+                yield return (prop, attr);
+            }
+        }
+    }
 
     #endregion
 }

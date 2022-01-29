@@ -33,13 +33,16 @@ public static class Factory
 
     public static ATrackable CreateProxy(ATrackable model)
     {
-        model.WrapNotifiers();
+        var shallowCopy = model.ShallowCopy();
 
-        var proxy = (Generator.CreateClassProxyWithTarget(model.GetType(), model, Interceptor) as ATrackable)!;
+        shallowCopy.WrapNotifiers();
+        shallowCopy.CloneMembers();
 
-        model.CopyInitials(proxy);
+        var proxy = (Generator.CreateClassProxyWithTarget(shallowCopy.GetType(), shallowCopy, Interceptor) as ATrackable)!;
 
-        ATrackable.WatchNotifiers(model, proxy);
+        shallowCopy.CopyInitials(proxy);
+
+        ATrackable.WatchNotifiers(shallowCopy, proxy);
 
         return proxy;
     }

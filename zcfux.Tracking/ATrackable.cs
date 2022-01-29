@@ -55,7 +55,9 @@ public abstract class ATrackable :
     }
 
     public IEnumerable<KeyValuePair<string, object?>> GetInitialProperties()
-        => _initialProperties;
+        => ProxyUtil.IsProxy(this)
+            ? _initialProperties
+            : throw new InvalidOperationException();
 
     #endregion
 
@@ -124,7 +126,9 @@ public abstract class ATrackable :
     }
 
     public IEnumerable<KeyValuePair<string, Tracking.ChangedValue>> GetChangedProperties()
-        => _changedProperties;
+        => ProxyUtil.IsProxy(this)
+            ? _changedProperties
+            : throw new InvalidOperationException();
 
     #endregion
 
@@ -136,7 +140,9 @@ public abstract class ATrackable :
         => _touchedProperties.Add(propertyName);
 
     public IEnumerable<string> GetTouchedProperties()
-        => _touchedProperties;
+        => ProxyUtil.IsProxy(this)
+            ? _touchedProperties
+            : throw new InvalidOperationException();
 
     PropertyChangedEventHandler NewPropertyChangedHandler(string propertyName) => (s, e) =>
     {

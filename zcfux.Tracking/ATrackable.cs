@@ -54,11 +54,7 @@ public abstract class ATrackable :
     readonly IDictionary<string, object?> _initialProperties = new Dictionary<string, object?>();
 
     void IInitialProperties.InitializeProperty(string propertyName, object? value)
-    {
-        _initialProperties[propertyName] = value?.Copy();
-
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
+        => _initialProperties[propertyName] = value?.Copy();
 
     public IReadOnlyDictionary<string, object?> GetInitialProperties()
         => ProxyUtil.IsProxy(this)
@@ -150,13 +146,6 @@ public abstract class ATrackable :
             ? _touchedProperties
             : throw new InvalidOperationException();
 
-    PropertyChangedEventHandler NewPropertyChangedHandler(string propertyName) => (s, e) =>
-    {
-        _touchedProperties.Add(propertyName);
-
-        PropertyChanged?.Invoke(s, new PropertyChangedEventArgs(propertyName));
-    };
-
     #endregion
 
     #region internal
@@ -182,12 +171,9 @@ public abstract class ATrackable :
     {
         foreach (var (prop, _) in _properties.Value)
         {
-            var obj = prop.GetValue(this);
+            var clone = prop.GetValue(this)?.Copy();
 
-            if (obj is ICloneable cloneable)
-            {
-                prop.SetValue(this, cloneable.Clone());
-            }
+            prop.SetValue(this, clone);
         }
     }
 
@@ -229,6 +215,13 @@ public abstract class ATrackable :
             }
         }
     }
+
+    PropertyChangedEventHandler NewPropertyChangedHandler(string propertyName) => (s, e) =>
+    {
+        _touchedProperties.Add(propertyName);
+
+        PropertyChanged?.Invoke(s, new PropertyChangedEventArgs(propertyName));
+    };
 
     #endregion
 }

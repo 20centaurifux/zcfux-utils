@@ -35,8 +35,8 @@ public static class Factory
     {
         var shallowCopy = model.ShallowCopy();
 
-        shallowCopy.WrapNotifiers();
         shallowCopy.CloneMembers();
+        shallowCopy.WrapNotifiers();
 
         var proxy = (Generator.CreateClassProxyWithTarget(shallowCopy.GetType(), shallowCopy, Interceptor) as ATrackable)!;
 

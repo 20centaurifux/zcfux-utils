@@ -43,3 +43,6 @@ This is a collection of various utilities and abstractions I use in .NET project
 
 ## SqlMapper
 * Tiny object mapper for ADO.NET.
+
+## Tracking
+* Track state changes to objects.

@@ -127,9 +127,9 @@ public abstract class ATrackable :
         }
     }
 
-    public IEnumerable<KeyValuePair<string, ChangedValue>> GetChangedProperties()
+    public ReadOnlyDictionary<string, ChangedValue> GetChangedProperties()
         => ProxyUtil.IsProxy(this)
-            ? _changedProperties
+            ? new ReadOnlyDictionary<string, ChangedValue>(_changedProperties)
             : throw new InvalidOperationException();
 
     #endregion

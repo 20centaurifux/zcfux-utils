@@ -19,33 +19,15 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using Castle.DynamicProxy;
-
 namespace zcfux.Tracking;
 
-public static class Factory
+[AttributeUsage(AttributeTargets.Property)]
+public class FormatterAttribute : Attribute
 {
-    static readonly ProxyGenerator Generator = new();
-    static readonly IInterceptor Interceptor = new Interceptor();
+    public string Assembly { get; }
 
-    public static T? CreateProxy<T>(T model) where T : ATrackable
-        => CreateProxy(model as ATrackable) as T;
+    public string Name { get; }
 
-    public static ATrackable CreateProxy(ATrackable model)
-    {
-        var shallowCopy = model.ShallowCopy();
-
-        shallowCopy.CloneMembers();
-        shallowCopy.WrapNotifiers();
-
-        var proxy = (Generator.CreateClassProxyWithTarget(shallowCopy.GetType(), shallowCopy, Interceptor) as ATrackable)!;
-
-        ATrackable.CreateFormatters(shallowCopy, proxy);
-
-        shallowCopy.CopyInitials(proxy);
-
-        ATrackable.WatchNotifiers(shallowCopy, proxy);
-
-        return proxy;
-    }
+    public FormatterAttribute(string assembly, string name)
+        => (Assembly, Name) = (assembly, name);
 }

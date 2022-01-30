@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,33 +19,33 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using Castle.DynamicProxy;
+namespace zcfux.Tracking.Formatters;
 
-namespace zcfux.Tracking;
-
-public static class Factory
+internal static class Factory
 {
-    static readonly ProxyGenerator Generator = new();
-    static readonly IInterceptor Interceptor = new Interceptor();
-
-    public static T? CreateProxy<T>(T model) where T : ATrackable
-        => CreateProxy(model as ATrackable) as T;
-
-    public static ATrackable CreateProxy(ATrackable model)
+    public static IFormatter CreateFormatter(FormatterAttribute attr)
     {
-        var shallowCopy = model.ShallowCopy();
+        var formatter = Activator.CreateInstance(attr.Assembly, attr.Name)?.Unwrap()!;
 
-        shallowCopy.CloneMembers();
-        shallowCopy.WrapNotifiers();
+        CopyProperties(attr, formatter);
 
-        var proxy = (Generator.CreateClassProxyWithTarget(shallowCopy.GetType(), shallowCopy, Interceptor) as ATrackable)!;
+        return (formatter as IFormatter)!;
+    }
 
-        ATrackable.CreateFormatters(shallowCopy, proxy);
+    static void CopyProperties(object attr, object formatter)
+    {
+        var formatterType = formatter.GetType();
 
-        shallowCopy.CopyInitials(proxy);
+        foreach (var getter in attr.GetType().GetProperties())
+        {
+            var setter = formatterType.GetProperty(getter.Name);
 
-        ATrackable.WatchNotifiers(shallowCopy, proxy);
+            if (setter != null)
+            {
+                var value = getter.GetValue(attr);
 
-        return proxy;
+                setter.SetValue(formatter, value);
+            }
+        }
     }
 }

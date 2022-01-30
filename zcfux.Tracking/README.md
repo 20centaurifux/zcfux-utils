@@ -28,49 +28,64 @@ public class Person : ATrackable
     public virtual string? FirstName { get; set; }
 
     [Trackable]
+    [Anonymize(Char = '?')]
     public virtual string? LastName { get; set; }
 
     [Trackable(Initial = true)]
     public virtual Address? Address { get; set; }
 }
 
-var person = new Person
+internal static class App
 {
-    FirstName = "John",
-    LastName = "Doe",
-    Address = new Address
+    static void Main(string[] args)
     {
-        Zip = "123",
-        Street = "Main Street"
+        var person = new Person
+        {
+            FirstName = "John",
+            LastName = "Doe",
+            Address = new Address
+            {
+                Zip = "123",
+                Street = "Main Street"
+            }
+        };
+
+        // At first, we create a proxy to track changes. Class members inherited from
+        // ATrackable (like Address) are converted to proxies recursively.
+        var trackedPerson = Factory.CreateProxy(person);
+
+        // Objects implementing INotifyPropertyChange are marked as "touched" when their
+        // state changes. Any tracked property of a proxy fires the PropertyChanged
+        // event when updated.
+        trackedPerson!.Address!.Zip = "456";
+
+        var touched = trackedPerson.GetTouchedProperties().First();
+
+        Debug.Assert(touched == "Address");
+
+        // Now we know that Address has been changed. Let's receive the modifications.
+        var changes = trackedPerson.Address.GetChangedProperties();
+
+        var (propertyName, (old, @new)) = changes.First();
+
+        Debug.Assert(propertyName == "Zip");
+        Debug.Assert((old as string) == "123");
+        Debug.Assert((@new as string) == "456");
+
+        // Address implements ICloneable. Therefore the initial state is still available.
+        var initial = trackedPerson.GetInitialProperties();
+
+        var initialAddress = initial["Address"] as Address;
+
+        Debug.Assert(initialAddress!.Zip == "123");
+
+        // You can use formatters to overwrite received initial and changed values.
+        trackedPerson.LastName = "Smith";
+
+        (_, (old, @new)) = trackedPerson.GetChangedProperties().First();
+
+        Debug.Assert((old as string) == "???");
+        Debug.Assert((@new as string) == "?????");
     }
-};
-
-// Create a proxy to track changes.
-var trackedPerson = Factory.CreateProxy(person);
-
-// Objects implementing INotifyPropertyChanged are marked as "touched" when
-// they're changed. Nested properties inherited from ATrackable (like
-// "Address") are converted to proxies automatically.
-trackedPerson!.Address!.Zip = "456"; // fires PropertyChanged event
-
-var touched = trackedPerson.GetTouchedProperties().First();
-
-Debug.Assert(touched == "Address");
-
-// Receive changed properties from the "Address" proxy.
-var changes = trackedPerson.Address.GetChangedProperties();
-
-var (propertyName, (old, @new)) = changes.First();
-
-Debug.Assert(propertyName == "Zip");
-Debug.Assert((old as string) == "123");
-Debug.Assert((@new as string) == "456");
-
-// Properties implementing ICloneable are copied whenever necessary,
-// hence the state of the initial address instance is still available.
-var initial = trackedPerson.GetInitialProperties();
-
-var initialAddress = initial["Address"] as Address;
-
-Debug.Assert(initialAddress!.Zip == "123");
+}
 ```

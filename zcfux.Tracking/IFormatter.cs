@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,33 +19,9 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using Castle.DynamicProxy;
-
 namespace zcfux.Tracking;
 
-public static class Factory
+public interface IFormatter
 {
-    static readonly ProxyGenerator Generator = new();
-    static readonly IInterceptor Interceptor = new Interceptor();
-
-    public static T? CreateProxy<T>(T model) where T : ATrackable
-        => CreateProxy(model as ATrackable) as T;
-
-    public static ATrackable CreateProxy(ATrackable model)
-    {
-        var shallowCopy = model.ShallowCopy();
-
-        shallowCopy.CloneMembers();
-        shallowCopy.WrapNotifiers();
-
-        var proxy = (Generator.CreateClassProxyWithTarget(shallowCopy.GetType(), shallowCopy, Interceptor) as ATrackable)!;
-
-        ATrackable.CreateFormatters(shallowCopy, proxy);
-
-        shallowCopy.CopyInitials(proxy);
-
-        ATrackable.WatchNotifiers(shallowCopy, proxy);
-
-        return proxy;
-    }
+    object? Format(object? value);
 }

@@ -35,6 +35,7 @@ public abstract class ATrackable :
     public event PropertyChangedEventHandler? PropertyChanged;
 
     readonly Lazy<(PropertyInfo, TrackableAttribute)[]> _properties;
+    IDictionary<string, IFormatter>? _formatters;
 
     protected ATrackable()
         => _properties = new Lazy<(PropertyInfo, TrackableAttribute)[]>(() => GetProperties().ToArray());
@@ -129,8 +130,27 @@ public abstract class ATrackable :
 
     public ReadOnlyDictionary<string, ChangedValue> GetChangedProperties()
         => ProxyUtil.IsProxy(this)
-            ? new ReadOnlyDictionary<string, ChangedValue>(_changedProperties)
+            ? FormatChangedProperties()
             : throw new InvalidOperationException();
+
+    ReadOnlyDictionary<string, ChangedValue> FormatChangedProperties()
+    {
+        var m = new Dictionary<string, ChangedValue>();
+
+        foreach (var (propertyName, (old, @new)) in _changedProperties)
+        {
+            if (_formatters!.TryGetValue(propertyName, out var formatter))
+            {
+                m[propertyName] = new ChangedValue(formatter.Format(old), formatter.Format(@new));
+            }
+            else
+            {
+                m[propertyName] = new ChangedValue(old, @new);
+            }
+        }
+
+        return new ReadOnlyDictionary<string, ChangedValue>(m);
+    }
 
     #endregion
 
@@ -177,15 +197,39 @@ public abstract class ATrackable :
         }
     }
 
-    internal void CopyInitials(ATrackable other)
+    internal static void CreateFormatters(ATrackable origin, ATrackable proxy)
+    {
+        proxy._formatters = new Dictionary<string, IFormatter>();
+
+        foreach (var prop in origin.GetType().GetProperties())
+        {
+            var attr = prop.GetCustomAttributes(typeof(FormatterAttribute), true)
+                .Cast<FormatterAttribute>()
+                .SingleOrDefault();
+
+            if (attr != null)
+            {
+                proxy._formatters[prop.Name] = Formatters.Factory.CreateFormatter(attr);
+            }
+        }
+    }
+
+    internal void CopyInitials(ATrackable proxy)
     {
         foreach (var (prop, attr) in _properties.Value)
         {
             if (attr.Initial)
             {
-                var value = prop.GetValue(this);
+                var value = prop.GetValue(this)?.Copy();
 
-                other._initialProperties[prop.Name] = value?.Copy();
+                if (proxy._formatters!.TryGetValue(prop.Name, out var formatter))
+                {
+                    proxy._initialProperties[prop.Name] = formatter.Format(value);
+                }
+                else
+                {
+                    proxy._initialProperties[prop.Name] = value?.Copy();
+                }
             }
         }
     }

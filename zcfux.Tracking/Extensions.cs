@@ -25,16 +25,4 @@ internal static class Extensions
 {
     public static object Copy(this object self)
         => (self is ICloneable cloneable) ? cloneable.Clone() : self;
-
-    public static string Anonymize(this object? self)
-    {
-        var length = 0;
-
-        if (self?.ToString() is { } str)
-        {
-            length = str.Length;
-        }
-
-        return new string('*', length);
-    }
 }

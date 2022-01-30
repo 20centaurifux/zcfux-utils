@@ -25,6 +25,4 @@ namespace zcfux.Tracking;
 public sealed class TrackableAttribute : Attribute
 {
     public bool Initial { get; set; }
-
-    public bool Anonymize { get; set; }
 }

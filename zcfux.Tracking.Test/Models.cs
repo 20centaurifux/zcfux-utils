@@ -21,7 +21,7 @@
  ***************************************************************************/
 using System.ComponentModel;
 
-namespace zcfux.Tracking.Test.Models;
+namespace zcfux.Tracking.Test;
 
 public class A : ATrackable
 {
@@ -107,4 +107,18 @@ public class G : ATrackable
 
     [Trackable]
     public virtual int C { get; set; }
+}
+
+public class H : ATrackable
+{
+    [Trackable(Initial = true)]
+    [Formatter("zcfux.Tracking.Test", "zcfux.Tracking.Test.ReverseFormatter")]
+    public virtual string? Value { get; set; }
+}
+
+public class I : ATrackable
+{
+    [Trackable(Initial = true)]
+    [Anonymize(Char = '#')]
+    public virtual string? Value { get; set; }
 }

@@ -20,7 +20,6 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using NUnit.Framework;
-using zcfux.Tracking.Test.Models;
 
 namespace zcfux.Tracking.Test;
 
@@ -313,4 +312,41 @@ public sealed class Test
         Assert.AreEqual(3, old);
         Assert.AreEqual(42, @new);
     }
+
+    [Test]
+    public void Formatter()
+    {
+        var model = new H
+        {
+            Value = "redrum"
+        };
+
+        var proxy = Factory.CreateProxy(model);
+
+        proxy!.Value = "murder";
+
+        var (_, value) = proxy.GetInitialProperties().First();
+
+        Assert.AreEqual("murder", value);
+
+        var (_, (old, @new)) = proxy.GetChangedProperties().First();
+
+        Assert.AreEqual("murder", old);
+        Assert.AreEqual("redrum", @new);
+    }
+
+     [Test]
+     public void Anonymize()
+     {
+         var model = new I
+         {
+             Value = "hello world"
+         };
+
+         var proxy = Factory.CreateProxy(model);
+
+         var (_, value) = proxy!.GetInitialProperties().First();
+
+         Assert.AreEqual("###########", value);
+     }
 }

@@ -185,6 +185,46 @@ public sealed class LinqTest
         Assert.AreEqual(data[0], match[0]);
     }
 
+    [Test]
+    public void And()
+    {
+        var filter = Logical.And(
+            Columns.Id.EqualTo(1),
+            Columns.Value.EqualTo("hello"));
+
+        var match = Filter(filter);
+
+        Assert.AreEqual(1, match.Length);
+        Assert.AreEqual(Data[0], match[0]);
+    }
+
+    [Test]
+    public void Or()
+    {
+        var filter = Logical.Or(
+            Columns.Id.EqualTo(1),
+            Columns.Value.EqualTo("world"));
+
+        var match = Filter(filter);
+
+        Assert.AreEqual(2, match.Length);
+        Assert.AreEqual(Data[0], match[0]);
+        Assert.AreEqual(Data[2], match[1]);
+    }
+
+    [Test]
+    public void Not()
+    {
+        var filter = Logical.Not(
+            Columns.Value.IsNull());
+
+        var match = Filter(filter);
+
+        Assert.AreEqual(2, match.Length);
+        Assert.AreEqual(Data[0], match[0]);
+        Assert.AreEqual(Data[2], match[1]);
+    }
+
     static Model[] Filter(INode node)
         => Filter(Data, node);
 

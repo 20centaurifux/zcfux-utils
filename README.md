@@ -3,25 +3,24 @@
 This is a collection of various utilities and abstractions I use in .NET projects.
 
 ## Byte
-
 * Exension methods to convert byte arrays to hex strings and back. 
 * BCD encoder/decoder.
 
-## CircularBuffer:
-
+## CircularBuffer
 * Generic circular buffer.
 
 ## Data
 * Database abstractions.
 
 ## Data.Postgres
-* PostgreSQL provider.
+* Npgsql provider for zcfux.Data.
 
 ## DI
 * Dependency injection wrapper.
 
 ## Filter
 * Exensions methods to build abstract syntax trees for querying data.
+* Abstract syntax trees can be converted to LINQ expressions.
 
 ## JobRunner
 * Run and schedule (periodic) tasks.
@@ -31,7 +30,7 @@ This is a collection of various utilities and abstractions I use in .NET project
 * Logging abstractions.
 
 ## Logging.NLog
-* NLog provider.
+* NLog provider for zcfux.Logging.
 
 ## Security
 * Password generator.

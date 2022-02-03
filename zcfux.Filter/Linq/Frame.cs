@@ -39,130 +39,19 @@ internal class Frame<T>
 
     public Expression<Func<T, bool>> ToExpression()
     {
-        if (_name == "not")
+        var expr = _name switch
         {
-            return Not();
-        }
-
-        if (_name is "and" or "or")
-        {
-            return Logical();
-        }
-
-        var body = _name switch
-        {
-            "=" => BinaryExpression(ExpressionType.Equal),
-            ">=" => BinaryExpression(ExpressionType.GreaterThanOrEqual),
-            ">" => BinaryExpression(ExpressionType.GreaterThan),
-            "<=" => BinaryExpression(ExpressionType.LessThanOrEqual),
-            "<" => BinaryExpression(ExpressionType.LessThan),
-            "<>" => BinaryExpression(ExpressionType.NotEqual),
-            "between" => BetweenExpression(),
-            "in" => In(),
-            "starts-with?" => StartsWith(),
-            "ends-with?" => EndsWith(),
-            "contains?" => Contains(),
-            "null?" => IsNull(),
-            _ => throw new InvalidOperationException()
-        };
-
-        return Expression.Lambda<Func<T, bool>>(body, _parameter);
-    }
-
-    Expression BinaryExpression(ExpressionType type)
-    {
-        var (left, right) = (ArgExpression(_args[0]), ArgExpression(_args[1]));
-
-        return Expression.MakeBinary(type, left, right);
-    }
-
-    Expression ArgExpression(object? arg)
-    {
-        var expr = arg switch
-        {
-            IColumn column => ColumnExpression(column),
-            Expression expression => expression,
-            _ => ConstantExpression(arg)
+            "not" => Not(),
+            "and" or "or" => Logical(),
+            _ => Function()
         };
 
         return expr;
     }
 
-    Expression ColumnExpression(IColumn column)
-        => Expression.Property(_parameter, column.Name);
-
-    static Expression ConstantExpression(object? value)
-    {
-        var type = typeof(object);
-
-        if (value != null)
-        {
-            type = value.GetType();
-        }
-
-        return Expression.Constant(value, type);
-    }
-
-    Expression BetweenExpression()
-    {
-        var member = ArgExpression(_args[0]);
-        var lower = ArgExpression(_args[1]);
-        var upper = ArgExpression(_args[2]);
-
-        return Expression.AndAlso(Expression.GreaterThanOrEqual(member, lower), Expression.LessThanOrEqual(member, upper));
-    }
-
-    Expression In()
-    {
-        var type = (_args[0] is IColumn column)
-            ? column.Type
-            : _args[0]!.GetType()!;
-
-        var listType = typeof(List<>).MakeGenericType(new[] { type });
-
-        var l = (IList)Activator.CreateInstance(listType, _args[1])!;
-
-        var haystack = ArgExpression(l);
-
-        var needle = ArgExpression(_args[0]);
-
-        return Expression.Call(haystack, "Contains", null, needle);
-    }
-
-    Expression StartsWith()
-    {
-        var haystack = ArgExpression(_args[0]);
-        var needle = ArgExpression(_args[1]);
-
-        return Expression.Call(haystack, "StartsWith", null, needle);
-    }
-
-    Expression EndsWith()
-    {
-        var haystack = ArgExpression(_args[0]);
-        var needle = ArgExpression(_args[1]);
-
-        return Expression.Call(haystack, "EndsWith", null, needle);
-    }
-
-    Expression Contains()
-    {
-        var haystack = ArgExpression(_args[0]);
-        var needle = ArgExpression(_args[1]);
-
-        return Expression.Call(haystack, "Contains", null, needle);
-    }
-
-    Expression IsNull()
-    {
-        var arg = ArgExpression(_args[0]);
-
-        return Expression.MakeBinary(ExpressionType.Equal, arg, ConstantExpression(null));
-    }
-
     Expression<Func<T, bool>> Not()
     {
-        var child = ArgExpression(_args[0]) as Expression<Func<T, bool>>;
+        var child = ArgToExpression() as Expression<Func<T, bool>>;
 
         var expr = Expression.Not(child!.Body);
 
@@ -203,5 +92,125 @@ internal class Frame<T>
         var invoked = Expression.Invoke(right, left.Parameters);
 
         return Expression.Lambda<Func<T, bool>>(Expression.AndAlso(left.Body, invoked), left.Parameters);
+    }
+
+       Expression<Func<T, bool>> Function()
+    {
+        var body = _name switch
+        {
+            "=" => BinaryExpression(ExpressionType.Equal),
+            ">=" => BinaryExpression(ExpressionType.GreaterThanOrEqual),
+            ">" => BinaryExpression(ExpressionType.GreaterThan),
+            "<=" => BinaryExpression(ExpressionType.LessThanOrEqual),
+            "<" => BinaryExpression(ExpressionType.LessThan),
+            "<>" => BinaryExpression(ExpressionType.NotEqual),
+            "between" => BetweenExpression(),
+            "in" => In(),
+            "starts-with?" => StartsWith(),
+            "ends-with?" => EndsWith(),
+            "contains?" => Contains(),
+            "null?" => IsNull(),
+            _ => throw new InvalidOperationException()
+        };
+
+        return Expression.Lambda<Func<T, bool>>(body, _parameter);
+    }
+
+    Expression BinaryExpression(ExpressionType type)
+    {
+        var (left, right) = TwoArgsToExpressions();
+
+        return Expression.MakeBinary(type, left, right);
+    }
+
+    Expression ColumnExpression(IColumn column)
+        => Expression.Property(_parameter, column.Name);
+
+    static Expression ConstantExpression(object? value)
+    {
+        var type = typeof(object);
+
+        if (value != null)
+        {
+            type = value.GetType();
+        }
+
+        return Expression.Constant(value, type);
+    }
+
+    Expression BetweenExpression()
+    {
+        var (member, lower, upper) = ThreeArgsToExpressions();
+
+        return Expression.AndAlso(Expression.GreaterThanOrEqual(member, lower), Expression.LessThanOrEqual(member, upper));
+    }
+
+    Expression In()
+    {
+        var type = (_args[0] is IColumn column)
+            ? column.Type
+            : _args[0]!.GetType()!;
+
+        var listType = typeof(List<>).MakeGenericType(type);
+
+        var l = (IList)Activator.CreateInstance(listType, _args[1])!;
+
+        var haystack = ArgExpression(l);
+
+        var needle = ArgExpression(_args[0]);
+
+        return Expression.Call(haystack, "Contains", null, needle);
+    }
+
+    Expression StartsWith()
+    {
+        var (haystack, needle) = TwoArgsToExpressions();
+
+        return Expression.Call(haystack, "StartsWith", null, needle);
+    }
+
+    Expression EndsWith()
+    {
+        var (haystack, needle) = TwoArgsToExpressions();
+
+        return Expression.Call(haystack, "EndsWith", null, needle);
+    }
+
+    Expression Contains()
+    {
+        var (haystack, needle) = TwoArgsToExpressions();
+
+        return Expression.Call(haystack, "Contains", null, needle);
+    }
+
+    Expression IsNull()
+    {
+        var arg = ArgToExpression();
+
+        return Expression.MakeBinary(ExpressionType.Equal, arg, ConstantExpression(null));
+    }
+
+    Expression ArgToExpression()
+        => ArgExpression(_args[0]);
+
+    (Expression, Expression) TwoArgsToExpressions()
+        => (ArgExpression(_args[0]),
+            ArgExpression(_args[1]));
+
+    (Expression, Expression, Expression) ThreeArgsToExpressions()
+        => (ArgExpression(_args[0]),
+            ArgExpression(_args[1]),
+            ArgExpression(_args[2]));
+
+    Expression ArgExpression(object? arg)
+    {
+        var expr = arg switch
+        {
+            IColumn column => ColumnExpression(column),
+            Expression expression => expression,
+            _ => ConstantExpression(arg)
+        };
+
+        return expr;
     }
 }

@@ -12,6 +12,9 @@ This is a collection of various utilities and abstractions I use in .NET project
 ## Data
 * Database abstractions.
 
+## Data.LinqToDB
+* LinqToDB provider for zcfux.Data.
+
 ## Data.Postgres
 * Npgsql provider for zcfux.Data.
 

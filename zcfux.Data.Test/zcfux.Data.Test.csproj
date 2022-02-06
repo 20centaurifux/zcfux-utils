@@ -18,12 +18,14 @@ ENABLE_PG</DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="linq2db.PostgreSQL" Version="3.6.0" />
       <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
       <PackageReference Include="NUnit" Version="3.13.2" />
       <PackageReference Include="NUnit3TestAdapter" Version="4.2.0" />
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\zcfux.Data.LinqToDB\zcfux.Data.LinqToDB.csproj" />
       <ProjectReference Include="..\zcfux.Data.Postgres\zcfux.Data.Postgres.csproj" />
       <ProjectReference Include="..\zcfux.SqlMapper\zcfux.SqlMapper.csproj" />
     </ItemGroup>

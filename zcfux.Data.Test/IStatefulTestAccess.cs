@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -13,37 +13,17 @@
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more detail
+    Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using Castle.DynamicProxy;
+namespace zcfux.Data.Test;
 
-namespace zcfux.Data.Proxy;
-
-public static class Factory
+public interface IStatefulTestAccess
 {
-    static readonly ProxyGenerator Generator = new();
+    public Model New(string value);
 
-    public static TInterface CreateProxy<TInterface, TImpl>()
-        where TInterface : class
-    {
-        var interceptor = new ThreadingInterceptor<TInterface, TImpl>();
-
-        var proxy = Generator.CreateInterfaceProxyWithoutTarget<TInterface>(interceptor);
-
-        return proxy!;
-    }
-
-    public static TInterface CreateStatefulProxy<TInterface>(object handle, object impl)
-        where TInterface : class
-    {
-        var interceptor = new StatefulInterceptor(handle, impl);
-
-        var proxy = Generator.CreateInterfaceProxyWithoutTarget<TInterface>(interceptor);
-
-        return proxy!;
-    }
+    public IEnumerable<Model> All();
 }

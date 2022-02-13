@@ -13,37 +13,15 @@
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more detail
+    Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using Castle.DynamicProxy;
-
 namespace zcfux.Data.Proxy;
 
-public static class Factory
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class DisableHandleInjectionAttribute : Attribute
 {
-    static readonly ProxyGenerator Generator = new();
-
-    public static TInterface CreateProxy<TInterface, TImpl>()
-        where TInterface : class
-    {
-        var interceptor = new ThreadingInterceptor<TInterface, TImpl>();
-
-        var proxy = Generator.CreateInterfaceProxyWithoutTarget<TInterface>(interceptor);
-
-        return proxy!;
-    }
-
-    public static TInterface CreateStatefulProxy<TInterface>(object handle, object impl)
-        where TInterface : class
-    {
-        var interceptor = new StatefulInterceptor(handle, impl);
-
-        var proxy = Generator.CreateInterfaceProxyWithoutTarget<TInterface>(interceptor);
-
-        return proxy!;
-    }
 }

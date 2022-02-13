@@ -20,6 +20,7 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using NUnit.Framework;
+using zcfux.Data.Proxy;
 
 namespace zcfux.Data.Test;
 
@@ -104,6 +105,27 @@ public abstract class ADbTest
         Assert.AreEqual(0, fetched.Length);
     }
 
+    [Test]
+    public void StatefulDb()
+    {
+        var engine = NewEngine();
+
+        engine.Setup();
+
+        using (var t = engine.NewTransaction())
+        {
+            var db = Factory.CreateStatefulProxy<IStatefulTestAccess>(t.Handle, NewDb());
+
+            var created = db.New(TestContext.CurrentContext.Random.GetString());
+
+            var fetched = db.All().ToArray();
+
+            Assert.AreEqual(1, fetched.Length);
+
+            Assert.AreEqual(created.ID, fetched.First().ID);
+            Assert.AreEqual(created.Value, fetched.First().Value);
+        }
+    }
 
     protected abstract IEngine NewEngine();
 

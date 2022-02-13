@@ -24,12 +24,9 @@ using zcfux.SqlMapper;
 
 namespace zcfux.Data.Test.Pg;
 
-internal sealed class TestDb : ITestDb
+internal sealed class TestDb
 {
-    void ITestDb.DeleteAll(object handle)
-        => DeleteAll((handle as Handle)!);
-
-    static void DeleteAll(Handle handle)
+    public void DeleteAll(Handle handle)
     {
         using (var cmd = handle.CreateCommand())
         {
@@ -39,10 +36,7 @@ internal sealed class TestDb : ITestDb
         }
     }
 
-    Model ITestDb.New(object handle, string value)
-        => New((handle as Handle)!, value);
-
-    static Model New(Handle handle, string value)
+    public Model New(Handle handle, string value)
     {
         using (var cmd = handle.CreateCommand())
         {
@@ -61,10 +55,7 @@ internal sealed class TestDb : ITestDb
         }
     }
 
-    IEnumerable<Model> ITestDb.All(object handle)
-        => All((handle as Handle)!);
-
-    static IEnumerable<Model> All(Handle handle)
+    public IEnumerable<Model> All(Handle handle)
     {
         using (var cmd = handle.CreateCommand())
         {

@@ -9,4 +9,8 @@
         <Company>Sebastian Fedrau</Company>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Castle.Core" Version="4.4.1" />
+    </ItemGroup>
+
 </Project>

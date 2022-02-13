@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -13,27 +13,27 @@
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+    Lesser General Public License for more detail
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Data.Test;
+using Castle.DynamicProxy;
 
-public sealed class PgTest : ADbTest
+namespace zcfux.Data.Proxy;
+
+public static class Factory
 {
-    const string DefaultConnectionString
-        = "User ID=test;Host=localhost;Port=5432;Database=test;";
+    static readonly ProxyGenerator Generator = new();
 
-    protected override IEngine NewEngine()
+    public static TInterface CreateProxy<TInterface, TImpl>()
+        where TInterface : class
     {
-        var connectionString = Environment.GetEnvironmentVariable("PG_TEST_CONNECTIONSTRING")
-                               ?? DefaultConnectionString;
+        var interceptor = new ThreadingInterceptor<TInterface, TImpl>();
 
-        return new Postgres.Engine(connectionString);
+        var proxy = Generator.CreateInterfaceProxyWithoutTarget<TInterface>(interceptor);
+
+        return proxy!;
     }
-
-    protected override ITestDb NewDb()
-        => Proxy.Factory.CreateProxy<ITestDb, Pg.TestDb>();
 }

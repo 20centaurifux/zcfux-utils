@@ -24,20 +24,14 @@ using zcfux.Data.LinqToDB;
 
 namespace zcfux.Data.Test.LinqToDB;
 
-internal sealed class TestDb : ITestDb
+internal sealed class TestDb
 {
-    void ITestDb.DeleteAll(object handle)
-        => DeleteAll((handle as Handle)!);
-
-    static void DeleteAll(Handle handle)
+    public void DeleteAll(Handle handle)
         => handle.Db()
             .GetTable<Model>()
             .Delete();
 
-    public Model New(object handle, string value)
-        => New((handle as Handle)!, value);
-
-    static Model New(Handle handle, string value)
+    public Model New(Handle handle, string value)
     {
         var model = new Model() { Value = value };
 
@@ -46,9 +40,6 @@ internal sealed class TestDb : ITestDb
         return model;
     }
 
-    public IEnumerable<Model> All(object handle)
-        => All((handle as Handle)!);
-
-    static IEnumerable<Model> All(Handle handle)
+    public IEnumerable<Model> All(Handle handle)
         => handle.Db().GetTable<Model>();
 }

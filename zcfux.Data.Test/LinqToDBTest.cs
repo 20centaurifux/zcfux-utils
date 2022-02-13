@@ -43,5 +43,5 @@ public sealed class LinqToDBTest : ADbTest
     }
 
     protected override ITestDb NewDb()
-        => new LinqToDB.TestDb();
+        => Proxy.Factory.CreateProxy<ITestDb, LinqToDB.TestDb>();
 }

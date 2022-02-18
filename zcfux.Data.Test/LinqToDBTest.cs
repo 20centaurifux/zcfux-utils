@@ -23,7 +23,7 @@ using LinqToDB.Configuration;
 
 namespace zcfux.Data.Test;
 
-public sealed class LinqToDBTest : ADbTest
+public sealed class LinqToDbTest : APureTest
 {
     const string DefaultConnectionString
         = "User ID=test;Host=localhost;Port=5432;Database=test;";
@@ -42,6 +42,6 @@ public sealed class LinqToDBTest : ADbTest
         return new LinqToDB.Engine(opts);
     }
 
-    protected override ITestDb NewDb()
-        => Proxy.Factory.CreateProxy<ITestDb, LinqToDB.TestDb>();
+    protected override IPure NewDb()
+        => new LinqToDB.Pure();
 }

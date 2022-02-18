@@ -27,20 +27,30 @@ public static class Factory
 {
     static readonly ProxyGenerator Generator = new();
 
-    public static TInterface CreateProxy<TInterface, TImpl>()
+    public static TInterface ConvertHandle<TInterface, TImpl>()
         where TInterface : class
     {
-        var interceptor = new ThreadingInterceptor<TInterface, TImpl>();
+        var interceptor = new ConvertHandleInterceptor<TInterface, TImpl>();
 
         var proxy = Generator.CreateInterfaceProxyWithoutTarget<TInterface>(interceptor);
 
         return proxy!;
     }
 
-    public static TInterface CreateStatefulProxy<TInterface>(object handle, object impl)
+    public static TInterface PrependHandle<TInterface, TImpl>(object handle)
         where TInterface : class
+        where TImpl : class
     {
-        var interceptor = new StatefulInterceptor(handle, impl);
+        var impl = Activator.CreateInstance<TImpl>();
+
+        return PrependHandle<TInterface, TImpl>(impl, handle);
+    }
+
+    public static TInterface PrependHandle<TInterface, TImpl>(TImpl impl, object handle)
+        where TInterface : class
+        where TImpl : class
+    {
+        var interceptor = new PrependHandleInterceptor<TImpl>(impl, handle);
 
         var proxy = Generator.CreateInterfaceProxyWithoutTarget<TInterface>(interceptor);
 

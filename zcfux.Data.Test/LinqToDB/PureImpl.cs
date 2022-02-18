@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,21 +19,27 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Data.Test;
+using LinqToDB;
+using zcfux.Data.LinqToDB;
 
-public sealed class PgTest : APureTest
+namespace zcfux.Data.Test.LinqToDB;
+
+internal sealed class PureDb
 {
-    const string DefaultConnectionString
-        = "User ID=test;Host=localhost;Port=5432;Database=test;";
+    public void DeleteAll(Handle handle)
+        => handle.Db()
+            .GetTable<Model>()
+            .Delete();
 
-    protected override IEngine NewEngine()
+    public Model New(Handle handle, string value)
     {
-        var connectionString = Environment.GetEnvironmentVariable("PG_TEST_CONNECTIONSTRING")
-                               ?? DefaultConnectionString;
+        var model = new Model() { Value = value };
 
-        return new Postgres.Engine(connectionString);
+        model.ID = Convert.ToInt32(handle.Db().InsertWithIdentity(model));
+
+        return model;
     }
 
-    protected override IPure NewDb()
-        => new Pg.Pure();
+    public IEnumerable<Model> All(Handle handle)
+        => handle.Db().GetTable<Model>();
 }

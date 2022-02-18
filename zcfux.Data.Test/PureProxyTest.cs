@@ -19,11 +19,29 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using LinqToDB.Configuration;
+
 namespace zcfux.Data.Test;
 
-public interface IStatefulTestAccess
+public sealed class PureProxyTest : APureTest
 {
-    public Model New(string value);
+    const string DefaultConnectionString
+        = "User ID=test;Host=localhost;Port=5432;Database=test;";
 
-    public IEnumerable<Model> All();
+    protected override IEngine NewEngine()
+    {
+        var connectionString = Environment.GetEnvironmentVariable("PG_TEST_CONNECTIONSTRING")
+                               ?? DefaultConnectionString;
+
+        var builder = new LinqToDbConnectionOptionsBuilder();
+
+        builder.UsePostgreSQL(connectionString);
+
+        var opts = builder.Build();
+
+        return new LinqToDB.Engine(opts);
+    }
+
+    protected override IPure NewDb()
+        => Proxy.Factory.ConvertHandle<IPure, LinqToDB.Pure>();
 }

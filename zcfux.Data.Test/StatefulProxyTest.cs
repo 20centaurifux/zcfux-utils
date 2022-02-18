@@ -19,13 +19,16 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using LinqToDB.Configuration;
 using NUnit.Framework;
-using zcfux.Data.Proxy;
 
 namespace zcfux.Data.Test;
 
-public abstract class ADbTest
+public sealed class StatefulProxyTest
 {
+    const string DefaultConnectionString
+        = "User ID=test;Host=localhost;Port=5432;Database=test;";
+
     [SetUp]
     public void Setup()
         => ResetDb();
@@ -42,71 +45,16 @@ public abstract class ADbTest
 
         using (var t = engine.NewTransaction())
         {
-            var db = NewDb();
+            var db = Proxy.Factory.PrependHandle<IStateful, LinqToDB.Stateful>(t.Handle);
 
-            db.DeleteAll(t.Handle);
-
-            t.Commit = true;
-        }
-    }
-
-    [Test]
-    public void Commit()
-    {
-        var engine = NewEngine();
-
-        engine.Setup();
-
-        Model created;
-
-        var db = NewDb();
-
-        using (var t = engine.NewTransaction())
-        {
-            created = db.New(t.Handle, TestContext.CurrentContext.Random.GetString());
+            db.DeleteAll();
 
             t.Commit = true;
         }
-
-        Model[] fetched;
-
-        using (var t = engine.NewTransaction())
-        {
-            fetched = db.All(t.Handle).ToArray();
-        }
-
-        Assert.AreEqual(1, fetched.Length);
-
-        Assert.AreEqual(created.ID, fetched.First().ID);
-        Assert.AreEqual(created.Value, fetched.First().Value);
     }
 
     [Test]
-    public void Rollback()
-    {
-        var engine = NewEngine();
-
-        engine.Setup();
-
-        var db = NewDb();
-
-        using (var t = engine.NewTransaction())
-        {
-            db.New(t.Handle, TestContext.CurrentContext.Random.GetString());
-        }
-
-        Model[] fetched;
-
-        using (var t = engine.NewTransaction())
-        {
-            fetched = db.All(t.Handle).ToArray();
-        }
-
-        Assert.AreEqual(0, fetched.Length);
-    }
-
-    [Test]
-    public void StatefulDb()
+    public void InterceptMethods()
     {
         var engine = NewEngine();
 
@@ -114,20 +62,70 @@ public abstract class ADbTest
 
         using (var t = engine.NewTransaction())
         {
-            var db = Factory.CreateStatefulProxy<IStatefulTestAccess>(t.Handle, NewDb());
+            var db = Proxy.Factory.PrependHandle<IStateful, LinqToDB.Stateful>(t.Handle);
 
-            var created = db.New(TestContext.CurrentContext.Random.GetString());
+            var model = db.Insert(1, "hello world");
+
+            Assert.AreEqual(1, model.ID);
+            Assert.AreEqual("hello world", model.Value);
 
             var fetched = db.All().ToArray();
 
             Assert.AreEqual(1, fetched.Length);
-
-            Assert.AreEqual(created.ID, fetched.First().ID);
-            Assert.AreEqual(created.Value, fetched.First().Value);
+            Assert.AreEqual(1, fetched.First().ID);
+            Assert.AreEqual("hello world", fetched.First().Value);
         }
     }
 
-    protected abstract IEngine NewEngine();
+    [Test]
+    public void InterceptOverloadedMethod()
+    {
+        var engine = NewEngine();
 
-    protected abstract ITestDb NewDb();
+        engine.Setup();
+
+        using (var t = engine.NewTransaction())
+        {
+            var db = Proxy.Factory.PrependHandle<IStateful, LinqToDB.Stateful>(t.Handle);
+
+            var first = db.Insert(1, "hello");
+
+            Assert.AreEqual(1, first.ID);
+            Assert.AreEqual("hello", first.Value);
+
+            var second = db.Insert("world", 2);
+
+            Assert.AreEqual(2, second.ID);
+            Assert.AreEqual("world", second.Value);
+        }
+    }
+
+    [Test]
+    public void MethodNotImplemented()
+    {
+        var engine = NewEngine();
+
+        engine.Setup();
+
+        using (var t = engine.NewTransaction())
+        {
+            var db = Proxy.Factory.PrependHandle<IStateful, LinqToDB.Stateful>(t.Handle);
+
+            Assert.That(() => db.NotImplemented(), Throws.Exception);
+        }
+    }
+
+    static IEngine NewEngine()
+    {
+        var connectionString = Environment.GetEnvironmentVariable("PG_TEST_CONNECTIONSTRING")
+                               ?? DefaultConnectionString;
+
+        var builder = new LinqToDbConnectionOptionsBuilder();
+
+        builder.UsePostgreSQL(connectionString);
+
+        var opts = builder.Build();
+
+        return new LinqToDB.Engine(opts);
+    }
 }

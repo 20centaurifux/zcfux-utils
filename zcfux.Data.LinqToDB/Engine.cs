@@ -26,10 +26,10 @@ namespace zcfux.Data.LinqToDB;
 
 public class Engine : IEngine
 {
-    readonly LinqToDbConnectionOptions _options;
-
     public Engine(LinqToDbConnectionOptions options)
-        => _options = options;
+        => Options = options;
+
+    protected LinqToDbConnectionOptions Options { get; }
 
     public virtual void Setup()
     {
@@ -39,5 +39,5 @@ public class Engine : IEngine
         => new(NewSession());
 
     Session NewSession()
-        => new(new DataConnection(_options));
+        => new(new DataConnection(Options));
 }

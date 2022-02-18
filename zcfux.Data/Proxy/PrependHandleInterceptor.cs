@@ -19,51 +19,51 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using System.Collections.Concurrent;
 using System.Reflection;
 using Castle.DynamicProxy;
 
 namespace zcfux.Data.Proxy;
 
-internal sealed class StatefulInterceptor : IInterceptor
+internal sealed class PrependHandleInterceptor<TImpl>
+    : IInterceptor
+    where TImpl : class
 {
-    readonly object _handle;
-    readonly object _impl;
+    static readonly Lazy<ConcurrentDictionary<string, MethodInfo>> Methods
+        = new(() => new ConcurrentDictionary<string, MethodInfo>());
 
-    public StatefulInterceptor(object handle, object impl)
+    readonly TImpl _impl;
+    readonly object _handle;
+
+    public PrependHandleInterceptor(TImpl impl, object handle)
         => (_handle, _impl) = (handle, impl);
 
     public void Intercept(IInvocation invocation)
     {
-        if (!InvokeWithoutInjection(invocation))
-        {
-            InvokeWithInjection(invocation);
-        }
-    }
-
-    bool InvokeWithoutInjection(IInvocation invocation)
-    {
-        var invoked = false;
-
-        var types = invocation.Arguments
+        var argumentTypes = invocation.Arguments
             .Select(arg => arg.GetType())
             .ToArray();
 
-        var method = _impl.GetType()
-            .GetMethod(invocation.Method.Name, BindingFlags.Public | BindingFlags.Instance, types);
+        var key = ToKey(invocation.Method.Name, argumentTypes);
 
-        if (method != null
-            && method.GetCustomAttribute(typeof(DisableHandleInjectionAttribute)) != null)
+        var mapping = Methods.Value;
+
+        if (!mapping.TryGetValue(key, out var method))
         {
-            invocation.ReturnValue = method.Invoke(_impl, invocation.Arguments);
+            var types = new List<Type>
+            {
+                _handle.GetType()
+            };
 
-            invoked = true;
+            types.AddRange(argumentTypes);
+
+            method = typeof(TImpl)
+                         .GetMethod(invocation.Method.Name, BindingFlags.Public | BindingFlags.Instance, types.ToArray())
+                     ?? throw new NotImplementedException();
+
+            Methods.Value[key] = method;
         }
 
-        return invoked;
-    }
-
-    void InvokeWithInjection(IInvocation invocation)
-    {
         var arguments = new List<object>
         {
             _handle
@@ -71,13 +71,9 @@ internal sealed class StatefulInterceptor : IInterceptor
 
         arguments.AddRange(invocation.Arguments);
 
-        var types = arguments
-            .Select(arg => arg.GetType())
-            .ToArray();
-
-        var method = _impl.GetType()
-            .GetMethod(invocation.Method.Name, BindingFlags.Public | BindingFlags.Instance, types);
-
         invocation.ReturnValue = method!.Invoke(_impl, arguments.ToArray());
     }
+
+    static string ToKey(string name, Type[] types)
+        => $"{name}_{string.Join('_', types.Cast<object>())}";
 }

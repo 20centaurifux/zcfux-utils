@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -24,21 +24,28 @@ using zcfux.Data.LinqToDB;
 
 namespace zcfux.Data.Test.LinqToDB;
 
-internal sealed class TestDb
+internal sealed class Stateful
 {
     public void DeleteAll(Handle handle)
         => handle.Db()
             .GetTable<Model>()
             .Delete();
 
-    public Model New(Handle handle, string value)
+    public Model Insert(Handle handle, int id, string value)
     {
-        var model = new Model() { Value = value };
+        var model = new Model
+        {
+            ID = id,
+            Value = value
+        };
 
-        model.ID = Convert.ToInt32(handle.Db().InsertWithIdentity(model));
+        handle.Db().Insert(model);
 
         return model;
     }
+
+    public Model Insert(Handle handle, string value, int id)
+        => Insert(handle, id, value);
 
     public IEnumerable<Model> All(Handle handle)
         => handle.Db().GetTable<Model>();

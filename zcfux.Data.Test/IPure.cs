@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,9 +19,13 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Data.Proxy;
+namespace zcfux.Data.Test;
 
-[AttributeUsage(AttributeTargets.Method)]
-public sealed class DisableHandleInjectionAttribute : Attribute
+public interface IPure
 {
+    public void DeleteAll(object handle);
+
+    public Model New(object handle, string value);
+
+    public IEnumerable<Model> All(object handle);
 }

@@ -38,7 +38,6 @@ public class Engine : zcfux.Data.LinqToDB.Engine
 
         builder.Entity<Model>()
             .HasTableName("Model")
-            .HasIdentity(m => m.ID)
             .HasPrimaryKey(m => m.ID)
             .Property(m => m.Value);
 

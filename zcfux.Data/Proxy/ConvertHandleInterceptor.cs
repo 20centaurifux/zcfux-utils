@@ -25,14 +25,14 @@ using Castle.DynamicProxy;
 
 namespace zcfux.Data.Proxy;
 
-internal sealed class ThreadingInterceptor<TInterface, TImpl> : IInterceptor
+internal sealed class ConvertHandleInterceptor<TInterface, TImpl> : IInterceptor
 {
     static readonly Lazy<ConcurrentDictionary<string, MethodInfo>> Methods
         = new(() => new ConcurrentDictionary<string, MethodInfo>());
 
     readonly object _impl;
 
-    public ThreadingInterceptor()
+    public ConvertHandleInterceptor()
     {
         var impl = Activator.CreateInstance(typeof(TImpl))!;
 
@@ -87,9 +87,10 @@ internal sealed class ThreadingInterceptor<TInterface, TImpl> : IInterceptor
 
     public void Intercept(IInvocation invocation)
     {
-        var method = MapMethod(invocation.Method.Name, invocation.Arguments);
+        var method = MapMethod(invocation.Method.Name, invocation.Arguments)
+                     ?? throw new NotImplementedException();
 
-        var returnValue = method?.Invoke(_impl, invocation.Arguments);
+        var returnValue = method.Invoke(_impl, invocation.Arguments);
 
         invocation.ReturnValue = returnValue;
     }

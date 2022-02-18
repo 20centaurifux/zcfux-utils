@@ -21,11 +21,15 @@
  ***************************************************************************/
 namespace zcfux.Data.Test;
 
-public interface ITestDb
+public interface IStateful
 {
-    public void DeleteAll(object handle);
+    public void DeleteAll();
 
-    public Model New(object handle, string value);
+    public Model Insert(int id, string value);
 
-    public IEnumerable<Model> All(object handle);
+    public Model Insert(string value, int id);
+
+    public IEnumerable<Model> All();
+
+    public void NotImplemented();
 }

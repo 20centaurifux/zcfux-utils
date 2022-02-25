@@ -50,6 +50,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Tracking.Test", "zcfu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Data.LinqToDB", "zcfux.Data.LinqToDB\zcfux.Data.LinqToDB.csproj", "{7AE22E85-C21B-44C1-9EAE-B09488C200F5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Replication", "zcfux.Replication\zcfux.Replication.csproj", "{7955D43B-4780-4955-AF1B-E31C49D3199A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -156,5 +158,9 @@ Global
 		{7AE22E85-C21B-44C1-9EAE-B09488C200F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7AE22E85-C21B-44C1-9EAE-B09488C200F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7AE22E85-C21B-44C1-9EAE-B09488C200F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7955D43B-4780-4955-AF1B-E31C49D3199A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7955D43B-4780-4955-AF1B-E31C49D3199A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7955D43B-4780-4955-AF1B-E31C49D3199A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7955D43B-4780-4955-AF1B-E31C49D3199A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

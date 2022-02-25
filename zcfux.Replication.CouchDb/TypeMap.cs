@@ -19,31 +19,33 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Replication.Generic;
+using System.Collections.Concurrent;
 
-public class Version<T> : IVersion<T>, IVersion
-    where T : IEntity
+namespace zcfux.Replication.CouchDb;
+
+static internal class TypeMap
 {
-    public Version(T entity, string? revision, string side, DateTime modified)
-        => (Entity, Revision, Side, Modified) = (entity, revision, side, modified);
+    static readonly ConcurrentDictionary<string, Type> Types = new ConcurrentDictionary<string, Type>();
 
-    public T Entity { get; }
+    static readonly Lazy<Type[]> AvailableTypes = new(() =>
+    {
+        return AppDomain.CurrentDomain
+            .GetAssemblies()
+            .SelectMany(asm => asm.GetTypes())
+            .ToArray();
+    });
 
-    IEntity IVersion.Entity => Entity;
+    public static Type Get(string fullname)
+    {
+        if (!Types.TryGetValue(fullname, out var type))
+        {
+            type = AvailableTypes
+                .Value
+                .FirstOrDefault(t => t.FullName == fullname);
 
-    public string? Revision { get; }
+            Types[fullname] = type ?? throw new ArgumentException($"Type `{fullname}' not found.");
+        }
 
-    string? IVersion.Revision => Revision;
-
-    public string Side { get; }
-
-    string IVersion.Side => Side;
-
-    public DateTime Modified { get; }
-
-    DateTime IVersion.Modified => Modified;
-
-    public bool IsNew => string.IsNullOrEmpty(Revision);
-
-    bool IVersion.IsNew => IsNew;
+        return type;
+    }
 }

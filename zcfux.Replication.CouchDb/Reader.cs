@@ -19,31 +19,39 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Replication.Generic;
+using MyCouch;
+using Newtonsoft.Json;
+using zcfux.Replication.Generic;
 
-public class Version<T> : IVersion<T>, IVersion
-    where T : IEntity
+namespace zcfux.Replication.CouchDb;
+
+public sealed class Reader : AReader
 {
-    public Version(T entity, string? revision, string side, DateTime modified)
-        => (Entity, Revision, Side, Modified) = (entity, revision, side, modified);
+    readonly string _url;
 
-    public T Entity { get; }
+    public Reader(string side, string url)
+        : base(side)
+        => _url = url;
 
-    IEntity IVersion.Entity => Entity;
+    public override Version<T> Read<T>(Guid guid)
+    {
+        using (var client = NewClient())
+        {
+            var id = guid.ToString("n");
 
-    public string? Revision { get; }
+            var response = client.Documents.GetAsync(id).Result;
 
-    string? IVersion.Revision => Revision;
+            if (!response.IsSuccess)
+            {
+                throw new Exception(response.Reason);
+            }
 
-    public string Side { get; }
+            var doc = JsonConvert.DeserializeObject<Document<T>>(response.Content);
 
-    string IVersion.Side => Side;
+            return new Version<T>(doc!.Entity, response.Rev, doc.Side, doc.Modified);
+        }
+    }
 
-    public DateTime Modified { get; }
-
-    DateTime IVersion.Modified => Modified;
-
-    public bool IsNew => string.IsNullOrEmpty(Revision);
-
-    bool IVersion.IsNew => IsNew;
+    IMyCouchClient NewClient()
+        => new MyCouchClient(_url, Side);
 }

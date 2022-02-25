@@ -19,31 +19,17 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Replication.Generic;
+namespace zcfux.Replication.CouchDb;
 
-public class Version<T> : IVersion<T>, IVersion
-    where T : IEntity
+internal sealed class Document<T>
 {
-    public Version(T entity, string? revision, string side, DateTime modified)
-        => (Entity, Revision, Side, Modified) = (entity, revision, side, modified);
+    public string _id { get; set; }
 
-    public T Entity { get; }
+    public string Kind { get; set; }
 
-    IEntity IVersion.Entity => Entity;
+    public string Side { get; set; }
 
-    public string? Revision { get; }
+    public DateTime Modified { get; set; }
 
-    string? IVersion.Revision => Revision;
-
-    public string Side { get; }
-
-    string IVersion.Side => Side;
-
-    public DateTime Modified { get; }
-
-    DateTime IVersion.Modified => Modified;
-
-    public bool IsNew => string.IsNullOrEmpty(Revision);
-
-    bool IVersion.IsNew => IsNew;
+    public T Entity { get; set; }
 }

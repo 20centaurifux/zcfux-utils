@@ -26,7 +26,7 @@ public interface IVersion<T>
 {
     T Entity { get; }
 
-    string Revision { get; }
+    string? Revision { get; }
 
     string Side { get; }
 

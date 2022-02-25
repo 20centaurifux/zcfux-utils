@@ -23,12 +23,12 @@ namespace zcfux.Replication;
 
 public abstract class AStreamReader
 {
-    public abstract event EventHandler Started;
-    public abstract event EventHandler Stopped;
-    public abstract event EventHandler<VersionEventArgs> Read;
-    public abstract event EventHandler<VersionEventArgs> Deleted;
-    public abstract event EventHandler<VersionEventArgs> Conflict;
-    public abstract event ErrorEventHandler Error;
+    public abstract event EventHandler? Started;
+    public abstract event EventHandler? Stopped;
+    public abstract event EventHandler<VersionEventArgs>? Read;
+    public abstract event EventHandler<VersionEventArgs>? Deleted;
+    public abstract event EventHandler<VersionEventArgs>? Conflict;
+    public abstract event ErrorEventHandler? Error;
 
     public AStreamReader(string side)
         => Side = side;

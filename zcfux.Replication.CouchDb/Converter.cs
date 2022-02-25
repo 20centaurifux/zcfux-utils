@@ -19,31 +19,37 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Replication.Generic;
+using zcfux.Replication.Generic;
 
-public class Version<T> : IVersion<T>, IVersion
-    where T : IEntity
+namespace zcfux.Replication.CouchDb;
+
+internal static class Converter
 {
-    public Version(T entity, string? revision, string side, DateTime modified)
-        => (Entity, Revision, Side, Modified) = (entity, revision, side, modified);
+    public static Document<T> ToDocument<T>(T entity)
+        where T : IEntity
+    {
+        var doc = new Document<T>
+        {
+            _id = entity.Guid.ToString("n"),
+            Kind = entity.GetType().FullName!,
+            Entity = entity
+        };
 
-    public T Entity { get; }
+        return doc;
+    }
 
-    IEntity IVersion.Entity => Entity;
+    public static Document<T> ToDocument<T>(Version<T> version)
+        where T : IEntity
+    {
+        var doc = new Document<T>
+        {
+            _id = version.Entity.Guid.ToString("n"),
+            Kind = version.Entity.GetType().FullName!,
+            Entity = version.Entity,
+            Modified = version.Modified,
+            Side = version.Side
+        };
 
-    public string? Revision { get; }
-
-    string? IVersion.Revision => Revision;
-
-    public string Side { get; }
-
-    string IVersion.Side => Side;
-
-    public DateTime Modified { get; }
-
-    DateTime IVersion.Modified => Modified;
-
-    public bool IsNew => string.IsNullOrEmpty(Revision);
-
-    bool IVersion.IsNew => IsNew;
+        return doc;
+    }
 }

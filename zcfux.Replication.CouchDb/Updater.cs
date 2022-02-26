@@ -35,11 +35,15 @@ internal sealed class Updater<T>
     public Updater(string url, string side)
         => (_url, _side) = (url, side);
 
-    public Version<T> Apply(T update, string revision, string side, DateTime timestamp, IMerge<T> merge)
+    public IVersion<T> Apply(T update,
+        string revision,
+        string side,
+        DateTime timestamp,
+        Func<Version<T>, Version<T>[], Version<T>> merge)
     {
         using (var client = NewClient())
         {
-            Version<T> result;
+            IVersion<T> result;
 
             var latestVersion = LatestVersion(client, update.Guid);
 
@@ -53,7 +57,7 @@ internal sealed class Updater<T>
 
                 if (revision != latestVersion.Revision)
                 {
-                    winner = merge.Merge(latestVersion, new IVersion<T>[] { winner });
+                    winner = merge(latestVersion, new[] { winner });
                 }
 
                 if (winner.IsNew)

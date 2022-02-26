@@ -38,7 +38,7 @@ internal static class Converter
         return doc;
     }
 
-    public static Document<T> ToDocument<T>(Version<T> version)
+    public static Document<T> ToDocument<T>(IVersion<T> version)
         where T : IEntity
     {
         var doc = new Document<T>

@@ -33,6 +33,9 @@ public abstract class AWriter
     public abstract CreateResult<T> TryCreate<T>(T entity, DateTime timestamp)
         where T : IEntity;
 
-    public abstract Version<T> Update<T>(T entity, string revision, DateTime timestamp, IMerge<T> merge)
+    public abstract IVersion<T> Update<T>(T entity, string revision, DateTime timestamp, IMergeAlgorithm mergeAlgorithm)
+        where T : IEntity;
+
+    public abstract IVersion<T> Update<T>(T entity, string revision, DateTime timestamp, IMerge<T> merge)
         where T : IEntity;
 }

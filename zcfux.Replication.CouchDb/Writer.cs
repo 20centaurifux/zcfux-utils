@@ -75,11 +75,32 @@ public sealed class Writer : AWriter
         }
     }
 
-    public override Version<T> Update<T>(T entity, string revision, DateTime timestamp, IMerge<T> merge)
+    public override IVersion<T> Update<T>(T entity, string revision, DateTime timestamp, IMergeAlgorithm mergeAlgorithm)
     {
         var updater = new Updater<T>(_url, Side);
 
-        return updater.Apply(entity, revision, Side, timestamp, merge);
+        return updater.Apply(entity, revision, Side, timestamp, (latestVersion, conflicts) =>
+        {
+            var conflictVersions = conflicts.Cast<IVersion>().ToArray();
+
+            var mergedVersion = mergeAlgorithm.Merge(latestVersion, conflictVersions);
+
+            return new Version<T>(mergedVersion);
+        });
+    }
+
+    public override IVersion<T> Update<T>(T entity, string revision, DateTime timestamp, IMerge<T> merge)
+    {
+        var updater = new Updater<T>(_url, Side);
+
+        return updater.Apply(entity, revision, Side, timestamp, (latestVersion, conflicts) =>
+        {
+            var conflictVersions = conflicts.Cast<IVersion<T>>().ToArray();
+
+            var mergedVersion = merge.IMergeAlgorithm(latestVersion, conflictVersions);
+
+            return new Version<T>(mergedVersion);
+        });
     }
 
     IMyCouchClient NewClient()

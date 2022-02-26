@@ -23,10 +23,10 @@ namespace zcfux.Replication;
 
 public abstract class AResolver
 {
-    public AResolver(MergeRegistry? registry = null)
-        => MergeRegistry = registry ?? new MergeRegistry();
+    public AResolver(MergeAlgorithms? algorithms = null)
+        => Algorithms = algorithms ?? new MergeAlgorithms();
 
-    public MergeRegistry MergeRegistry { get; }
+    public MergeAlgorithms Algorithms { get; }
 
     public abstract IVersion Resolve(IVersion version);
 }

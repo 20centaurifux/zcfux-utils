@@ -19,9 +19,18 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Replication;
+namespace zcfux.Replication.Merge;
 
-public interface IMerge
+public sealed class LastWriteWins : IMergeAlgorithm
 {
-    IVersion Merge(IVersion version, IVersion[] conflicts);
+    IVersion IMergeAlgorithm.Merge(IVersion version, IVersion[] conflicts)
+    {
+        var latest = conflicts
+            .OrderByDescending(c => c.Modified)
+            .First();
+
+        return (version.Modified >= latest.Modified)
+            ? version
+            : latest;
+    }
 }

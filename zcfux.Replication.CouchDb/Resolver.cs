@@ -108,7 +108,7 @@ public sealed class Resolver : AResolver
     {
         var type = version.Entity.GetType();
 
-        var merge = MergeRegistry.Get(type);
+        var merge = Algorithms.GetGeneric(type);
 
         return merge.Merge(version, conflicts);
     }

@@ -23,43 +23,70 @@ using zcfux.Replication.Generic;
 
 namespace zcfux.Replication;
 
-public sealed class MergeRegistry
+public sealed class MergeAlgorithms
 {
-    readonly Dictionary<Type, object> _m = new Dictionary<Type, object>();
+    readonly Dictionary<Type, object> _m = new();
     bool _built = false;
 
     public void Register<T>(IMerge<T> merge)
         where T : IEntity
     {
-        if (_built)
-        {
-            throw new InvalidOperationException("Registry has been built.");
-        }
+        ThrowIfBuilt();
 
         _m[typeof(T)] = merge;
     }
 
-    public void Build()
-        => _built = true;
-
-    public IMerge<T> Get<T>()
+    public void Register<T>(IMergeAlgorithm mergeAlgorithm)
         where T : IEntity
     {
-        if (!_built)
-        {
-            throw new InvalidOperationException("Registry has not been built.");
-        }
+        ThrowIfBuilt();
 
-        return (_m[typeof(T)] as IMerge<T>)!;
+        _m[typeof(T)] = mergeAlgorithm;
     }
 
-    public IMerge Get(Type type)
+    public void Build()
+    {
+        ThrowIfBuilt();
+
+        _built = true;
+    }
+
+    void ThrowIfBuilt()
+    {
+        if (_built)
+        {
+            throw new InvalidOperationException("Registry has been built.");
+        }
+    }
+
+    public IMerge<T> GetNonGeneric<T>()
+        where T : IEntity
+    {
+        ThrowIfNotBuilt();
+
+        return (_m[typeof(T)] is IMerge<T> algorithm)
+            ? algorithm
+            : throw new ArgumentException($"Algorithm for type `{typeof(T)}' not found.");
+    }
+
+    public IMergeAlgorithm GetGeneric<T>()
+        where T : IEntity
+        => GetGeneric(typeof(T));
+
+    public IMergeAlgorithm GetGeneric(Type type)
+    {
+        ThrowIfNotBuilt();
+
+        return (_m[type] is IMergeAlgorithm algorithm)
+            ? algorithm
+            : throw new ArgumentException($"Algorithm for type `{type}' not found.");
+    }
+
+    void ThrowIfNotBuilt()
     {
         if (!_built)
         {
             throw new InvalidOperationException("Registry has not been built.");
         }
-
-        return (_m[type] as IMerge)!;
     }
 }

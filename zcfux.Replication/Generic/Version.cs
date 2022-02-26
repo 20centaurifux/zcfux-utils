@@ -27,6 +27,12 @@ public class Version<T> : IVersion<T>, IVersion
     public Version(T entity, string? revision, string side, DateTime modified)
         => (Entity, Revision, Side, Modified) = (entity, revision, side, modified);
 
+    public Version(IVersion<T> other)
+        => (Entity, Revision, Side, Modified) = (other.Entity, other.Revision, other.Side, other.Modified);
+
+    public Version(IVersion other)
+        => (Entity, Revision, Side, Modified) = ((T)other.Entity, other.Revision, other.Side, other.Modified);
+
     public T Entity { get; }
 
     IEntity IVersion.Entity => Entity;

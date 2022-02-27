@@ -54,6 +54,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Replication", "zcfux.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Replication.CouchDb", "zcfux.Replication.CouchDb\zcfux.Replication.CouchDb.csproj", "{3D1EA864-6CB9-4509-8AE0-A27596C8EE14}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Replication.Test", "zcfux.Replication.Test\zcfux.Replication.Test.csproj", "{1A030185-AFA5-4A33-95B6-9171B11B1F6F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -168,5 +170,9 @@ Global
 		{3D1EA864-6CB9-4509-8AE0-A27596C8EE14}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3D1EA864-6CB9-4509-8AE0-A27596C8EE14}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3D1EA864-6CB9-4509-8AE0-A27596C8EE14}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A030185-AFA5-4A33-95B6-9171B11B1F6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A030185-AFA5-4A33-95B6-9171B11B1F6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A030185-AFA5-4A33-95B6-9171B11B1F6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A030185-AFA5-4A33-95B6-9171B11B1F6F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

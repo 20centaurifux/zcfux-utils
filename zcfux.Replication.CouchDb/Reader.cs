@@ -19,7 +19,6 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using MyCouch;
 using Newtonsoft.Json;
 using zcfux.Replication.Generic;
 
@@ -35,7 +34,7 @@ public sealed class Reader : AReader
 
     public override Version<T> Read<T>(Guid guid)
     {
-        using (var client = NewClient())
+        using (var client = Pool.Clients.TakeOrCreate(new Uri($"{_url}{Side}")))
         {
             var id = guid.ToString("n");
 
@@ -51,7 +50,4 @@ public sealed class Reader : AReader
             return new Version<T>(doc!.Entity, response.Rev, doc.Side, doc.Modified);
         }
     }
-
-    IMyCouchClient NewClient()
-        => new MyCouchClient(_url, Side);
 }

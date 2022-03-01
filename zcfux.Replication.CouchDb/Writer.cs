@@ -19,8 +19,8 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using MyCouch;
 using Newtonsoft.Json;
+using System.Diagnostics;
 using System.Net;
 using zcfux.Replication.Generic;
 
@@ -36,7 +36,7 @@ public sealed class Writer : AWriter
 
     public override CreateResult<T> TryCreate<T>(T entity, DateTime timestamp)
     {
-        using (var client = NewClient())
+        using (var client = Pool.Clients.TakeOrCreate(new Uri($"{_url}{Side}")))
         {
             var id = entity.Guid.ToString("n");
 
@@ -46,6 +46,8 @@ public sealed class Writer : AWriter
             doc.Modified = timestamp;
 
             var json = JsonConvert.SerializeObject(doc);
+
+            var watch = Stopwatch.StartNew();
 
             var putResponse = client.Documents.PutAsync(doc._id, json).Result;
 
@@ -102,7 +104,4 @@ public sealed class Writer : AWriter
             return new Version<T>(mergedVersion);
         });
     }
-
-    IMyCouchClient NewClient()
-        => new MyCouchClient(_url, Side);
 }

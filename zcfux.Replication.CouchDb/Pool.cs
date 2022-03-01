@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,32 +19,33 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using zcfux.Replication.CouchDb;
+using zcfux.Pool;
 
-namespace zcfux.Replication.Test.CouchDb;
+namespace zcfux.Replication.CouchDb;
 
-public sealed class WriterTests : AWriterTests
+internal static class Pool
 {
-    protected override void CreateDb()
+    static readonly Lazy<Pool<CouchClientResource>> CouchClientPool = new(() =>
     {
-        var url = UrlBuilder.BuildServerUrl();
+        var builder = new PoolBuilder<CouchClientResource>();
 
-        using (var client = zcfux.Replication.CouchDb.Pool.ServerClients.TakeOrCreate(new Uri(url)))
-        {
-            client.Databases.PutAsync("a").Wait();
-        }
-    }
+        return builder
+            .WithFactory(uri => new CouchClientResource(uri))
+            .Build();
+    });
 
-    protected override void DropDb()
+    public static Pool<CouchClientResource> Clients
+        => CouchClientPool.Value;
+
+    static readonly Lazy<Pool<ServerClientResource>> CouchServerClientPool = new(() =>
     {
-        var url = UrlBuilder.BuildServerUrl();
+        var builder = new PoolBuilder<ServerClientResource>();
 
-        using (var client = zcfux.Replication.CouchDb.Pool.ServerClients.TakeOrCreate(new Uri(url)))
-        {
-            client.Databases.DeleteAsync("a").Wait();
-        }
-    }
+        return builder
+            .WithFactory(uri => new ServerClientResource(uri))
+            .Build();
+    });
 
-    protected override AWriter CreateWriter(string side)
-        => new Writer(side, UrlBuilder.BuildServerUrl());
+    public static Pool<ServerClientResource> ServerClients
+        => CouchServerClientPool.Value;
 }

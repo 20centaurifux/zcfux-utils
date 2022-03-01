@@ -19,7 +19,6 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using MyCouch;
 using zcfux.Replication.CouchDb;
 
 namespace zcfux.Replication.Test.CouchDb;
@@ -30,7 +29,7 @@ public sealed class ReaderTests : AReaderTests
     {
         var url = UrlBuilder.BuildServerUrl();
 
-        using (var client = new MyCouchServerClient(url))
+        using (var client = zcfux.Replication.CouchDb.Pool.ServerClients.TakeOrCreate(new Uri(url)))
         {
             client.Databases.PutAsync("a").Wait();
         }
@@ -40,7 +39,7 @@ public sealed class ReaderTests : AReaderTests
     {
         var url = UrlBuilder.BuildServerUrl();
 
-        using (var client = new MyCouchServerClient(url))
+        using (var client = zcfux.Replication.CouchDb.Pool.ServerClients.TakeOrCreate(new Uri(url)))
         {
             client.Databases.DeleteAsync("a").Wait();
         }

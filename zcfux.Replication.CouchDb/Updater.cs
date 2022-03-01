@@ -41,7 +41,7 @@ internal sealed class Updater<T>
         DateTime timestamp,
         Func<Version<T>, Version<T>[], Version<T>> merge)
     {
-        using (var client = NewClient())
+        using (var client = Pool.Clients.TakeOrCreate(new Uri($"{_url}{_side}")))
         {
             IVersion<T> result;
 
@@ -106,7 +106,4 @@ internal sealed class Updater<T>
 
         return new Version<T>(doc!.Entity, response.Rev, doc.Side, doc.Modified);
     }
-
-    IMyCouchClient NewClient()
-        => new MyCouchClient(_url, _side);
 }

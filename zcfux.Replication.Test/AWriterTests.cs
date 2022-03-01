@@ -27,9 +27,7 @@ namespace zcfux.Replication.Test
     {
         [SetUp]
         public void Setup()
-        {
-            CreateDb();
-        }
+            => CreateDb();
 
         [TearDown]
         public void TearDown()

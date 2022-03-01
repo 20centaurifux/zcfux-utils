@@ -20,7 +20,6 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using NUnit.Framework;
-using zcfux.Replication.CouchDb;
 using zcfux.Replication.Merge;
 
 namespace zcfux.Replication.Test
@@ -29,9 +28,7 @@ namespace zcfux.Replication.Test
     {
         [SetUp]
         public void Setup()
-        {
-            CreateDb();
-        }
+            => CreateDb();
 
         [TearDown]
         public void TearDown()

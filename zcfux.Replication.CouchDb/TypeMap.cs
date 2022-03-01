@@ -23,7 +23,7 @@ using System.Collections.Concurrent;
 
 namespace zcfux.Replication.CouchDb;
 
-static internal class TypeMap
+internal static class TypeMap
 {
     static readonly ConcurrentDictionary<string, Type> Types = new ConcurrentDictionary<string, Type>();
 

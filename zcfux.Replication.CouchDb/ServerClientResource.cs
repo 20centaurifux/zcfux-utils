@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,32 +19,32 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using zcfux.Replication.CouchDb;
+using MyCouch;
+using MyCouch.Serialization;
+using zcfux.Pool;
 
-namespace zcfux.Replication.Test.CouchDb;
+namespace zcfux.Replication.CouchDb;
 
-public sealed class WriterTests : AWriterTests
+internal sealed class ServerClientResource : AResource, IMyCouchServerClient
 {
-    protected override void CreateDb()
-    {
-        var url = UrlBuilder.BuildServerUrl();
+    readonly MyCouchServerClient _client;
 
-        using (var client = zcfux.Replication.CouchDb.Pool.ServerClients.TakeOrCreate(new Uri(url)))
-        {
-            client.Databases.PutAsync("a").Wait();
-        }
-    }
+    public ServerClientResource(Uri uri)
+        : base(uri)
+        => _client = new MyCouchServerClient(uri);
 
-    protected override void DropDb()
-    {
-        var url = UrlBuilder.BuildServerUrl();
+    public override void Free()
+        => _client.Dispose();
 
-        using (var client = zcfux.Replication.CouchDb.Pool.ServerClients.TakeOrCreate(new Uri(url)))
-        {
-            client.Databases.DeleteAsync("a").Wait();
-        }
-    }
+    public IServerConnection Connection
+        => _client.Connection;
 
-    protected override AWriter CreateWriter(string side)
-        => new Writer(side, UrlBuilder.BuildServerUrl());
+    public ISerializer Serializer
+        => _client.Serializer;
+
+    public IDatabases Databases
+        => _client.Databases;
+
+    public IReplicator Replicator
+        => _client.Replicator;
 }

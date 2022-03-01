@@ -9,6 +9,7 @@
     <ItemGroup>
       <ProjectReference Include="..\zcfux.Replication.CouchDb\zcfux.Replication.CouchDb.csproj" />
       <ProjectReference Include="..\zcfux.Replication\zcfux.Replication.csproj" />
+      <ProjectReference Include="..\zcfux.Pool\zcfux.Pool.csproj" />
     </ItemGroup>
 
     <ItemGroup>

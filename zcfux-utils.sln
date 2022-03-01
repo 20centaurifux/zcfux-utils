@@ -56,6 +56,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Replication.CouchDb",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Replication.Test", "zcfux.Replication.Test\zcfux.Replication.Test.csproj", "{1A030185-AFA5-4A33-95B6-9171B11B1F6F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Pool", "zcfux.Pool\zcfux.Pool.csproj", "{42460827-2E6D-442C-89EA-364F21865407}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Pool.Test", "zcfux.Pool.Test\zcfux.Pool.Test.csproj", "{D1C1F5E8-8A3B-48CC-82DF-526DCCF476C5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -174,5 +178,13 @@ Global
 		{1A030185-AFA5-4A33-95B6-9171B11B1F6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A030185-AFA5-4A33-95B6-9171B11B1F6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A030185-AFA5-4A33-95B6-9171B11B1F6F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{42460827-2E6D-442C-89EA-364F21865407}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42460827-2E6D-442C-89EA-364F21865407}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42460827-2E6D-442C-89EA-364F21865407}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42460827-2E6D-442C-89EA-364F21865407}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1C1F5E8-8A3B-48CC-82DF-526DCCF476C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1C1F5E8-8A3B-48CC-82DF-526DCCF476C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1C1F5E8-8A3B-48CC-82DF-526DCCF476C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1C1F5E8-8A3B-48CC-82DF-526DCCF476C5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

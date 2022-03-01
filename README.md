@@ -35,6 +35,9 @@ This is a collection of various utilities and abstractions I use in .NET project
 ## Logging.NLog
 * NLog provider for zcfux.Logging.
 
+## Pool
+* Resource pool building.
+
 ## Security
 * Password generator.
 * Message signing.

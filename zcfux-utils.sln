@@ -52,6 +52,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Data.LinqToDB", "zcfu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Pool", "zcfux.Pool\zcfux.Pool.csproj", "{44069A65-2E14-4290-BB2E-302BF7020704}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Pool.Test", "zcfux.Pool.Test\zcfux.Pool.Test.csproj", "{F82C8D58-2D2C-4BF1-87AE-570A7665E040}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -162,5 +164,9 @@ Global
 		{44069A65-2E14-4290-BB2E-302BF7020704}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{44069A65-2E14-4290-BB2E-302BF7020704}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{44069A65-2E14-4290-BB2E-302BF7020704}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F82C8D58-2D2C-4BF1-87AE-570A7665E040}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F82C8D58-2D2C-4BF1-87AE-570A7665E040}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F82C8D58-2D2C-4BF1-87AE-570A7665E040}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F82C8D58-2D2C-4BF1-87AE-570A7665E040}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

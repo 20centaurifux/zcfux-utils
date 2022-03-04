@@ -31,7 +31,7 @@ public sealed class ReaderTests : AReaderTests
 
         using (var client = zcfux.Replication.CouchDb.Pool.ServerClients.TakeOrCreate(new Uri(url)))
         {
-            client.Databases.PutAsync("a").Wait();
+            client.Databases.PutAsync(Side).Wait();
         }
     }
 
@@ -41,13 +41,13 @@ public sealed class ReaderTests : AReaderTests
 
         using (var client = zcfux.Replication.CouchDb.Pool.ServerClients.TakeOrCreate(new Uri(url)))
         {
-            client.Databases.DeleteAsync("a").Wait();
+            client.Databases.DeleteAsync(Side).Wait();
         }
     }
 
-    protected override AReader CreateReader(string side)
-        => new Reader(side, UrlBuilder.BuildServerUrl());
+    protected override AReader CreateReader()
+        => new Reader(Side, UrlBuilder.BuildServerUrl());
 
-    protected override AWriter CreateWriter(string side)
-        => new Writer(side, UrlBuilder.BuildServerUrl());
+    protected override AWriter CreateWriter()
+        => new Writer(Side, UrlBuilder.BuildServerUrl());
 }

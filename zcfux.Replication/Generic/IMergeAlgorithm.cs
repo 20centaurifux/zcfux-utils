@@ -19,20 +19,10 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using zcfux.Replication.Generic;
+namespace zcfux.Replication.Generic;
 
-namespace zcfux.Replication.Test;
-
-internal sealed class MergeModels : IMerge<Model>
+public interface IMergeAlgorithm<T>
+    where T : IEntity
 {
-    public IVersion<Model> IMergeAlgorithm(IVersion<Model> version, IVersion<Model>[] conflicts)
-    {
-        var latest = conflicts
-            .OrderByDescending(c => c.Modified)
-            .First();
-
-        return (version.Modified >= latest.Modified)
-            ? version
-            : latest;
-    }
+    IVersion<T> Merge(IVersion<T> version, IVersion<T>[] conflicts);
 }

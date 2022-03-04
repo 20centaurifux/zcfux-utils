@@ -26,6 +26,8 @@ namespace zcfux.Replication.Test
 {
     public abstract class AReaderTests
     {
+        protected const string Side = "a";
+
         [SetUp]
         public void Setup()
             => CreateDb();
@@ -39,18 +41,18 @@ namespace zcfux.Replication.Test
         protected abstract void DropDb();
 
         [Test]
-        public void CreateReader()
+        public void CreateNewReader()
         {
-            var reader = CreateReader("a");
+            var reader = CreateReader();
 
             Assert.IsInstanceOf<AReader>(reader);
-            Assert.AreEqual("a", reader.Side);
+            Assert.AreEqual(Side, reader.Side);
         }
 
         [Test]
         public void ReadNonExistingEntity()
         {
-            var reader = CreateReader("a");
+            var reader = CreateReader();
 
             Assert.That(() => reader.Read<Model>(Guid.NewGuid()), Throws.Exception);
         }
@@ -64,9 +66,11 @@ namespace zcfux.Replication.Test
                 Text = TestContext.CurrentContext.Random.GetString()
             };
 
-            var writer = CreateWriter("a");
+            var writer = CreateWriter();
 
-            var a = writer.TryCreate(model, DateTime.UtcNow).Version;
+            var result = writer.TryCreate(model, DateTime.UtcNow, out var a);
+
+            Assert.AreEqual(ECreateResult.Success, result);
 
             model = new Model
             {
@@ -74,9 +78,9 @@ namespace zcfux.Replication.Test
                 Text = TestContext.CurrentContext.Random.GetString()
             };
 
-            var b = writer.Update(model, a.Revision!, DateTime.UtcNow, new LastWriteWins());
+            var b = writer.Update(model, a!.Revision!, DateTime.UtcNow, new LastWriteWins());
 
-            var reader = CreateReader("a");
+            var reader = CreateReader();
 
             var c = reader.Read<Model>(model.Guid);
 
@@ -93,8 +97,8 @@ namespace zcfux.Replication.Test
             Assert.AreEqual(b.Side, c.Side);
         }
 
-        protected abstract AReader CreateReader(string side);
+        protected abstract AReader CreateReader();
 
-        protected abstract AWriter CreateWriter(string side);
+        protected abstract AWriter CreateWriter();
     }
 }

@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -23,31 +23,42 @@ using zcfux.Replication.CouchDb;
 
 namespace zcfux.Replication.Test.CouchDb;
 
-public sealed class WriterTests : AWriterTests
+public sealed class ResolverTests : AResolverTests
 {
-    protected override void CreateDb()
+    protected override void CreateDbs()
     {
         var url = UrlBuilder.BuildServerUrl();
 
         using (var client = zcfux.Replication.CouchDb.Pool.ServerClients.TakeOrCreate(new Uri(url)))
         {
-            client.Databases.PutAsync(Side).Wait();
+            client.Databases.PutAsync(Alice).Wait();
+            client.Databases.PutAsync(Bob).Wait();
         }
     }
 
-    protected override void DropDb()
+    protected override void DropDbs()
     {
         var url = UrlBuilder.BuildServerUrl();
 
         using (var client = zcfux.Replication.CouchDb.Pool.ServerClients.TakeOrCreate(new Uri(url)))
         {
-            client.Databases.DeleteAsync(Side).Wait();
+            client.Databases.DeleteAsync(Alice).Wait();
+            client.Databases.DeleteAsync(Bob).Wait();
         }
     }
 
-    protected override AWriter CreateWriter()
-        => new Writer(Side, UrlBuilder.BuildServerUrl());
+    protected override AWriter CreateWriter(string side)
+        => new Writer(side, UrlBuilder.BuildServerUrl());
 
-    protected override AReader CreateReader()
-        => new Reader(Side, UrlBuilder.BuildServerUrl());
+    protected override AReader CreateReader(string side)
+        => new Reader(side, UrlBuilder.BuildServerUrl());
+
+    protected override AStreamReader CreateStreamReader(string side)
+        => new global::zcfux.Replication.CouchDb.StreamReader(side, UrlBuilder.BuildServerUrl());
+
+    protected override AResolver CreateResolver(string side)
+        => new Resolver(side, UrlBuilder.BuildServerUrl());
+
+    protected override void Push(string from, string to)
+        => Replication.Push(from, to);
 }

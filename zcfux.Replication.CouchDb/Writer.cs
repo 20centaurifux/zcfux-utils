@@ -19,8 +19,8 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using MyCouch.Requests;
 using Newtonsoft.Json;
-using System.Diagnostics;
 using System.Net;
 using zcfux.Replication.Generic;
 
@@ -34,8 +34,10 @@ public sealed class Writer : AWriter
         : base(side)
         => _url = url;
 
-    public override CreateResult<T> TryCreate<T>(T entity, DateTime timestamp)
+    public override ECreateResult TryCreate<T>(T entity, DateTime timestamp, out IVersion<T>? version)
     {
+        version = null;
+
         using (var client = Pool.Clients.TakeOrCreate(new Uri($"{_url}{Side}")))
         {
             var id = entity.Guid.ToString("n");
@@ -47,17 +49,13 @@ public sealed class Writer : AWriter
 
             var json = JsonConvert.SerializeObject(doc);
 
-            var watch = Stopwatch.StartNew();
+            var result = ECreateResult.Success;
 
             var putResponse = client.Documents.PutAsync(doc._id, json).Result;
 
-            CreateResult<T>? result = null;
-
             if (putResponse.IsSuccess)
             {
-                var version = new Version<T>(entity, putResponse.Rev, Side, timestamp);
-
-                result = CreateResult<T>.Created(version);
+                version = new Version<T>(entity, putResponse.Rev, Side, timestamp);
             }
             else if (putResponse.StatusCode == HttpStatusCode.Conflict)
             {
@@ -67,13 +65,21 @@ public sealed class Writer : AWriter
                 {
                     doc = JsonConvert.DeserializeObject<Document<T>>(getResponse.Content);
 
-                    var version = new Version<T>(doc!.Entity, getResponse.Rev, doc.Side, doc.Modified);
+                    version = new Version<T>(doc!.Entity, getResponse.Rev, doc.Side, doc.Modified);
 
-                    result = CreateResult<T>.Conflict(version);
+                    result = ECreateResult.Conflict;
+                }
+                else
+                {
+                    throw new Exception(getResponse.Reason);
                 }
             }
+            else
+            {
+                throw new Exception(putResponse.Reason);
+            }
 
-            return result ?? throw new Exception(putResponse.Reason);
+            return result;
         }
     }
 
@@ -91,7 +97,7 @@ public sealed class Writer : AWriter
         });
     }
 
-    public override IVersion<T> Update<T>(T entity, string revision, DateTime timestamp, IMerge<T> merge)
+    public override IVersion<T> Update<T>(T entity, string revision, DateTime timestamp, IMergeAlgorithm<T> mergeAlgorithm)
     {
         var updater = new Updater<T>(_url, Side);
 
@@ -99,9 +105,47 @@ public sealed class Writer : AWriter
         {
             var conflictVersions = conflicts.Cast<IVersion<T>>().ToArray();
 
-            var mergedVersion = merge.IMergeAlgorithm(latestVersion, conflictVersions);
+            var mergedVersion = mergeAlgorithm.Merge(latestVersion, conflictVersions);
 
             return new Version<T>(mergedVersion);
         });
+    }
+
+    public override void Delete(Guid guid)
+    {
+        using (var client = Pool.Clients.TakeOrCreate(new Uri($"{_url}{Side}")))
+        {
+            var id = guid.ToString("n");
+
+            var getRequest = new GetDocumentRequest(id)
+            {
+                Revisions = true
+            };
+
+            var deleted = false;
+
+            while (!deleted)
+            {
+                var getResponse = client.Documents.GetAsync(getRequest).Result;
+
+                if (getResponse.IsSuccess)
+                {
+                    var deleteResponse = client.Documents.DeleteAsync(id, getResponse.Rev).Result;
+
+                    if (!deleteResponse.IsSuccess)
+                    {
+                        throw new Exception(deleteResponse.Reason);
+                    }
+                }
+                else if (getResponse.StatusCode == HttpStatusCode.NotFound)
+                {
+                    deleted = true;
+                }
+                else
+                {
+                    throw new Exception(getResponse.Reason);
+                }
+            }
+        }
     }
 }

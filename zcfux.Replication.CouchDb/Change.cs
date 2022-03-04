@@ -21,6 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Replication.CouchDb;
 
+#pragma warning disable CS8618
 internal sealed class Change
 {
     public string Seq { get; set; }
@@ -31,3 +32,4 @@ internal sealed class Change
 
     public Dictionary<string, object>[] Changes { get; set; }
 }
+#pragma warning restore CS8618

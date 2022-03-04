@@ -30,12 +30,14 @@ public abstract class AWriter
 
     public string Side { get; }
 
-    public abstract CreateResult<T> TryCreate<T>(T entity, DateTime timestamp)
+    public abstract ECreateResult TryCreate<T>(T entity, DateTime timestamp, out IVersion<T>? version)
         where T : IEntity;
 
     public abstract IVersion<T> Update<T>(T entity, string revision, DateTime timestamp, IMergeAlgorithm mergeAlgorithm)
         where T : IEntity;
 
-    public abstract IVersion<T> Update<T>(T entity, string revision, DateTime timestamp, IMerge<T> merge)
+    public abstract IVersion<T> Update<T>(T entity, string revision, DateTime timestamp, IMergeAlgorithm<T> mergeAlgorithm)
         where T : IEntity;
+
+    public abstract void Delete(Guid guid);
 }

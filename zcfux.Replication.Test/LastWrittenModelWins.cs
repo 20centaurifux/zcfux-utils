@@ -19,23 +19,20 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Replication;
+using zcfux.Replication.Generic;
 
-public abstract class AStreamReader
+namespace zcfux.Replication.Test;
+
+internal sealed class LastWrittenModelWins : IMergeAlgorithm<Model>
 {
-    public abstract event EventHandler? Started;
-    public abstract event EventHandler? Stopped;
-    public abstract event EventHandler<VersionEventArgs>? Read;
-    public abstract event EventHandler<DeletedEventArgs>? Deleted;
-    public abstract event EventHandler<VersionEventArgs>? Conflict;
-    public abstract event ErrorEventHandler? Error;
+    public IVersion<Model> Merge(IVersion<Model> version, IVersion<Model>[] conflicts)
+    {
+        var latest = conflicts
+            .OrderByDescending(c => c.Modified)
+            .First();
 
-    public AStreamReader(string side)
-        => Side = side;
-
-    public string Side { get; }
-
-    public abstract void Start();
-
-    public abstract void Stop();
+        return (version.Modified >= latest.Modified)
+            ? version
+            : latest;
+    }
 }

@@ -31,10 +31,10 @@ namespace zcfux.Replication.CouchDb;
 public sealed class Resolver : AResolver
 {
     readonly string _url;
-    readonly string _side;
 
     public Resolver(string side, string url)
-        => (_side, _url) = (side, url);
+        : base(side)
+        => _url = url;
 
     public override IVersion Resolve(IVersion version)
     {
@@ -65,7 +65,7 @@ public sealed class Resolver : AResolver
 
         if (conflicts.Any())
         {
-            mergedVersion = Merge(client, version, conflicts);
+            mergedVersion = Algorithms.Merge(version, conflicts);
 
             var revisions = new List<IVersion>
             {
@@ -103,16 +103,7 @@ public sealed class Resolver : AResolver
             }
         }
     }
-
-    IVersion Merge(IMyCouchClient client, IVersion version, IVersion[] conflicts)
-    {
-        var type = version.Entity.GetType();
-
-        var merge = Algorithms.GetGeneric(type);
-
-        return merge.Merge(version, conflicts);
-    }
-
+    
     DocumentResponse ReceiveDocumentWithConflicts(IMyCouchClient client, string id)
     {
         var req = new GetDocumentRequest(id)
@@ -194,5 +185,5 @@ public sealed class Resolver : AResolver
     }
 
     IMyCouchClient NewClient()
-        => new MyCouchClient(_url, _side);
+        => new MyCouchClient(_url, Side);
 }

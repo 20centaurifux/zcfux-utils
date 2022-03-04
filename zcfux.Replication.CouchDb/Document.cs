@@ -21,6 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Replication.CouchDb;
 
+#pragma warning disable CS8618
 internal sealed class Document<T>
 {
     public string _id { get; set; }
@@ -33,3 +34,4 @@ internal sealed class Document<T>
 
     public T Entity { get; set; }
 }
+#pragma warning restore CS8618

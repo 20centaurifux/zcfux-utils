@@ -19,10 +19,10 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Replication.Generic;
+namespace zcfux.Replication;
 
-public interface IMerge<T>
-    where T : IEntity
+public enum ECreateResult
 {
-    IVersion<T> IMergeAlgorithm(IVersion<T> version, IVersion<T>[] conflicts);
+    Success,
+    Conflict
 }

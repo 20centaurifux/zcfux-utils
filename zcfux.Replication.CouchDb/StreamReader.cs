@@ -33,7 +33,7 @@ public sealed class StreamReader : AStreamReader
     public override event EventHandler? Started;
     public override event EventHandler? Stopped;
     public override event EventHandler<VersionEventArgs>? Read;
-    public override event EventHandler<VersionEventArgs>? Deleted;
+    public override event EventHandler<DeletedEventArgs>? Deleted;
     public override event EventHandler<VersionEventArgs>? Conflict;
     public override event ErrorEventHandler? Error;
 
@@ -59,11 +59,12 @@ public sealed class StreamReader : AStreamReader
         {
             try
             {
-                _client = NewClient();
+                _client = Pool.Clients.TakeOrCreate(new Uri($"{_url}{Side}"));
 
                 var req = new GetChangesRequest
                 {
-                    Feed = ChangesFeed.Continuous
+                    Feed = ChangesFeed.Continuous,
+                    Heartbeat = 15000
                 };
 
                 _source = new CancellationTokenSource();
@@ -100,6 +101,8 @@ public sealed class StreamReader : AStreamReader
     {
         if (Interlocked.CompareExchange(ref _state, Stopping, Running) == Running)
         {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+
             try
             {
                 _source?.Cancel();
@@ -118,6 +121,8 @@ public sealed class StreamReader : AStreamReader
                 // ...in its right place
             }
 
+            _client?.Dispose();
+
             Interlocked.Exchange(ref _state, Idle);
 
             Stopped?.Invoke(this, EventArgs.Empty);
@@ -128,27 +133,34 @@ public sealed class StreamReader : AStreamReader
     {
         if (ev != null)
         {
-            var response = ReceiveDocument(ev);
-
-            var doc = JsonConvert.DeserializeObject<Document<JObject>>(response.Content);
-
-            var version = BuildVersion(doc!, response.Rev);
-
-            if (version != null)
+            if (ev.Deleted)
             {
-                var args = new VersionEventArgs(version);
+                var guid = Guid.Parse(ev.Id);
 
-                if (ev.Deleted)
+                var args = new DeletedEventArgs(guid);
+
+                Deleted?.Invoke(this, args);
+            }
+            else
+            {
+                var response = ReceiveDocument(ev);
+
+                var doc = JsonConvert.DeserializeObject<Document<JObject>>(response.Content);
+
+                var version = BuildVersion(doc!, response.Rev);
+
+                if (version != null)
                 {
-                    Deleted?.Invoke(this, args);
-                }
-                else if (response.Conflicts == null || response.Conflicts.Length == 0)
-                {
-                    Read?.Invoke(this, args);
-                }
-                else
-                {
-                    Conflict?.Invoke(this, args);
+                    var args = new VersionEventArgs(version);
+
+                    if (response.Conflicts == null || response.Conflicts.Length == 0)
+                    {
+                        Read?.Invoke(this, args);
+                    }
+                    else
+                    {
+                        Conflict?.Invoke(this, args);
+                    }
                 }
             }
         }
@@ -160,22 +172,19 @@ public sealed class StreamReader : AStreamReader
             ? ev.Changes[0]["rev"].ToString()
             : null;
 
-        using (var client = NewClient())
+        var req = new GetDocumentRequest(ev.Id, rev)
         {
-            var req = new GetDocumentRequest(ev.Id, rev)
-            {
-                Conflicts = true
-            };
+            Conflicts = true
+        };
 
-            var response = client.Documents.GetAsync(req).Result;
+        var response = _client!.Documents.GetAsync(req).Result;
 
-            if (!response.IsSuccess)
-            {
-                throw new Exception(response.Reason);
-            }
-
-            return response;
+        if (!response.IsSuccess)
+        {
+            throw new Exception(response.Reason);
         }
+
+        return response;
     }
 
     IVersion? BuildVersion(Document<JObject> doc, string revision)
@@ -193,7 +202,4 @@ public sealed class StreamReader : AStreamReader
 
         return version;
     }
-
-    IMyCouchClient NewClient()
-        => new MyCouchClient(_url, Side);
 }

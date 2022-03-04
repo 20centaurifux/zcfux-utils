@@ -25,6 +25,8 @@ namespace zcfux.Replication.Test
 {
     public abstract class AWriterTests
     {
+        protected const string Side = "a";
+
         [SetUp]
         public void Setup()
             => CreateDb();
@@ -38,12 +40,12 @@ namespace zcfux.Replication.Test
         protected abstract void DropDb();
 
         [Test]
-        public void CreateWriter()
+        public void CreateNewWriter()
         {
-            var writer = CreateWriter("a");
+            var writer = CreateWriter();
 
             Assert.IsInstanceOf<AWriter>(writer);
-            Assert.AreEqual("a", writer.Side);
+            Assert.AreEqual(Side, writer.Side);
         }
 
         [Test]
@@ -55,19 +57,21 @@ namespace zcfux.Replication.Test
                 Text = TestContext.CurrentContext.Random.GetString()
             };
 
-            var writer = CreateWriter("a");
+            var writer = CreateWriter();
 
             var timestamp = DateTime.UtcNow;
 
-            var result = writer.TryCreate(model, timestamp);
+            var result = writer.TryCreate(model, timestamp, out var version);
 
-            Assert.IsFalse(result.IsConflict);
-            Assert.AreEqual(model.Guid, result.Version.Entity.Guid);
-            Assert.AreEqual(model.Text, result.Version.Entity.Text);
-            Assert.AreEqual(timestamp, result.Version.Modified);
-            Assert.AreEqual("a", result.Version.Side);
-            Assert.IsFalse(result.Version.IsNew);
-            Assert.IsNotEmpty(result.Version.Revision);
+            Assert.AreEqual(ECreateResult.Success, result);
+
+            Assert.IsNotNull(version);
+            Assert.AreEqual(model.Guid, version!.Entity.Guid);
+            Assert.AreEqual(model.Text, version.Entity.Text);
+            Assert.AreEqual(timestamp, version.Modified);
+            Assert.AreEqual("a", version.Side);
+            Assert.IsFalse(version.IsNew);
+            Assert.IsNotEmpty(version.Revision);
         }
 
         [Test]
@@ -79,11 +83,11 @@ namespace zcfux.Replication.Test
                 Text = TestContext.CurrentContext.Random.GetString()
             };
 
-            var writer = CreateWriter("a");
+            var writer = CreateWriter();
 
             var timestamp = DateTime.UtcNow;
 
-            writer.TryCreate(a, timestamp);
+            writer.TryCreate(a, timestamp, out var _);
 
             var b = new Model
             {
@@ -91,15 +95,17 @@ namespace zcfux.Replication.Test
                 Text = TestContext.CurrentContext.Random.GetString()
             };
 
-            var result = writer.TryCreate(b, timestamp);
+            var result = writer.TryCreate(b, timestamp, out var version);
 
-            Assert.IsTrue(result.IsConflict);
-            Assert.AreEqual(a.Guid, result.Version.Entity.Guid);
-            Assert.AreEqual(a.Text, result.Version.Entity.Text);
-            Assert.AreEqual(timestamp, result.Version.Modified);
-            Assert.AreEqual("a", result.Version.Side);
-            Assert.IsFalse(result.Version.IsNew);
-            Assert.IsNotEmpty(result.Version.Revision);
+            Assert.AreEqual(ECreateResult.Conflict, result);
+
+            Assert.IsNotNull(version);
+            Assert.AreEqual(a.Guid, version!.Entity.Guid);
+            Assert.AreEqual(a.Text, version.Entity.Text);
+            Assert.AreEqual(timestamp, version.Modified);
+            Assert.AreEqual("a", version.Side);
+            Assert.IsFalse(version.IsNew);
+            Assert.IsNotEmpty(version.Revision);
         }
 
         [Test]
@@ -111,17 +117,17 @@ namespace zcfux.Replication.Test
                 Text = TestContext.CurrentContext.Random.GetString()
             };
 
-            var writer = CreateWriter("a");
+            var writer = CreateWriter();
 
             var now = DateTime.UtcNow;
 
-            var first = writer.TryCreate(model, now.AddMinutes(-1)).Version;
+            writer.TryCreate(model, now.AddMinutes(-1), out var first);
 
             model.Text = TestContext.CurrentContext.Random.GetString();
 
             var second = writer.Update(
                 model,
-                first.Revision!,
+                first!.Revision!,
                 now,
                 new Merge.LastWriteWins());
 
@@ -143,15 +149,15 @@ namespace zcfux.Replication.Test
                 Text = TestContext.CurrentContext.Random.GetString()
             };
 
-            var writer = CreateWriter("a");
+            var writer = CreateWriter();
 
             var now = DateTime.UtcNow;
 
-            var first = writer.TryCreate(model, now.AddMinutes(-1)).Version;
+            writer.TryCreate(model, now.AddMinutes(-1), out var first);
 
             var second = writer.Update(
                 model,
-                first.Revision!,
+                first!.Revision!,
                 now,
                 new Merge.LastWriteWins());
 
@@ -170,11 +176,11 @@ namespace zcfux.Replication.Test
                 Text = TestContext.CurrentContext.Random.GetString()
             };
 
-            var writer = CreateWriter("a");
+            var writer = CreateWriter();
 
             var now = DateTime.UtcNow;
 
-            var first = writer.TryCreate(model, now.AddMinutes(-2)).Version;
+            writer.TryCreate(model, now.AddMinutes(-2), out var first);
 
             model = new Model
             {
@@ -184,7 +190,7 @@ namespace zcfux.Replication.Test
 
             var second = writer.Update(
                 model,
-                first.Revision!,
+                first!.Revision!,
                 now,
                 new Merge.LastWriteWins());
 
@@ -215,11 +221,11 @@ namespace zcfux.Replication.Test
                 Text = TestContext.CurrentContext.Random.GetString()
             };
 
-            var writer = CreateWriter("a");
+            var writer = CreateWriter();
 
             var now = DateTime.UtcNow;
 
-            var first = writer.TryCreate(model, now.AddMinutes(-2)).Version;
+            writer.TryCreate(model, now.AddMinutes(-2), out var first);
 
             model = new Model
             {
@@ -229,10 +235,9 @@ namespace zcfux.Replication.Test
 
             var second = writer.Update(
                 model,
-                first.Revision!,
+                first!.Revision!,
                 now,
-                new MergeModels());
-
+                new LastWrittenModelWins());
 
             model = new Model
             {
@@ -244,7 +249,7 @@ namespace zcfux.Replication.Test
                 model,
                 first.Revision!,
                 now.AddMinutes(-1),
-                new MergeModels());
+                new LastWrittenModelWins());
 
             Assert.AreEqual(third.IsNew, second.IsNew);
             Assert.AreEqual(third.Modified, second.Modified);
@@ -252,6 +257,40 @@ namespace zcfux.Replication.Test
             Assert.AreEqual(third.Entity, second.Entity);
         }
 
-        protected abstract AWriter CreateWriter(string side);
+        [Test]
+        public void Delete()
+        {
+            var model = new Model
+            {
+                Guid = Guid.NewGuid(),
+                Text = TestContext.CurrentContext.Random.GetString()
+            };
+
+            var writer = CreateWriter();
+
+            writer.TryCreate(model, DateTime.UtcNow, out var initialVersion);
+
+            model = new Model
+            {
+                Guid = model.Guid,
+                Text = TestContext.CurrentContext.Random.GetString()
+            };
+
+            writer.Update(model, initialVersion!.Revision!, DateTime.UtcNow, new LastWrittenModelWins());
+
+            var reader = CreateReader();
+
+            var latestVersion = reader.Read<Model>(model.Guid);
+
+            Assert.IsNotNull(latestVersion);
+
+            writer.Delete(model.Guid);
+
+            Assert.That(() => reader.Read<Model>(model.Guid), Throws.Exception);
+        }
+
+        protected abstract AWriter CreateWriter();
+
+        protected abstract AReader CreateReader();
     }
 }

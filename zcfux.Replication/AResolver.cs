@@ -23,8 +23,10 @@ namespace zcfux.Replication;
 
 public abstract class AResolver
 {
-    public AResolver(MergeAlgorithms? algorithms = null)
-        => Algorithms = algorithms ?? new MergeAlgorithms();
+    public AResolver(string side, MergeAlgorithms? algorithms = null)
+        => (Side, Algorithms) = (side, algorithms ?? new MergeAlgorithms());
+
+    public string Side { get; }
 
     public MergeAlgorithms Algorithms { get; }
 

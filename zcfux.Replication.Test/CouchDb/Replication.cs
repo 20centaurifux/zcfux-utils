@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,35 +19,53 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using zcfux.Replication.CouchDb;
-
 namespace zcfux.Replication.Test.CouchDb;
 
-public sealed class WriterTests : AWriterTests
+internal static class Replication
 {
-    protected override void CreateDb()
+    public static void Push(string from, string to)
     {
         var url = UrlBuilder.BuildServerUrl();
 
         using (var client = zcfux.Replication.CouchDb.Pool.ServerClients.TakeOrCreate(new Uri(url)))
         {
-            client.Databases.PutAsync(Side).Wait();
+            var id = Guid.NewGuid().ToString("n");
+
+            var response = client.Replicator.ReplicateAsync(id, $"{url}{from}", $"{url}{to}").Result;
+
+            if (!response.IsSuccess)
+            {
+                throw new Exception(response.Reason);
+            }
+
+            WaitForReplicationJob(id);
         }
     }
 
-    protected override void DropDb()
+    static void WaitForReplicationJob(string id)
     {
         var url = UrlBuilder.BuildServerUrl();
 
-        using (var client = zcfux.Replication.CouchDb.Pool.ServerClients.TakeOrCreate(new Uri(url)))
+        using (var client = zcfux.Replication.CouchDb.Pool.Clients.TakeOrCreate(new Uri($"{url}_replicator")))
         {
-            client.Databases.DeleteAsync(Side).Wait();
+            var deleted = false;
+
+            while (!deleted)
+            {
+                var response = client.Documents.GetAsync(id).Result;
+
+                if (!string.IsNullOrEmpty(response.Content)
+                    && response.Content.Contains("\"completed\""))
+                {
+                    client.Documents.DeleteAsync(response.Id, response.Rev).Wait();
+
+                    deleted = true;
+                }
+                else
+                {
+                    Thread.Sleep(250);
+                }
+            }
         }
     }
-
-    protected override AWriter CreateWriter()
-        => new Writer(Side, UrlBuilder.BuildServerUrl());
-
-    protected override AReader CreateReader()
-        => new Reader(Side, UrlBuilder.BuildServerUrl());
 }

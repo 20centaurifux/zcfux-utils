@@ -28,7 +28,7 @@ public sealed class MergeAlgorithms
     readonly Dictionary<Type, object> _m = new();
     bool _built = false;
 
-    public void Register<T>(IMerge<T> merge)
+    public void Register<T>(IMergeAlgorithm<T> merge)
         where T : IEntity
     {
         ThrowIfBuilt();
@@ -59,12 +59,12 @@ public sealed class MergeAlgorithms
         }
     }
 
-    public IMerge<T> GetNonGeneric<T>()
+    public IMergeAlgorithm<T> GetNonGeneric<T>()
         where T : IEntity
     {
         ThrowIfNotBuilt();
 
-        return (_m[typeof(T)] is IMerge<T> algorithm)
+        return (_m[typeof(T)] is IMergeAlgorithm<T> algorithm)
             ? algorithm
             : throw new ArgumentException($"Algorithm for type `{typeof(T)}' not found.");
     }
@@ -80,6 +80,54 @@ public sealed class MergeAlgorithms
         return (_m[type] is IMergeAlgorithm algorithm)
             ? algorithm
             : throw new ArgumentException($"Algorithm for type `{type}' not found.");
+    }
+
+    public IVersion Merge(IVersion version, IVersion[] conflicts)
+    {
+        IVersion? mergedVersion = null;
+
+        var entityType = version.Entity.GetType();
+
+        var algorithm = _m[entityType];
+
+        var algorithmType = algorithm.GetType();
+
+        if (algorithmType
+            .GetInterfaces()
+            .Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IMergeAlgorithm<>)))
+        {
+            var versionType = typeof(Version<>).MakeGenericType(entityType);
+
+            var ctor = versionType.GetConstructor(new[] { typeof(IVersion) })!;
+
+            dynamic typedVersion = ctor.Invoke(new object?[] { version });
+
+            dynamic typedConflicts = Activator.CreateInstance(
+                versionType.MakeArrayType(),
+                new object[] { conflicts.Length })!;
+
+            conflicts
+                .Select(c => ctor.Invoke(new object?[] { c }))
+                .ToArray()
+                .CopyTo(typedConflicts, 0);
+
+            typedVersion = algorithmType
+                .GetMethod("Merge")!
+                .Invoke(algorithm, new[] { typedVersion, typedConflicts })!;
+
+            mergedVersion = new Version<IEntity>(
+                typedVersion.Entity,
+                typedVersion.Revision,
+                typedVersion.Side,
+                typedVersion.Modified);
+        }
+        else if (algorithm is IMergeAlgorithm genericAlgorithm)
+        {
+            mergedVersion = genericAlgorithm.Merge(version, conflicts);
+        }
+
+        return mergedVersion
+               ?? throw new ArgumentException($"Algorithm for type `{entityType}' not found.");
     }
 
     void ThrowIfNotBuilt()

@@ -72,13 +72,13 @@ namespace zcfux.Replication.Test
         {
             var algorithms = new MergeAlgorithms();
 
-            algorithms.Register(new MergeModels());
+            algorithms.Register(new LastWrittenModelWins());
 
             algorithms.Build();
 
             var merge = algorithms.GetNonGeneric<Model>();
 
-            Assert.IsInstanceOf(typeof(IMerge<Model>), merge);
+            Assert.IsInstanceOf(typeof(IMergeAlgorithm<Model>), merge);
         }
 
         [Test]

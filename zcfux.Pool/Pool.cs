@@ -84,7 +84,7 @@ public sealed class Pool<T> : IDisposable
     {
         var resource = _factory.Create(uri);
 
-        resource.Disposed += (s, _) =>
+        resource.Suspended += (s, _) =>
         {
             var r = (s as T)!;
 

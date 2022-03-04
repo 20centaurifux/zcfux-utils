@@ -23,7 +23,7 @@ namespace zcfux.Pool;
 
 public abstract class AResource : IDisposable
 {
-    public event EventHandler? Disposed;
+    public event EventHandler? Suspended;
 
     bool _disposed;
 
@@ -31,6 +31,10 @@ public abstract class AResource : IDisposable
         => Uri = uri;
 
     public Uri Uri { get; private set; }
+
+    public virtual void Suspend()
+    {
+    }
 
     public virtual bool TryRecycle(Uri uri)
     {
@@ -54,7 +58,9 @@ public abstract class AResource : IDisposable
     {
         if (!_disposed && disposing)
         {
-            Disposed?.Invoke(this, EventArgs.Empty);
+            Suspend();
+
+            Suspended?.Invoke(this, EventArgs.Empty);
         }
 
         _disposed = true;

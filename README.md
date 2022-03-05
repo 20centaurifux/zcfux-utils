@@ -36,7 +36,13 @@ This is a collection of various utilities and abstractions I use in .NET project
 * NLog provider for zcfux.Logging.
 
 ## Pool
-* Resource pool building.
+* Generic and customizable resource pool.
+
+## Replication
+* Replication abstractions.
+
+## Replication.CouchDb
+* CouchDB provider for zcfux.Replication.
 
 ## Security
 * Password generator.

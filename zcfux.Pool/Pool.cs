@@ -35,6 +35,9 @@ public sealed class Pool<T> : IDisposable
     internal Pool(IFactory<T> factory, IKeyBuilder keyBuilder, Options options)
         => (_factory, _keyBuilder, _options) = (factory, keyBuilder, options);
 
+    public int Limit
+        => _options.Limit;
+
     public T? TryTake(Uri uri)
     {
         T? resource = null;

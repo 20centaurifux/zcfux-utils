@@ -23,7 +23,7 @@ using NUnit.Framework;
 
 namespace zcfux.Pool.Test;
 
-public sealed class Tests
+public sealed class PoolTests
 {
     [Test]
     public void Create()
@@ -37,7 +37,6 @@ public sealed class Tests
         Assert.IsInstanceOf<A>(r);
         Assert.AreEqual(uri, r.Uri);
         Assert.AreEqual(1, r.Counter);
-        Assert.IsFalse(r.Freed);
     }
 
     [Test]
@@ -70,7 +69,27 @@ public sealed class Tests
         Assert.IsInstanceOf<A>(first);
         Assert.AreEqual(uri, first.Uri);
         Assert.AreEqual(2, first.Counter);
-        Assert.IsFalse(first.Freed);
+    }
+
+    [Test]
+    public void Suspend()
+    {
+        var pool = CreatePoolA();
+
+        var uri = new Uri("test://");
+
+        var first = pool.TakeOrCreate(uri);
+
+        Assert.IsFalse(first.IsSuspended);
+
+        first.Dispose();
+
+        Assert.IsTrue(first.IsSuspended);
+
+        var second = pool.TakeOrCreate(uri);
+
+        Assert.AreSame(first, second);
+        Assert.IsFalse(second.IsSuspended);
     }
 
     [Test]
@@ -85,7 +104,6 @@ public sealed class Tests
         Assert.IsInstanceOf<A>(first);
         Assert.AreEqual(uri, first.Uri);
         Assert.AreEqual(1, first.Counter);
-        Assert.IsFalse(first.Freed);
 
         var second = pool.TakeOrCreate(uri);
 
@@ -94,7 +112,6 @@ public sealed class Tests
         Assert.IsInstanceOf<A>(second!);
         Assert.AreEqual(uri, second.Uri);
         Assert.AreEqual(1, second.Counter);
-        Assert.IsFalse(second.Freed);
     }
 
     [Test]
@@ -109,7 +126,6 @@ public sealed class Tests
         Assert.IsInstanceOf<A>(first);
         Assert.AreEqual(uri, first.Uri);
         Assert.AreEqual(1, first.Counter);
-        Assert.IsFalse(first.Freed);
 
         first.Dispose();
 
@@ -120,7 +136,6 @@ public sealed class Tests
         Assert.IsInstanceOf<A>(second!);
         Assert.AreEqual(uri, second.Uri);
         Assert.AreEqual(2, second.Counter);
-        Assert.IsFalse(second.Freed);
     }
 
     [Test]
@@ -136,8 +151,8 @@ public sealed class Tests
         first.Dispose();
         second.Dispose();
 
-        Assert.IsFalse(first.Freed);
-        Assert.IsTrue(second.Freed);
+        Assert.IsFalse(first.IsFreed);
+        Assert.IsTrue(second.IsFreed);
     }
 
     static Pool<A> CreatePoolA()
@@ -161,7 +176,7 @@ public sealed class Tests
 
         var second = pool.TryTake(uri);
 
-        Assert.IsTrue(first.Freed);
+        Assert.IsTrue(first.IsFreed);
         Assert.IsNull(second);
     }
 
@@ -188,7 +203,6 @@ public sealed class Tests
         Assert.IsInstanceOf<A>(second!);
         Assert.AreEqual(uri2, second.Uri);
         Assert.AreEqual(2, second.Counter);
-        Assert.IsFalse(second.Freed);
 
         second.Dispose();
 
@@ -201,7 +215,6 @@ public sealed class Tests
         Assert.IsInstanceOf<A>(third!);
         Assert.AreEqual(uri3, third.Uri);
         Assert.AreEqual(1, third.Counter);
-        Assert.IsFalse(third.Freed);
     }
 
     [Test]
@@ -223,8 +236,8 @@ public sealed class Tests
 
         pool.Dispose();
 
-        Assert.IsTrue(first.Freed);
-        Assert.IsTrue(second.Freed);
-        Assert.IsFalse(third.Freed);
+        Assert.IsTrue(first.IsFreed);
+        Assert.IsTrue(second.IsFreed);
+        Assert.IsFalse(third.IsFreed);
     }
 }

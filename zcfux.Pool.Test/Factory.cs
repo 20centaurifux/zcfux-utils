@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -21,22 +21,14 @@
  ***************************************************************************/
 namespace zcfux.Pool.Test;
 
-public sealed class B : AResource
+public class Factory : IFactory<A>
 {
-    public B(Uri uri)
-        : base(uri)
+    public A Create(Uri uri)
     {
+        Counter++;
+
+        return new A(uri);
     }
 
-    public override bool TryRecycle(Uri uri)
-    {
-        base.TryRecycle(uri);
-
-        return false;
-    }
-
-    public bool IsFreed { get; private set; }
-
-    public override void Free()
-        => IsFreed = true;
+    public int Counter { get; private set; }
 }

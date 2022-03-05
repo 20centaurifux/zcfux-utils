@@ -34,13 +34,24 @@ public sealed class A : AResource
 
         ++Counter;
 
+        IsSuspended = false;
+
         return true;
+    }
+
+    public override void Suspend()
+    {
+        base.Suspend();
+
+        IsSuspended = true;
     }
 
     public int Counter { get; private set; } = 1;
 
-    public bool Freed { get; private set; }
+    public bool IsFreed { get; private set; }
+
+    public bool IsSuspended { get; private set; }
 
     public override void Free()
-        => Freed = true;
+        => IsFreed = true;
 }

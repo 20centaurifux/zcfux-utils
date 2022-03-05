@@ -85,6 +85,11 @@ public sealed class PoolBuilder<T>
             Limit = _limit
         };
 
-        return new Pool<T>(_factory!, _keyBuilder, options);
+        if (_factory == null)
+        {
+            throw new NullReferenceException("Factory not set.");
+        }
+
+        return new Pool<T>(_factory, _keyBuilder, options);
     }
 }

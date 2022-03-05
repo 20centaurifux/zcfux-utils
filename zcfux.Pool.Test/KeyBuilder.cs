@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -21,22 +21,14 @@
  ***************************************************************************/
 namespace zcfux.Pool.Test;
 
-public sealed class B : AResource
+public class KeyBuilder : IKeyBuilder
 {
-    public B(Uri uri)
-        : base(uri)
+    public string Build(Uri uri)
     {
+        Counter++;
+
+        return uri.AbsolutePath;
     }
 
-    public override bool TryRecycle(Uri uri)
-    {
-        base.TryRecycle(uri);
-
-        return false;
-    }
-
-    public bool IsFreed { get; private set; }
-
-    public override void Free()
-        => IsFreed = true;
+    public int Counter { get; private set; }
 }

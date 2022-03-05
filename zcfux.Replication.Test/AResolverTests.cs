@@ -43,7 +43,7 @@ namespace zcfux.Replication.Test
         protected abstract void DropDbs();
 
         [Test]
-        public void CreateReader()
+        public void CreateResolver()
         {
             var resolver = CreateResolver(Alice);
 

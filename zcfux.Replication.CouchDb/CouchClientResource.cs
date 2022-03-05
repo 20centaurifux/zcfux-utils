@@ -32,13 +32,24 @@ public sealed class CouchClientResource : AResource, IMyCouchClient
     public CouchClientResource(Uri uri)
         : base(uri)
     {
-        var builder = new UriBuilder(uri.AbsoluteUri);
-
-        builder.Path = null;
+        var builder = new UriBuilder(uri.AbsoluteUri)
+        {
+            Path = null
+        };
 
         var dbName = uri.LocalPath.Substring(1);
 
-        _client = new MyCouchClient(builder.Uri, dbName);
+        _client = new MyCouchClient(builder.Uri, dbName, new ClientBootstrapper());
+    }
+
+    public override void Suspend()
+    {
+        base.Suspend();
+
+        if (_client.Connection is ISuspend suspend)
+        {
+            suspend.Suspend();
+        }
     }
 
     public override void Free()

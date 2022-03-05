@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -20,41 +20,18 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using MyCouch;
-using MyCouch.Serialization;
-using zcfux.Pool;
 
 namespace zcfux.Replication.CouchDb;
 
-internal sealed class ServerClientResource : AResource, IMyCouchServerClient
+internal class ClientBootstrapper : MyCouchClientBootstrapper
 {
-    readonly MyCouchServerClient _client;
-
-    public ServerClientResource(Uri uri)
-        : base(uri)
-        => _client = new MyCouchServerClient(uri, new ClientBootstrapper());
-
-    public override void Suspend()
+    protected override void ConfigureDbConnectionFn()
     {
-        base.Suspend();
-
-        if (_client.Connection is ISuspend suspend)
-        {
-            suspend.Suspend();
-        }
+        DbConnectionFn = cnInfo => new DbConnection(cnInfo);
     }
 
-    public override void Free()
-        => _client.Dispose();
-
-    public IServerConnection Connection
-        => _client.Connection;
-
-    public ISerializer Serializer
-        => _client.Serializer;
-
-    public IDatabases Databases
-        => _client.Databases;
-
-    public IReplicator Replicator
-        => _client.Replicator;
+    protected override void ConfigureServerConnectionFn()
+    {
+        ServerConnectionFn = cnInfo => new ServerConnection(cnInfo);;
+    }
 }

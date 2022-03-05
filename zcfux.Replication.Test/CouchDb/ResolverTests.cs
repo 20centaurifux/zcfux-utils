@@ -31,6 +31,7 @@ public sealed class ResolverTests : AResolverTests
 
         using (var client = zcfux.Replication.CouchDb.Pool.ServerClients.TakeOrCreate(new Uri(url)))
         {
+            client.Databases.PutAsync("_replicator").Wait();
             client.Databases.PutAsync(Alice).Wait();
             client.Databases.PutAsync(Bob).Wait();
         }

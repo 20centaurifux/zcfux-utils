@@ -23,6 +23,9 @@ namespace zcfux.Replication.Test.CouchDb;
 
 internal static class UrlBuilder
 {
+    const string DefaultServerUrl = "http://admin:admin@localhost:5984/";
+
     public static string BuildServerUrl()
-        => "http://admin:123456@localhost:5984/";
+        => Environment.GetEnvironmentVariable("COUCH_TEST_URL")
+           ?? DefaultServerUrl;
 }

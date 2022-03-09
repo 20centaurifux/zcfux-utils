@@ -19,7 +19,7 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using MyCouch.Requests;
+using MyCouch;
 using Newtonsoft.Json;
 using System.Net;
 using zcfux.Replication.Generic;
@@ -55,7 +55,7 @@ public sealed class Writer : AWriter
 
             if (putResponse.IsSuccess)
             {
-                version = new Version<T>(entity, putResponse.Rev, Side, timestamp);
+                version = new Version<T>(entity, putResponse.Rev, Side, timestamp, false);
             }
             else if (putResponse.StatusCode == HttpStatusCode.Conflict)
             {
@@ -65,7 +65,7 @@ public sealed class Writer : AWriter
                 {
                     doc = JsonConvert.DeserializeObject<Document<T>>(getResponse.Content);
 
-                    version = new Version<T>(doc!.Entity, getResponse.Rev, doc.Side, doc.Modified);
+                    version = new Version<T>(doc!.Entity, getResponse.Rev, doc.Side, doc.Modified, doc.Deleted);
 
                     result = ECreateResult.Conflict;
                 }
@@ -111,41 +111,54 @@ public sealed class Writer : AWriter
         });
     }
 
-    public override void Delete(Guid guid)
+    public override IVersion<T> Delete<T>(Guid guid, DateTime timestamp)
     {
         using (var client = Pool.Clients.TakeOrCreate(new Uri($"{_url}{Side}")))
         {
             var id = guid.ToString("n");
 
-            var getRequest = new GetDocumentRequest(id)
+            var (doc, rev) = GetDocument<T>(client, id);
+
+            while (!doc.Deleted)
             {
-                Revisions = true
-            };
+                doc.Side = Side;
+                doc.Modified = timestamp;
+                doc.Deleted = true;
 
-            var deleted = false;
+                var json = JsonConvert.SerializeObject(doc);
 
-            while (!deleted)
-            {
-                var getResponse = client.Documents.GetAsync(getRequest).Result;
+                var response = client.Documents.PutAsync(id, rev, json).Result;
 
-                if (getResponse.IsSuccess)
+                if (response.IsSuccess)
                 {
-                    var deleteResponse = client.Documents.DeleteAsync(id, getResponse.Rev).Result;
-
-                    if (!deleteResponse.IsSuccess)
-                    {
-                        throw new Exception(deleteResponse.Reason);
-                    }
+                    rev = response.Rev;
                 }
-                else if (getResponse.StatusCode == HttpStatusCode.NotFound)
+                else if (response.StatusCode == HttpStatusCode.Conflict)
                 {
-                    deleted = true;
+                    (doc, rev) = GetDocument<T>(client, id);
                 }
                 else
                 {
-                    throw new Exception(getResponse.Reason);
+                    throw new Exception(response.Reason);
                 }
             }
+
+            return new Version<T>(doc.Entity, rev, doc.Side, doc.Modified, doc.Deleted);
         }
+    }
+
+    static (Document<T>, string) GetDocument<T>(IMyCouchClient client, string id)
+        where T : IEntity
+    {
+            var response = client.Documents.GetAsync(id).Result;
+
+            if (!response.IsSuccess)
+            {
+                throw new Exception(response.Reason);
+            }
+
+            var doc = JsonConvert.DeserializeObject<Document<T>>(response.Content);
+
+            return (doc!, response.Rev);
     }
 }

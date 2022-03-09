@@ -47,7 +47,7 @@ public sealed class Reader : AReader
 
             var doc = JsonConvert.DeserializeObject<Document<T>>(response.Content);
 
-            return new Version<T>(doc!.Entity, response.Rev, doc.Side, doc.Modified);
+            return new Version<T>(doc!.Entity, response.Rev, doc.Side, doc.Modified, doc.Deleted);
         }
     }
 }

@@ -53,7 +53,7 @@ internal sealed class Updater<T>
             }
             else
             {
-                var winner = new Version<T>(update, null, side, timestamp);
+                var winner = new Version<T>(update, null, side, timestamp, false);
 
                 if (revision != latestVersion.Revision)
                 {
@@ -70,7 +70,7 @@ internal sealed class Updater<T>
 
                     if (response.IsSuccess)
                     {
-                        result = new Version<T>(winner.Entity, response.Rev, winner.Side, winner.Modified);
+                        result = new Version<T>(winner.Entity, response.Rev, winner.Side, winner.Modified, winner.IsDeleted);
                     }
                     else if (response.StatusCode == HttpStatusCode.Conflict)
                     {
@@ -104,6 +104,6 @@ internal sealed class Updater<T>
 
         var doc = JsonConvert.DeserializeObject<Document<T>>(response.Content);
 
-        return new Version<T>(doc!.Entity, response.Rev, doc.Side, doc.Modified);
+        return new Version<T>(doc!.Entity, response.Rev, doc.Side, doc.Modified, doc.Deleted);
     }
 }

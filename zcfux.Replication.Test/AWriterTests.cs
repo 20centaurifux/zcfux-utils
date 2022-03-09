@@ -71,6 +71,7 @@ namespace zcfux.Replication.Test
             Assert.AreEqual(timestamp, version.Modified);
             Assert.AreEqual("a", version.Side);
             Assert.IsFalse(version.IsNew);
+            Assert.IsFalse(version.IsDeleted);
             Assert.IsNotEmpty(version.Revision);
         }
 
@@ -105,6 +106,7 @@ namespace zcfux.Replication.Test
             Assert.AreEqual(timestamp, version.Modified);
             Assert.AreEqual("a", version.Side);
             Assert.IsFalse(version.IsNew);
+            Assert.IsFalse(version.IsDeleted);
             Assert.IsNotEmpty(version.Revision);
         }
 
@@ -136,6 +138,7 @@ namespace zcfux.Replication.Test
             Assert.AreEqual(now, second.Modified);
             Assert.AreEqual("a", second.Side);
             Assert.IsFalse(second.IsNew);
+            Assert.IsFalse(second.IsDeleted);
             Assert.IsNotEmpty(second.Revision);
             Assert.AreNotEqual(first.Revision, second.Revision);
         }
@@ -162,6 +165,7 @@ namespace zcfux.Replication.Test
                 new Merge.LastWriteWins());
 
             Assert.AreEqual(first.IsNew, second.IsNew);
+            Assert.AreEqual(first.IsDeleted, second.IsDeleted);
             Assert.AreEqual(first.Modified, second.Modified);
             Assert.AreEqual(first.Revision, second.Revision);
             Assert.AreEqual(first.Entity, second.Entity);
@@ -207,6 +211,7 @@ namespace zcfux.Replication.Test
                 new Merge.LastWriteWins());
 
             Assert.AreEqual(third.IsNew, second.IsNew);
+            Assert.AreEqual(third.IsDeleted, second.IsDeleted);
             Assert.AreEqual(third.Modified, second.Modified);
             Assert.AreEqual(third.Revision, second.Revision);
             Assert.AreEqual(third.Entity, second.Entity);
@@ -252,6 +257,7 @@ namespace zcfux.Replication.Test
                 new LastWrittenModelWins());
 
             Assert.AreEqual(third.IsNew, second.IsNew);
+            Assert.AreEqual(third.IsDeleted, second.IsDeleted);
             Assert.AreEqual(third.Modified, second.Modified);
             Assert.AreEqual(third.Revision, second.Revision);
             Assert.AreEqual(third.Entity, second.Entity);
@@ -270,23 +276,15 @@ namespace zcfux.Replication.Test
 
             writer.TryCreate(model, DateTime.UtcNow, out var initialVersion);
 
-            model = new Model
-            {
-                Guid = model.Guid,
-                Text = TestContext.CurrentContext.Random.GetString()
-            };
+            var deletedAt = DateTime.UtcNow;
 
-            writer.Update(model, initialVersion!.Revision!, DateTime.UtcNow, new LastWrittenModelWins());
+            var timestamp = writer.Delete<Model>(model.Guid, deletedAt);
 
-            var reader = CreateReader();
-
-            var latestVersion = reader.Read<Model>(model.Guid);
-
-            Assert.IsNotNull(latestVersion);
-
-            writer.Delete(model.Guid);
-
-            Assert.That(() => reader.Read<Model>(model.Guid), Throws.Exception);
+            Assert.IsFalse(timestamp.IsNew);
+            Assert.IsTrue(timestamp.IsDeleted);
+            Assert.AreEqual(timestamp.Modified, deletedAt);
+            Assert.AreNotEqual(timestamp.Revision, initialVersion);
+            Assert.AreEqual(timestamp.Entity, initialVersion!.Entity);
         }
 
         protected abstract AWriter CreateWriter();

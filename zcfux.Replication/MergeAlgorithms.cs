@@ -119,7 +119,8 @@ public sealed class MergeAlgorithms
                 typedVersion.Entity,
                 typedVersion.Revision,
                 typedVersion.Side,
-                typedVersion.Modified);
+                typedVersion.Modified,
+                typedVersion.IsDeleted);
         }
         else if (algorithm is IMergeAlgorithm genericAlgorithm)
         {

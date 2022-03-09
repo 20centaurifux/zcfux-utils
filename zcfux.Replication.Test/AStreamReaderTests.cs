@@ -89,10 +89,6 @@ namespace zcfux.Replication.Test
 
             stream.Read += (s, e) => readVersions.Add(e.Version);
 
-            var deletedGuids = new ConcurrentBag<Guid>();
-
-            stream.Deleted += (s, e) => deletedGuids.Add(e.Guid);
-
             var conflictedVersions = new ConcurrentBag<IVersion>();
 
             stream.Conflict += (s, e) => conflictedVersions.Add(e.Version);
@@ -122,10 +118,8 @@ namespace zcfux.Replication.Test
             Assert.AreEqual(createdVersion.Side, receivedVersion.Side);
             Assert.AreEqual(createdVersion.Entity, receivedVersion.Entity);
 
-            Assert.IsEmpty(deletedGuids);
             Assert.IsEmpty(conflictedVersions);
         }
-
 
         [Test]
         public void ReceiveUpdatedDocument()
@@ -135,10 +129,6 @@ namespace zcfux.Replication.Test
             var readVersions = new ConcurrentBag<IVersion>();
 
             stream.Read += (s, e) => readVersions.Add(e.Version);
-
-            var deletedGuids = new ConcurrentBag<Guid>();
-
-            stream.Deleted += (s, e) => deletedGuids.Add(e.Guid);
 
             var conflictedVersions = new ConcurrentBag<IVersion>();
 
@@ -188,7 +178,6 @@ namespace zcfux.Replication.Test
             Assert.AreEqual(updatedVersion.Side, receivedVersion.Side);
             Assert.AreEqual(updatedVersion.Entity, receivedVersion.Entity);
 
-            Assert.IsEmpty(deletedGuids);
             Assert.IsEmpty(conflictedVersions);
         }
 
@@ -240,10 +229,6 @@ namespace zcfux.Replication.Test
 
             stream.Read += (s, e) => readVersions.Add(e.Version);
 
-            var deletedGuids = new ConcurrentBag<Guid>();
-
-            stream.Deleted += (s, e) => deletedGuids.Add(e.Guid);
-
             var conflictedVersions = new ConcurrentBag<IVersion>();
 
             stream.Conflict += (s, e) => conflictedVersions.Add(e.Version);
@@ -255,7 +240,6 @@ namespace zcfux.Replication.Test
             stream.Stop();
 
             Assert.IsEmpty(readVersions);
-            Assert.IsEmpty(deletedGuids);
 
             var conflictedVersion = conflictedVersions.Single();
 
@@ -281,10 +265,6 @@ namespace zcfux.Replication.Test
 
             stream.Read += (s, e) => readVersions.Add(e.Version);
 
-            var deletedGuids = new ConcurrentBag<Guid>();
-
-            stream.Deleted += (s, e) => deletedGuids.Add(e.Guid);
-
             var conflictedVersions = new ConcurrentBag<IVersion>();
 
             stream.Conflict += (s, e) => conflictedVersions.Add(e.Version);
@@ -305,17 +285,27 @@ namespace zcfux.Replication.Test
 
             WaitForEvents(1, readVersions);
 
-            writer.Delete(model.Guid);
+            var deletedVersion = writer.Delete<Model>(model.Guid, DateTime.UtcNow);
 
-            WaitForEvents(1, deletedGuids);
+            WaitForEvents(2, readVersions);
 
             stream.Stop();
 
-            Assert.AreEqual(1, readVersions.Count());
+            Assert.AreEqual(2, readVersions.Count());
 
-            var deletedGuid = deletedGuids.Single();
+            var receivedVersion = readVersions.Single(v => v.Revision == createdVersion!.Revision);
 
-            Assert.AreEqual(createdVersion!.Entity.Guid, deletedGuid);
+            Assert.AreEqual(createdVersion!.Modified, receivedVersion.Modified);
+            Assert.AreEqual(createdVersion!.Side, receivedVersion.Side);
+            Assert.AreEqual(createdVersion!.Entity, receivedVersion.Entity);
+            Assert.IsFalse(createdVersion.IsDeleted);
+
+            receivedVersion = readVersions.Single(v => v.Revision == deletedVersion.Revision);
+
+            Assert.AreEqual(deletedVersion!.Modified, receivedVersion.Modified);
+            Assert.AreEqual(deletedVersion!.Side, receivedVersion.Side);
+            Assert.AreEqual(deletedVersion!.Entity, receivedVersion.Entity);
+            Assert.IsTrue(deletedVersion.IsDeleted);
 
             Assert.IsEmpty(conflictedVersions);
         }

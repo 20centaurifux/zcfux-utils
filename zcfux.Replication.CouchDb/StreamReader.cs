@@ -33,7 +33,6 @@ public sealed class StreamReader : AStreamReader
     public override event EventHandler? Started;
     public override event EventHandler? Stopped;
     public override event EventHandler<VersionEventArgs>? Read;
-    public override event EventHandler<DeletedEventArgs>? Deleted;
     public override event EventHandler<VersionEventArgs>? Conflict;
     public override event ErrorEventHandler? Error;
 
@@ -131,36 +130,25 @@ public sealed class StreamReader : AStreamReader
 
     void HandleEvent(Change? ev)
     {
-        if (ev != null)
+        if (ev != null && !ev.Deleted)
         {
-            if (ev.Deleted)
+            var response = ReceiveDocument(ev);
+
+            var doc = JsonConvert.DeserializeObject<Document<JObject>>(response.Content);
+
+            var version = BuildVersion(doc!, response.Rev);
+
+            if (version != null)
             {
-                var guid = Guid.Parse(ev.Id);
+                var args = new VersionEventArgs(version);
 
-                var args = new DeletedEventArgs(guid);
-
-                Deleted?.Invoke(this, args);
-            }
-            else
-            {
-                var response = ReceiveDocument(ev);
-
-                var doc = JsonConvert.DeserializeObject<Document<JObject>>(response.Content);
-
-                var version = BuildVersion(doc!, response.Rev);
-
-                if (version != null)
+                if (response.Conflicts == null || response.Conflicts.Length == 0)
                 {
-                    var args = new VersionEventArgs(version);
-
-                    if (response.Conflicts == null || response.Conflicts.Length == 0)
-                    {
-                        Read?.Invoke(this, args);
-                    }
-                    else
-                    {
-                        Conflict?.Invoke(this, args);
-                    }
+                    Read?.Invoke(this, args);
+                }
+                else
+                {
+                    Conflict?.Invoke(this, args);
                 }
             }
         }
@@ -197,7 +185,7 @@ public sealed class StreamReader : AStreamReader
 
             var entity = doc.Entity.ToObject(type) as IEntity;
 
-            version = new Version<IEntity>(entity!, revision, doc.Side, doc.Modified);
+            version = new Version<IEntity>(entity!, revision, doc.Side, doc.Modified, doc.Deleted);
         }
 
         return version;

@@ -24,14 +24,14 @@ namespace zcfux.Replication.Generic;
 public class Version<T> : IVersion<T>, IVersion
     where T : IEntity
 {
-    public Version(T entity, string? revision, string side, DateTime modified)
-        => (Entity, Revision, Side, Modified) = (entity, revision, side, modified);
+    public Version(T entity, string? revision, string side, DateTime modified, bool isDeleted)
+        => (Entity, Revision, Side, Modified, IsDeleted) = (entity, revision, side, modified, isDeleted);
 
     public Version(IVersion<T> other)
-        => (Entity, Revision, Side, Modified) = (other.Entity, other.Revision, other.Side, other.Modified);
+        => (Entity, Revision, Side, Modified, IsDeleted) = (other.Entity, other.Revision, other.Side, other.Modified, other.IsDeleted);
 
     public Version(IVersion other)
-        => (Entity, Revision, Side, Modified) = ((T)other.Entity, other.Revision, other.Side, other.Modified);
+        => (Entity, Revision, Side, Modified, IsDeleted) = ((T)other.Entity, other.Revision, other.Side, other.Modified, other.IsDeleted);
 
     public T Entity { get; }
 
@@ -52,4 +52,8 @@ public class Version<T> : IVersion<T>, IVersion
     public bool IsNew => string.IsNullOrEmpty(Revision);
 
     bool IVersion.IsNew => IsNew;
+
+    public bool IsDeleted { get; private set; }
+
+    bool IVersion.IsDeleted => IsDeleted;
 }

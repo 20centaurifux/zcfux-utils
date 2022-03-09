@@ -141,7 +141,7 @@ public sealed class Resolver : AResolver
 
         var entity = doc.Entity.ToObject(type) as IEntity;
 
-        var version = new Version<IEntity>(entity!, response.Rev, doc.Side, doc.Modified);
+        var version = new Version<IEntity>(entity!, response.Rev, doc.Side, doc.Modified, doc.Deleted);
 
         return version;
     }

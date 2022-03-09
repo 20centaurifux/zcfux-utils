@@ -32,6 +32,8 @@ internal sealed class Document<T>
 
     public DateTime Modified { get; set; }
 
+    public bool Deleted { get; set; }
+
     public T Entity { get; set; }
 }
 #pragma warning restore CS8618

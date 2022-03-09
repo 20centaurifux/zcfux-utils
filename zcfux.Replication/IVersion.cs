@@ -32,4 +32,6 @@ public interface IVersion
     DateTime Modified { get; }
 
     bool IsNew { get; }
+
+    bool IsDeleted { get; }
 }

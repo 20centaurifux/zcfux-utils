@@ -33,4 +33,6 @@ public interface IVersion<T>
     DateTime Modified { get; }
 
     bool IsNew { get; }
+
+    bool IsDeleted { get; }
 }

@@ -39,5 +39,6 @@ public abstract class AWriter
     public abstract IVersion<T> Update<T>(T entity, string revision, DateTime timestamp, IMergeAlgorithm<T> mergeAlgorithm)
         where T : IEntity;
 
-    public abstract void Delete(Guid guid);
+    public abstract IVersion<T> Delete<T>(Guid guid, DateTime timestamp)
+        where T : IEntity;
 }

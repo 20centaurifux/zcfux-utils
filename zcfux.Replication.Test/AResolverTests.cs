@@ -54,7 +54,7 @@ namespace zcfux.Replication.Test
         [Test]
         public void ResolveConflictWithGenericMergeAlgorithm()
         {
-            var (_, bob, conflict) = CreateConflict();
+            var (_, bob, conflict) = UpdateAliceAndBob();
 
             var resolver = CreateResolver(Alice);
 
@@ -79,7 +79,7 @@ namespace zcfux.Replication.Test
         [Test]
         public void ResolveConflictWithNonGenericMergeAlgorithm()
         {
-            var (alice, _, conflict) = CreateConflict();
+            var (alice, _, conflict) = UpdateAliceAndBob();
 
             var resolver = CreateResolver(Alice);
 
@@ -100,7 +100,7 @@ namespace zcfux.Replication.Test
             Assert.AreEqual(latest.Revision, resolved.Revision);
         }
 
-        (IVersion<Model>, IVersion<Model>, IVersion) CreateConflict()
+        (IVersion<Model>, IVersion<Model>, IVersion) UpdateAliceAndBob()
         {
             // Create & push initial version.
             var alice = CreateWriter(Alice);
@@ -133,6 +133,79 @@ namespace zcfux.Replication.Test
             };
 
             var bobsUpdate = bob.Update(model, initialVersion.Revision!, DateTime.UtcNow, new LastWriteWins());
+
+            // Create & receive conflict.
+            Push(Bob, Alice);
+
+            var stream = CreateStreamReader(Alice);
+
+            var source = new TaskCompletionSource<IVersion>();
+
+            stream.Conflict += (s, e) => source.SetResult(e.Version);
+
+            stream.Start();
+
+            var success = source.Task.Wait(5000);
+
+            Assert.IsTrue(success);
+
+            stream.Stop();
+
+            return (alicesUpdate, bobsUpdate, source.Task.Result);
+        }
+
+        [Test]
+        public void ReceiveDeletedConflict()
+        {
+            var (_, bob, conflict) = UpdateAliceDeleteBob();
+
+            var resolver = CreateResolver(Alice);
+
+            resolver.Algorithms.Register<Model>(new LastWriteWins());
+
+            resolver.Algorithms.Build();
+
+            var resolved = resolver.Resolve(conflict);
+
+            Assert.AreEqual(bob.Modified, resolved.Modified);
+            Assert.AreEqual(bob.Revision, resolved.Revision);
+            Assert.AreEqual(bob.Entity, resolved.Entity);
+
+            var reader = CreateReader(Alice);
+
+            var latest = reader.Read<Model>(resolved.Entity.Guid);
+
+            Assert.AreEqual(latest.Revision, resolved.Revision);
+        }
+
+        (IVersion<Model>, IVersion<Model>, IVersion) UpdateAliceDeleteBob()
+        {
+            // Create & push initial version.
+            var alice = CreateWriter(Alice);
+
+            var model = new Model
+            {
+                Guid = Guid.NewGuid(),
+                Text = TestContext.CurrentContext.Random.GetString()
+            };
+
+            alice.TryCreate(model, DateTime.UtcNow.AddMinutes(-2), out var initialVersion);
+
+            Push(Alice, Bob);
+
+            // Update Alice's version.
+            model = new Model
+            {
+                Guid = model.Guid,
+                Text = TestContext.CurrentContext.Random.GetString()
+            };
+
+            var alicesUpdate = alice.Update(model, initialVersion!.Revision!, DateTime.UtcNow.AddMinutes(-1), new LastWriteWins());
+
+            // Delete on Bob's side.
+            var bob = CreateWriter(Bob);
+
+            var bobsUpdate = bob.Delete<Model>(model.Guid, DateTime.UtcNow);
 
             // Create & receive conflict.
             Push(Bob, Alice);

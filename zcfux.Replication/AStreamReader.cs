@@ -26,7 +26,6 @@ public abstract class AStreamReader
     public abstract event EventHandler? Started;
     public abstract event EventHandler? Stopped;
     public abstract event EventHandler<VersionEventArgs>? Read;
-    public abstract event EventHandler<DeletedEventArgs>? Deleted;
     public abstract event EventHandler<VersionEventArgs>? Conflict;
     public abstract event ErrorEventHandler? Error;
 

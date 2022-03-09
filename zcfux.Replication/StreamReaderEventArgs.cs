@@ -21,10 +21,12 @@
  ***************************************************************************/
 namespace zcfux.Replication;
 
-public sealed class VersionEventArgs : EventArgs
+public sealed class StreamReaderEventArgs : EventArgs
 {
-    public VersionEventArgs(IVersion version)
-        => Version = version;
+    public StreamReaderEventArgs(string eventId, IVersion version)
+        => (EventId, Version) = (eventId, version);
+
+    public string EventId { get; }
 
     public IVersion Version { get; }
 }

@@ -32,8 +32,8 @@ public sealed class StreamReader : AStreamReader
 {
     public override event EventHandler? Started;
     public override event EventHandler? Stopped;
-    public override event EventHandler<VersionEventArgs>? Read;
-    public override event EventHandler<VersionEventArgs>? Conflict;
+    public override event EventHandler<StreamReaderEventArgs>? Read;
+    public override event EventHandler<StreamReaderEventArgs>? Conflict;
     public override event ErrorEventHandler? Error;
 
     readonly string _url;
@@ -52,7 +52,7 @@ public sealed class StreamReader : AStreamReader
         : base(side)
         => _url = url;
 
-    public override void Start()
+    public override void Start(string? since)
     {
         if (Interlocked.CompareExchange(ref _state, Running, Idle) == Idle)
         {
@@ -65,6 +65,11 @@ public sealed class StreamReader : AStreamReader
                     Feed = ChangesFeed.Continuous,
                     Heartbeat = 15000
                 };
+
+                if (!string.IsNullOrEmpty(since))
+                {
+                    req.Since = since;
+                }
 
                 _source = new CancellationTokenSource();
 
@@ -140,7 +145,7 @@ public sealed class StreamReader : AStreamReader
 
             if (version != null)
             {
-                var args = new VersionEventArgs(version);
+                var args = new StreamReaderEventArgs(ev.Seq, version);
 
                 if (response.Conflicts == null || response.Conflicts.Length == 0)
                 {

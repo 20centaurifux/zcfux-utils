@@ -310,6 +310,80 @@ namespace zcfux.Replication.Test
             Assert.IsEmpty(conflictedVersions);
         }
 
+        [Test]
+        public void Since()
+        {
+            var stream = CreateStreamReader(Alice);
+
+            var readVersions = new ConcurrentBag<IVersion>();
+
+            string? firstEventId = null;
+
+            stream.Read += (_, e) =>
+            {
+                if (string.IsNullOrEmpty(firstEventId))
+                {
+                    firstEventId = e.EventId;
+                }
+
+                readVersions.Add(e.Version);
+            };
+
+            stream.Start();
+
+            var writer = CreateWriter(Alice);
+
+            var model = new Model
+            {
+                Guid = Guid.NewGuid(),
+                Text = TestContext.CurrentContext.Random.GetString()
+            };
+
+            var result = writer.TryCreate(model, DateTime.UtcNow, out var first);
+
+            Assert.AreEqual(ECreateResult.Success, result);
+
+            model = new Model
+            {
+                Guid = Guid.NewGuid(),
+                Text = TestContext.CurrentContext.Random.GetString()
+            };
+
+            result = writer.TryCreate(model, DateTime.UtcNow, out var second);
+
+            Assert.AreEqual(ECreateResult.Success, result);
+
+            model = new Model
+            {
+                Guid = Guid.NewGuid(),
+                Text = TestContext.CurrentContext.Random.GetString()
+            };
+
+            result = writer.TryCreate(model, DateTime.UtcNow, out var third);
+
+            Assert.AreEqual(ECreateResult.Success, result);
+
+            WaitForEvents(3, readVersions);
+
+            stream.Stop();
+
+            Assert.IsNotNull(firstEventId);
+
+            readVersions.Clear();
+
+            stream.Start(firstEventId);
+
+            WaitForEvents(2, readVersions);
+
+            Thread.Sleep(500);
+
+            stream.Stop();
+
+            Assert.IsFalse(readVersions.Any(v => v.Revision == first!.Revision));
+            Assert.IsTrue(readVersions.Any(v => v.Revision == second!.Revision));
+            Assert.IsTrue(readVersions.Any(v => v.Revision == third!.Revision));
+        }
+
         void WaitForEvents(int expectedSum, params IEnumerable[] collections)
             => WaitForEvents(expectedSum, Stopwatch.StartNew(), collections);
 

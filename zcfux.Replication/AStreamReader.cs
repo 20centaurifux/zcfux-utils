@@ -25,8 +25,8 @@ public abstract class AStreamReader
 {
     public abstract event EventHandler? Started;
     public abstract event EventHandler? Stopped;
-    public abstract event EventHandler<VersionEventArgs>? Read;
-    public abstract event EventHandler<VersionEventArgs>? Conflict;
+    public abstract event EventHandler<StreamReaderEventArgs>? Read;
+    public abstract event EventHandler<StreamReaderEventArgs>? Conflict;
     public abstract event ErrorEventHandler? Error;
 
     public AStreamReader(string side)
@@ -34,7 +34,7 @@ public abstract class AStreamReader
 
     public string Side { get; }
 
-    public abstract void Start();
+    public abstract void Start(string? since = null);
 
     public abstract void Stop();
 }

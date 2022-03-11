@@ -33,4 +33,21 @@ using System.Linq.Expressions;
 
         return visitor.Expression!;
      }
+
+     public static IQueryable<T> Range<T>(this IQueryable<T> self, Range range)
+     {
+         var queryable = self;
+
+         if (range.Skip.HasValue)
+         {
+             queryable = queryable.Skip(range.Skip.Value);
+         }
+
+         if (range.Limit.HasValue)
+         {
+             queryable = queryable.Take(range.Limit.Value);
+         }
+
+         return queryable;
+     }
  }

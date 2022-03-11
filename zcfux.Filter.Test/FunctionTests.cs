@@ -23,7 +23,7 @@ using NUnit.Framework;
 
 namespace zcfux.Filter.Test;
 
-public sealed class FunctionTest
+public sealed class FunctionTests
 {
     [Test]
     public void IsNull()

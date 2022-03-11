@@ -24,7 +24,7 @@ using zcfux.Filter.Linq;
 
 namespace zcfux.Filter.Test;
 
-public sealed class LinqTest
+public sealed class LinqTests
 {
     record Model(int Id, string? Value);
 
@@ -232,4 +232,52 @@ public sealed class LinqTest
         => source.Where(node.ToExpression<Model>().Compile())
             .OrderBy(m => m.Id)
             .ToArray();
+
+    [Test]
+    public void RangeAll()
+    {
+        var l = new[] { 1, 2, 3, 4, 5 };
+
+        var result = l.AsQueryable()
+            .Range(Range.All)
+            .ToArray();
+
+        Assert.IsTrue(l.SequenceEqual(result));
+    }
+
+    [Test]
+    public void RangeSkip()
+    {
+        var l = new[] { 1, 2, 3, 4, 5 };
+
+        var result = l.AsQueryable()
+            .Range(new Range(skip: 3))
+            .ToArray();
+
+        Assert.IsTrue(l.Skip(3).SequenceEqual(result));
+    }
+
+    [Test]
+    public void RangeLimit()
+    {
+        var l = new[] { 1, 2, 3, 4, 5 };
+
+        var result = l.AsQueryable()
+            .Range(new Range(limit: 3))
+            .ToArray();
+
+        Assert.IsTrue(l.Take(3).SequenceEqual(result));
+    }
+
+    [Test]
+    public void RangeSkipAndLimit()
+    {
+        var l = new[] { 1, 2, 3, 4, 5 };
+
+        var result = l.AsQueryable()
+            .Range(new Range(skip: 2, limit: 2))
+            .ToArray();
+
+        Assert.IsTrue(l.Skip(2).Take(2).SequenceEqual(result));
+    }
 }

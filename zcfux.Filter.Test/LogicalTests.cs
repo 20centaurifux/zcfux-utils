@@ -23,7 +23,7 @@ using NUnit.Framework;
 
 namespace zcfux.Filter.Test;
 
-public sealed class LogicalTest
+public sealed class LogicalTests
 {
     [Test]
     public void Not()

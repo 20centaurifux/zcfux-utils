@@ -36,7 +36,7 @@ public sealed class StreamReader : AStreamReader
     public override event EventHandler<StreamReaderEventArgs>? Conflict;
     public override event ErrorEventHandler? Error;
 
-    readonly string _url;
+    readonly StreamReaderOptions _options;
 
     const long Idle = 0;
     const long Running = 1;
@@ -48,9 +48,9 @@ public sealed class StreamReader : AStreamReader
     CancellationTokenSource? _source;
     Task<ContinuousChangesResponse>? _task;
 
-    public StreamReader(string side, string url)
+    public StreamReader(string side, StreamReaderOptions opts)
         : base(side)
-        => _url = url;
+        => _options = opts;
 
     public override void Start(string? since)
     {
@@ -58,12 +58,12 @@ public sealed class StreamReader : AStreamReader
         {
             try
             {
-                _client = Pool.Clients.TakeOrCreate(new Uri($"{_url}{Side}"));
+                _client = Pool.Clients.TakeOrCreate(new Uri($"{_options.Url}{Side}"));
 
                 var req = new GetChangesRequest
                 {
                     Feed = ChangesFeed.Continuous,
-                    Heartbeat = 15000
+                    Heartbeat = Convert.ToInt32(_options.Heartbeat.TotalMilliseconds)
                 };
 
                 if (!string.IsNullOrEmpty(since))

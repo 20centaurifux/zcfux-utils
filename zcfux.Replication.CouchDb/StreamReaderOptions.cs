@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,18 +19,21 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using MyCouch;
-using zcfux.Pool;
+ namespace zcfux.Replication.CouchDb;
 
-namespace zcfux.Replication.CouchDb;
-
-internal class DbConnection : MyCouch.Net.DbConnection
-{
-    public DbConnection(DbConnectionInfo connectionInfo)
-        : base(connectionInfo)
+ public class StreamReaderOptions
+ {
+    public StreamReaderOptions(string url, TimeSpan? heartbeat = null)
     {
+        Url = url;
+
+        if (heartbeat.HasValue)
+        {
+            Heartbeat = heartbeat.Value;
+        }
     }
 
-    public void Suspend()
-        => HttpClient.CancelPendingRequests();
-}
+     public string Url { get; set; }
+
+     public TimeSpan Heartbeat { get; set; } = TimeSpan.FromSeconds(60);
+ }

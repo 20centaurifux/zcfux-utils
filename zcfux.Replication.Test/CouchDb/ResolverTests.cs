@@ -55,7 +55,12 @@ public sealed class ResolverTests : AResolverTests
         => new Reader(side, UrlBuilder.BuildServerUrl());
 
     protected override AStreamReader CreateStreamReader(string side)
-        => new global::zcfux.Replication.CouchDb.StreamReader(side, UrlBuilder.BuildServerUrl());
+    {
+        var url = UrlBuilder.BuildServerUrl();
+        var opts = new StreamReaderOptions(url, TimeSpan.FromSeconds(1));
+
+        return new global::zcfux.Replication.CouchDb.StreamReader(side, opts);
+    }
 
     protected override AResolver CreateResolver(string side)
         => new Resolver(side, UrlBuilder.BuildServerUrl());

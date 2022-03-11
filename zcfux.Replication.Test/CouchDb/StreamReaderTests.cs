@@ -52,7 +52,12 @@ public sealed class StreamReaderTests : AStreamReaderTests
         => new Writer(side, UrlBuilder.BuildServerUrl());
 
     protected override AStreamReader CreateStreamReader(string side)
-        => new global::zcfux.Replication.CouchDb.StreamReader(side, UrlBuilder.BuildServerUrl());
+    {
+        var url = UrlBuilder.BuildServerUrl();
+        var opts = new StreamReaderOptions(url, TimeSpan.FromSeconds(1));
+
+        return new global::zcfux.Replication.CouchDb.StreamReader(side, opts);
+    }
 
     protected override void Push(string from, string to)
         => Replication.Push(from, to);

@@ -40,8 +40,8 @@ internal sealed class PrependHandleInterceptor<TImpl>
 
     public void Intercept(IInvocation invocation)
     {
-        var argumentTypes = invocation.Arguments
-            .Select(arg => arg.GetType())
+        var argumentTypes = invocation.Method.GetParameters()
+            .Select(p => p.ParameterType)
             .ToArray();
 
         var key = ToKey(invocation.Method.Name, argumentTypes);

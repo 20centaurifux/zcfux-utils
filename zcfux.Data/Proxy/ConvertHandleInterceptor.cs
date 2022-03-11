@@ -41,6 +41,13 @@ internal sealed class ConvertHandleInterceptor<TInterface, TImpl> : IInterceptor
         _impl = impl;
     }
 
+    public ConvertHandleInterceptor(TImpl impl)
+    {
+        UpdateMapping(impl);
+
+        _impl = impl;
+    }
+
     static void UpdateMapping(object impl)
     {
         if (!Methods.IsValueCreated)
@@ -87,7 +94,7 @@ internal sealed class ConvertHandleInterceptor<TInterface, TImpl> : IInterceptor
 
     public void Intercept(IInvocation invocation)
     {
-        var method = MapMethod(invocation.Method.Name, invocation.Arguments)
+        var method = MapMethod(invocation.Method)
                      ?? throw new NotImplementedException();
 
         var returnValue = method.Invoke(_impl, invocation.Arguments);
@@ -95,18 +102,19 @@ internal sealed class ConvertHandleInterceptor<TInterface, TImpl> : IInterceptor
         invocation.ReturnValue = returnValue;
     }
 
-    static MethodInfo? MapMethod(string name, object[] arguments)
+    static MethodInfo? MapMethod(MethodInfo methodInfo)
     {
-        var argumentTypes = arguments
+        var argumentTypes = methodInfo
+            .GetParameters()
             .Skip(1)
-            .Select(arg => arg.GetType())
+            .Select(p => p.ParameterType)
             .ToArray();
 
-        var key = ToKey(name, argumentTypes);
+        var key = ToKey(methodInfo.Name, argumentTypes);
 
-        Methods.Value.TryGetValue(key, out var methodInfo);
+        Methods.Value.TryGetValue(key, out var matchedMethod);
 
-        return methodInfo;
+        return matchedMethod;
     }
 
     static string ToKey(string name, Type[] types)

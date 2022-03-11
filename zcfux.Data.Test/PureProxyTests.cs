@@ -19,21 +19,42 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using LinqToDB.Configuration;
+using NUnit.Framework;
+
 namespace zcfux.Data.Test;
 
-public sealed class PgTest : APureTest
+public sealed class PureProxyTests : APureTests
 {
     const string DefaultConnectionString
         = "User ID=test;Host=localhost;Port=5432;Database=test;";
+
+    [Test]
+    public void CreateProxies()
+    {
+        var first = Proxy.Factory.ConvertHandle<IPure, LinqToDB.Pure>();
+
+        Assert.IsInstanceOf<IPure>(first);
+
+        var second = Proxy.Factory.ConvertHandle<IPure, LinqToDB.Pure>(new LinqToDB.Pure());
+
+        Assert.IsInstanceOf<IPure>(second);
+    }
 
     protected override IEngine NewEngine()
     {
         var connectionString = Environment.GetEnvironmentVariable("PG_TEST_CONNECTIONSTRING")
                                ?? DefaultConnectionString;
 
-        return new Postgres.Engine(connectionString);
+        var builder = new LinqToDbConnectionOptionsBuilder();
+
+        builder.UsePostgreSQL(connectionString);
+
+        var opts = builder.Build();
+
+        return new LinqToDB.Engine(opts);
     }
 
     protected override IPure NewDb()
-        => new Pg.Pure();
+        => Proxy.Factory.ConvertHandle<IPure, LinqToDB.Pure>();
 }

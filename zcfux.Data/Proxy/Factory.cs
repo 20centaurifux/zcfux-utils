@@ -37,6 +37,16 @@ public static class Factory
         return proxy!;
     }
 
+    public static TInterface ConvertHandle<TInterface, TImpl>(TImpl impl)
+        where TInterface : class
+    {
+        var interceptor = new ConvertHandleInterceptor<TInterface, TImpl>(impl);
+
+        var proxy = Generator.CreateInterfaceProxyWithoutTarget<TInterface>(interceptor);
+
+        return proxy!;
+    }
+
     public static TInterface PrependHandle<TInterface, TImpl>(object handle)
         where TInterface : class
         where TImpl : class

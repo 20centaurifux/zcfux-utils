@@ -23,7 +23,7 @@ using LinqToDB.Configuration;
 
 namespace zcfux.Data.Test;
 
-public sealed class LinqToDbTest : APureTest
+public sealed class LinqToDbTests : APureTests
 {
     const string DefaultConnectionString
         = "User ID=test;Host=localhost;Port=5432;Database=test;";

@@ -24,7 +24,7 @@ using NUnit.Framework;
 
 namespace zcfux.Data.Test;
 
-public sealed class StatefulProxyTest
+public sealed class StatefulProxyTests
 {
     const string DefaultConnectionString
         = "User ID=test;Host=localhost;Port=5432;Database=test;";
@@ -50,6 +50,25 @@ public sealed class StatefulProxyTest
             db.DeleteAll();
 
             t.Commit = true;
+        }
+    }
+
+    [Test]
+    public void CreateProxies()
+    {
+        var engine = NewEngine();
+
+        engine.Setup();
+
+        using (var t = engine.NewTransaction())
+        {
+            var first = Proxy.Factory.PrependHandle<IStateful, LinqToDB.Stateful>(t.Handle);
+
+            Assert.IsInstanceOf<IStateful>(first);
+
+            var second = Proxy.Factory.PrependHandle<IStateful, LinqToDB.Stateful>(new LinqToDB.Stateful(), t.Handle);
+
+            Assert.IsInstanceOf<IStateful>(second);
         }
     }
 

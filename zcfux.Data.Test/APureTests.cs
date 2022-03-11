@@ -23,7 +23,7 @@ using NUnit.Framework;
 
 namespace zcfux.Data.Test;
 
-public abstract class APureTest
+public abstract class APureTests
 {
     [SetUp]
     public void Setup()

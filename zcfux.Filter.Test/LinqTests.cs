@@ -236,48 +236,148 @@ public sealed class LinqTests
     [Test]
     public void RangeAll()
     {
-        var l = new[] { 1, 2, 3, 4, 5 };
+        var coll = new[] { 1, 2, 3, 4, 5 };
 
-        var result = l.AsQueryable()
+        var result = coll.AsQueryable()
             .Range(Range.All)
             .ToArray();
 
-        Assert.IsTrue(l.SequenceEqual(result));
+        Assert.IsTrue(coll.SequenceEqual(result));
     }
 
     [Test]
     public void RangeSkip()
     {
-        var l = new[] { 1, 2, 3, 4, 5 };
+        var coll = new[] { 1, 2, 3, 4, 5 };
 
-        var result = l.AsQueryable()
+        var result = coll.AsQueryable()
             .Range(new Range(skip: 3))
             .ToArray();
 
-        Assert.IsTrue(l.Skip(3).SequenceEqual(result));
+        Assert.IsTrue(coll.Skip(3).SequenceEqual(result));
     }
 
     [Test]
     public void RangeLimit()
     {
-        var l = new[] { 1, 2, 3, 4, 5 };
+        var coll = new[] { 1, 2, 3, 4, 5 };
 
-        var result = l.AsQueryable()
+        var result = coll.AsQueryable()
             .Range(new Range(limit: 3))
             .ToArray();
 
-        Assert.IsTrue(l.Take(3).SequenceEqual(result));
+        Assert.IsTrue(coll.Take(3).SequenceEqual(result));
     }
 
     [Test]
     public void RangeSkipAndLimit()
     {
-        var l = new[] { 1, 2, 3, 4, 5 };
+        var coll = new[] { 1, 2, 3, 4, 5 };
 
-        var result = l.AsQueryable()
+        var result = coll.AsQueryable()
             .Range(new Range(skip: 2, limit: 2))
             .ToArray();
 
-        Assert.IsTrue(l.Skip(2).Take(2).SequenceEqual(result));
+        Assert.IsTrue(coll.Skip(2).Take(2).SequenceEqual(result));
+    }
+
+    [Test]
+    public void OrderAscending()
+    {
+        var coll = new[]
+        {
+            new Model(2, "hello"),
+            new Model(1, "world")
+        };
+
+        var result = coll.AsQueryable()
+            .Order(("Id", EDirection.Ascending))
+            .ToArray();
+
+        Assert.AreEqual(2, result.Length);
+
+        Assert.AreEqual(1, result[0].Id);
+        Assert.AreEqual(2, result[1].Id);
+    }
+
+    [Test]
+    public void OrderDescending()
+    {
+        var coll = new[]
+        {
+            new Model(1, "hello"),
+            new Model(2, "world")
+        };
+
+        var result = coll.AsQueryable()
+            .Order(("Id", EDirection.Descending))
+            .ToArray();
+
+        Assert.AreEqual(2, result.Length);
+
+        Assert.AreEqual(2, result[0].Id);
+        Assert.AreEqual(1, result[1].Id);
+    }
+
+    [Test]
+    public void OrderMultiple()
+    {
+        var coll = new[]
+        {
+            new Model(1, "a"),
+            new Model(1, "b"),
+            new Model(2, "d"),
+            new Model(2, "c")
+        };
+
+        var result = coll.AsQueryable()
+            .Order(("Value", EDirection.Descending))
+            .Order(("Id", EDirection.Ascending))
+            .ToArray();
+
+        Assert.AreEqual(4, result.Length);
+
+        Assert.AreEqual(1, result[0].Id);
+        Assert.AreEqual("b", result[0].Value);
+
+        Assert.AreEqual(1, result[1].Id);
+        Assert.AreEqual("a", result[1].Value);
+
+        Assert.AreEqual(2, result[2].Id);
+        Assert.AreEqual("d", result[2].Value);
+
+        Assert.AreEqual(2, result[3].Id);
+        Assert.AreEqual("c", result[3].Value);
+    }
+
+    [Test]
+    public void Query()
+    {
+        var qb = new QueryBuilder()
+            .WithFilter(Columns.Id.Between(2, 5))
+            .WithOrderBy(Columns.Id)
+            .WithLimit(2)
+            .WithSkip(1);
+
+        var q = qb.Build();
+
+        var coll = new[]
+        {
+            new Model(6, "f"),
+            new Model(5, "e"),
+            new Model(4, "d"),
+            new Model(3, "c"),
+            new Model(2, "b"),
+            new Model(1, "a")
+        };
+
+        var result = coll.AsQueryable()
+            .Query(q)
+            .ToArray();
+        
+        Assert.AreEqual(2, result.Length);
+
+        Assert.AreEqual(3, result[0].Id);
+        Assert.AreEqual(4, result[1].Id);
     }
 }

@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,27 +19,34 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Runtime.CompilerServices;
+using NUnit.Framework;
+using zcfux.Filter.Convert;
 
-namespace zcfux.Filter;
+namespace zcfux.Filter.Test;
 
-public sealed record Column<T> : IColumn, INode
+public sealed class ConverterTests
 {
-    public string Name { get; }
+    [Test]
+    public void ValueConverter()
+    {
+        var node = Columns.Id.Between(2, 4);
 
-    public Type Type { get; } = typeof(T);
+        var converter = new ValueConverter(v =>
+        {
+            var result = v;
 
-    Column(string name)
-        => Name = name;
+            if (v is long n)
+            {
+                result = n * 2;
+            }
 
-    public static implicit operator Column<T>(string name)
-        => new(name);
+            return result;
+        });
 
-    public static Column<T> FromMember([CallerMemberName] string name = default!)
-        => new(name);
+        var transformed = converter.Convert(node);
 
-    public IColumn Rename(string name) => new Column<T>(name);
+        var sexpr = Sexpression.Parse(transformed);
 
-    public void Traverse(IVisitor visitor)
-        => visitor.Visit(this);
+        Assert.AreEqual("(between [Id] 4 8)", sexpr);
+    }
 }

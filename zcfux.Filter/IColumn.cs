@@ -26,4 +26,6 @@ public interface IColumn
     public string Name { get; }
 
     public Type Type { get; }
+
+    IColumn Rename(string name);
 }

@@ -141,7 +141,7 @@ public sealed class QueryBuilderTests
 
         Assert.IsNull(q.Range.Skip);
         Assert.IsNull(q.Range.Limit);
-    }    
+    }
 
     [Test]
     public void WithSkip()

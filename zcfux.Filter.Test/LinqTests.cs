@@ -374,7 +374,7 @@ public sealed class LinqTests
         var result = coll.AsQueryable()
             .Query(q)
             .ToArray();
-        
+
         Assert.AreEqual(2, result.Length);
 
         Assert.AreEqual(3, result[0].Id);

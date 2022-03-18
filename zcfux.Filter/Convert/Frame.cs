@@ -19,27 +19,19 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Runtime.CompilerServices;
+namespace zcfux.Filter.Convert;
 
-namespace zcfux.Filter;
-
-public sealed record Column<T> : IColumn, INode
+internal class Frame
 {
-    public string Name { get; }
+    readonly string _name;
+    readonly List<INode> _args = new();
 
-    public Type Type { get; } = typeof(T);
+    public Frame(string name)
+        => _name = name;
 
-    Column(string name)
-        => Name = name;
+    public void AddArgument(INode arg)
+        => _args.Add(arg);
 
-    public static implicit operator Column<T>(string name)
-        => new(name);
-
-    public static Column<T> FromMember([CallerMemberName] string name = default!)
-        => new(name);
-
-    public IColumn Rename(string name) => new Column<T>(name);
-
-    public void Traverse(IVisitor visitor)
-        => visitor.Visit(this);
+    public INode ToNode()
+        => new Function(_name, _args.ToArray());
 }

@@ -94,7 +94,7 @@ internal class Frame<T>
         return Expression.Lambda<Func<T, bool>>(Expression.AndAlso(left.Body, invoked), left.Parameters);
     }
 
-       Expression<Func<T, bool>> Function()
+    Expression<Func<T, bool>> Function()
     {
         var body = _name switch
         {
@@ -120,8 +120,21 @@ internal class Frame<T>
     {
         var (left, right) = TwoArgsToExpressions();
 
+        if (IsNullableType(left.Type) && !IsNullableType(right.Type))
+        {
+            right = Expression.Convert(right, left.Type);
+        }
+        else if (!IsNullableType(left.Type) && IsNullableType(right.Type))
+        {
+            left = Expression.Convert(left, right.Type);
+        }
+
         return Expression.MakeBinary(type, left, right);
     }
+
+    static bool IsNullableType(Type t)
+        => t.IsGenericType
+           && t.GetGenericTypeDefinition() == typeof(Nullable<>);
 
     Expression ColumnExpression(IColumn column)
         => Expression.Property(_parameter, column.Name);

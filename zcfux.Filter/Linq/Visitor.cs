@@ -26,10 +26,8 @@ namespace zcfux.Filter.Linq;
 internal class Visitor<T> : IVisitor
 {
     readonly Stack<Frame<T>> _stack = new();
-    Expression<Func<T, bool>>? _root;
 
-    public Expression<Func<T, bool>>? Expression
-        => _root;
+    public Expression<Func<T, bool>>? Expression { get; private set; }
 
     public void BeginFunction(string name)
     {
@@ -50,7 +48,7 @@ internal class Visitor<T> : IVisitor
         }
         else
         {
-            _root = expr;
+            Expression = expr;
         }
     }
 

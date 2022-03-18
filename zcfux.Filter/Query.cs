@@ -27,7 +27,7 @@ public sealed class Query
 
     public bool HasFilter => (Filter != null);
 
-    public (string, EDirection)[] Order { get; internal set; } = new (string, EDirection)[0];
+    public (string, EDirection)[] Order { get; internal init; } = Array.Empty<(string, EDirection)>();
 
-    public Range Range { get; internal set; } = Range.All;
+    public Range Range { get; internal init; } = Range.All;
 }

@@ -19,12 +19,12 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
- namespace zcfux.Filter;
+namespace zcfux.Filter;
 
 public sealed class QueryBuilder
 {
     INode? _filter;
-    List<(string, EDirection)> _columns = new List<(string, EDirection)>();
+    readonly List<(string, EDirection)> _columns = new List<(string, EDirection)>();
     int? _skip;
     int? _limit;
 
@@ -74,18 +74,20 @@ public sealed class QueryBuilder
 
     public QueryBuilder WithSkip(int? skip)
     {
-        var qb = new QueryBuilder(this);
-
-        qb._skip = skip;
+        var qb = new QueryBuilder(this)
+        {
+            _skip = skip
+        };
 
         return qb;
     }
 
     public QueryBuilder WithLimit(int? limit)
     {
-        var qb = new QueryBuilder(this);
-
-        qb._limit = limit;
+        var qb = new QueryBuilder(this)
+        {
+            _limit = limit
+        };
 
         return qb;
     }

@@ -39,5 +39,19 @@ public class Engine : IEngine
         => new(NewSession());
 
     Session NewSession()
-        => new(new DataConnection(Options));
+    {
+        var conn = new DataConnection(Options);
+
+        conn.InlineParameters = false;
+
+        PrepareDataConnection(conn);
+
+        var session = new Session(conn);
+
+        return session;
+    }
+
+    protected virtual void PrepareDataConnection(DataConnection connection)
+    {
+    }
 }

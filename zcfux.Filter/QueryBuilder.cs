@@ -39,6 +39,20 @@ public sealed class QueryBuilder
         (_skip, _limit) = (other._skip, other._limit);
     }
 
+    public static QueryBuilder FromQuery(Query query)
+    {
+        var qb = new QueryBuilder
+        {
+            _filter = query.Filter,
+            _skip = query.Range.Skip,
+            _limit = query.Range.Limit
+        };
+
+        qb._columns.AddRange(query.Order);
+
+        return qb;
+    }
+
     public QueryBuilder WithFilter(INode filter)
     {
         var qb = new QueryBuilder(this);

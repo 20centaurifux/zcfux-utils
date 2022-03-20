@@ -184,4 +184,32 @@ public sealed class QueryBuilderTests
         Assert.IsNull(q.Range.Skip);
         Assert.AreEqual(limit, q.Range.Limit);
     }
+
+    [Test]
+    public void FromQuery()
+    {
+        var qb = new QueryBuilder()
+            .WithSkip(1)
+            .WithLimit(2)
+            .WithOrderBy("Id")
+            .WithOrderByDescending("Value")
+            .WithFilter(Columns.Id.EqualTo(42));
+
+        var query = qb.Build();
+
+        qb = QueryBuilder.FromQuery(query);
+
+        query = qb.Build();
+
+        Assert.AreEqual(1, query.Range.Skip);
+        Assert.AreEqual(2, query.Range.Limit);
+
+        Assert.AreEqual(2, query.Order.Length);
+        Assert.IsTrue(query.Order.Any(t => t.Item1 == "Id" && t.Item2 == EDirection.Ascending));
+        Assert.IsTrue(query.Order.Any(t => t.Item1 == "Value" && t.Item2 == EDirection.Descending));
+
+        var sexpr = Sexpression.Parse(query.Filter!);
+
+        Assert.AreEqual("(= [Id] 42)", sexpr);
+    }
 }

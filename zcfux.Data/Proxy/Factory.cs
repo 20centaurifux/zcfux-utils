@@ -29,6 +29,7 @@ public static class Factory
 
     public static TInterface ConvertHandle<TInterface, TImpl>()
         where TInterface : class
+        where TImpl : notnull
     {
         var interceptor = new ConvertHandleInterceptor<TInterface, TImpl>();
 
@@ -39,6 +40,7 @@ public static class Factory
 
     public static TInterface ConvertHandle<TInterface, TImpl>(TImpl impl)
         where TInterface : class
+        where TImpl : notnull
     {
         var interceptor = new ConvertHandleInterceptor<TInterface, TImpl>(impl);
 

@@ -32,6 +32,9 @@ public sealed class QueryBuilder
     {
     }
 
+    public static Query All()
+        => new QueryBuilder().Build();
+
     QueryBuilder(QueryBuilder other)
     {
         _filter = other._filter;

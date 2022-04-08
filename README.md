@@ -2,6 +2,9 @@
 
 This is a collection of various utilities and abstractions I use in .NET projects.
 
+## Audit
+* Store & query activities.
+
 ## Byte
 * Exension methods to convert byte arrays to hex strings and back. 
 * BCD encoder/decoder.

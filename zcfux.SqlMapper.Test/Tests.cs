@@ -25,7 +25,7 @@ using NUnit.Framework;
 
 namespace zcfux.SqlMapper.Test;
 
-public sealed class Test
+public sealed class Tests
 {
     IDbConnection _conn = default!;
 

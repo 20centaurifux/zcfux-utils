@@ -23,7 +23,7 @@ using NUnit.Framework;
 
 namespace zcfux.JobRunner.Test;
 
-public sealed class RunnerTest
+public sealed class RunnerTests
 {
     AJobQueue _queue = default!;
     Runner _runner = default!;

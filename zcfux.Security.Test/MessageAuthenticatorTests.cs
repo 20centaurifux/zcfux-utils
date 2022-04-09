@@ -24,7 +24,7 @@ using zcfux.Byte;
 
 namespace zcfux.Security.Test;
 
-public sealed class MessageAuthenticatorTest
+public sealed class MessageAuthenticatorTests
 {
     [Test]
     public void MessageTest()

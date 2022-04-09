@@ -23,7 +23,7 @@ using NUnit.Framework;
 
 namespace zcfux.Session.Test;
 
-public sealed class Test
+public sealed class Tests
 {
     Manager<MemoryStore> _manager = default!;
 

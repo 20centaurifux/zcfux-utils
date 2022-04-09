@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -21,24 +21,50 @@
  ***************************************************************************/
 using NUnit.Framework;
 
-namespace zcfux.Security.Test;
+namespace zcfux.Byte.Test;
 
-public sealed class PasswordTest
+public sealed class ExtensionsTests
 {
     [Test]
-    public void Hash()
+    public void GetBytes()
     {
-        var plain = TestContext.CurrentContext.Random.GetString();
+        const string text = "hello world";
 
-        var (hash1, salt1) = Password.Hash(plain);
+        var bytes = text.GetBytes();
 
-        var (hash2, salt2) = Password.Hash(plain);
+        Assert.AreEqual(text.Length, bytes.Length);
 
-        Assert.AreNotEqual(hash1, hash2);
-        Assert.AreNotEqual(salt1, salt2);
+        for (var i = 0; i < text.Length; i++)
+        {
+            Assert.AreEqual(text[i], bytes[i]);
+        }
+    }
 
-        var hash3 = Password.Hash(plain, salt1);
+    [Test]
+    public void ToHex()
+    {
+        var bytes = new byte[] { 35, 66, 171, 205, 239 };
 
-        Assert.AreEqual(hash1, hash3);
+        var hex = bytes.ToHex();
+
+        Assert.AreEqual("2342ABCDEF", hex);
+    }
+
+    [Test]
+    public void FromHex()
+    {
+        const string text = "2342ABCDEF";
+
+        var bytes = text.FromHex();
+
+        Assert.IsTrue(new byte[] { 35, 66, 171, 205, 239 }.SequenceEqual(bytes));
+    }
+
+    [Test]
+    public void FromInvalidHex()
+    {
+        Assert.That(() => "A".FromHex(), Throws.Exception);
+
+        Assert.That(() => "BCDEFG".FromHex(), Throws.Exception);
     }
 }

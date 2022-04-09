@@ -23,7 +23,7 @@ using NUnit.Framework;
 
 namespace zcfux.CircularBuffer.Test;
 
-public sealed class Test
+public sealed class Tests
 {
     [Test]
     public void InvalidLimit()

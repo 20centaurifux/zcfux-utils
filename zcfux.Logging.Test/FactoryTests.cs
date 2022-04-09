@@ -21,50 +21,47 @@
  ***************************************************************************/
 using NUnit.Framework;
 
-namespace zcfux.Byte.Test;
+namespace zcfux.Logging.Test;
 
-public sealed class ExtensionsTest
+public sealed class FactoryTests
 {
     [Test]
-    public void GetBytes()
+    public void CreateLoggerByName()
     {
-        const string text = "hello world";
+        var logger = Factory.ByName("void");
 
-        var bytes = text.GetBytes();
-
-        Assert.AreEqual(text.Length, bytes.Length);
-
-        for (var i = 0; i < text.Length; i++)
-        {
-            Assert.AreEqual(text[i], bytes[i]);
-        }
+        Assert.IsInstanceOf<ILogger>(logger);
     }
 
     [Test]
-    public void ToHex()
+    public void CreateLoggerByUnknownName()
     {
-        var bytes = new byte[] { 35, 66, 171, 205, 239 };
+        var loggerName = TestContext.CurrentContext.Random.GetString();
 
-        var hex = bytes.ToHex();
-
-        Assert.AreEqual("2342ABCDEF", hex);
+        Assert.Throws<FactoryException>(() => Factory.ByName(loggerName));
     }
 
     [Test]
-    public void FromHex()
+    public void CreateLoggerFromAssembly()
     {
-        const string text = "2342ABCDEF";
+        var logger = Factory.FromAssembly("zcfux.Logging", "zcfux.Logging.Console.Writer");
 
-        var bytes = text.FromHex();
-
-        Assert.IsTrue(new byte[] { 35, 66, 171, 205, 239 }.SequenceEqual(bytes));
+        Assert.IsInstanceOf<ILogger>(logger);
     }
 
     [Test]
-    public void FromInvalidHex()
+    public void CreateLoggerFromUnknownAssembly()
     {
-        Assert.That(() => "A".FromHex(), Throws.Exception);
+        var assemblyName = TestContext.CurrentContext.Random.GetString();
 
-        Assert.That(() => "BCDEFG".FromHex(), Throws.Exception);
+        Assert.Throws<FactoryException>(() => Factory.FromAssembly(assemblyName, "zcfux.Logging.Console.Writer"));
+    }
+
+    [Test]
+    public void CreateUnknownLoggerFromAssembly()
+    {
+        var writerName = TestContext.CurrentContext.Random.GetString();
+
+        Assert.Throws<FactoryException>(() => Factory.FromAssembly("zcfux.Logging", writerName));
     }
 }

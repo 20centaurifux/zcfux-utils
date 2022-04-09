@@ -24,7 +24,7 @@ using NUnit.Framework;
 
 namespace zcfux.Logging.Test;
 
-public sealed class LoggingTest
+public sealed class LoggingTests
 {
     [SetUp]
     public void Setup()

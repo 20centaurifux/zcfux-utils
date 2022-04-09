@@ -21,25 +21,48 @@
  ***************************************************************************/
 using NUnit.Framework;
 
-namespace zcfux.Security.Test;
+namespace zcfux.Byte.Test;
 
-public sealed class ConcurrentLimiterTest
+public sealed class BcdTests
 {
     [Test]
-    public void LimiterTest()
+    public void ParseAscii()
     {
-        var child = new RateLimit.BucketLimiter<string>(bucketSize: 2, periodMillis: 500);
-        var parent = new RateLimit.ConcurrentRateLimiter<string>(child);
+        Bcd.ParseAscii("1337", out var bytes);
 
-        var t1 = Task.Factory.StartNew(() => parent.Throttle("a"));
-        var t2 = Task.Factory.StartNew(() => parent.Throttle("a"));
+        Assert.AreEqual(bytes[0], 0x13);
+        Assert.AreEqual(bytes[1], 0x37);
+    }
 
-        Task.WaitAll(t1, t2);
+    [Test]
+    public void ParseInvalidAscii()
+    {
+        Assert.Throws<ArgumentException>(() => Bcd.ParseAscii("1337a", out var bytes));
+    }
 
-        Assert.IsTrue(parent.Throttle("a"));
+    [Test]
+    public void ToAscii()
+    {
+        var bytes = new byte[] { 0x13, 0x37 };
 
-        Thread.Sleep(500);
+        var ascii = Bcd.ToAscii(bytes);
 
-        Assert.IsFalse(parent.Throttle("a"));
+        Assert.AreEqual("1337", ascii);
+    }
+
+    [Test]
+    public void ToIntegral()
+    {
+        var n = Bcd.ToIntegral(new byte[] { 0x13, 0x37 });
+
+        Assert.AreEqual(1337, n);
+    }
+
+    [Test]
+    public void ToIntegralWithOffsetAndLength()
+    {
+        var n = Bcd.ToIntegral(new byte[] { 0x13, 0x37 }, 1, 1);
+
+        Assert.AreEqual(37, n);
     }
 }

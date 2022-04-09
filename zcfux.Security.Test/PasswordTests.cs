@@ -23,21 +23,22 @@ using NUnit.Framework;
 
 namespace zcfux.Security.Test;
 
-public sealed class BucketLimiterTest
+public sealed class PasswordTests
 {
     [Test]
-    public void LimiterTest()
+    public void Hash()
     {
-        var limiter = new RateLimit.BucketLimiter<string>(bucketSize: 2, periodMillis: 500);
+        var plain = TestContext.CurrentContext.Random.GetString();
 
-        Assert.IsFalse(limiter.Throttle("a"));
-        Assert.IsFalse(limiter.Throttle("a"));
-        Assert.IsFalse(limiter.Throttle("b"));
-        Assert.IsTrue(limiter.Throttle("a"));
+        var (hash1, salt1) = Password.Hash(plain);
 
-        Thread.Sleep(500);
+        var (hash2, salt2) = Password.Hash(plain);
 
-        Assert.IsFalse(limiter.Throttle("a"));
-        Assert.IsTrue(limiter.Throttle("a"));
+        Assert.AreNotEqual(hash1, hash2);
+        Assert.AreNotEqual(salt1, salt2);
+
+        var hash3 = Password.Hash(plain, salt1);
+
+        Assert.AreEqual(hash1, hash3);
     }
 }

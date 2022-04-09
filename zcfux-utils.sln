@@ -65,6 +65,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Audit", "zcfux.Audit\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Audit.LinqToPg", "zcfux.Audit.LinqToPg\zcfux.Audit.LinqToPg.csproj", "{9E88E9AA-7E3F-4683-8529-FD7D8E07B674}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Audit.Test", "zcfux.Audit.Test\zcfux.Audit.Test.csproj", "{15FC8C66-B739-4461-9E5A-F737AF6C17E4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -199,5 +201,9 @@ Global
 		{9E88E9AA-7E3F-4683-8529-FD7D8E07B674}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9E88E9AA-7E3F-4683-8529-FD7D8E07B674}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9E88E9AA-7E3F-4683-8529-FD7D8E07B674}.Release|Any CPU.Build.0 = Release|Any CPU
+		{15FC8C66-B739-4461-9E5A-F737AF6C17E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{15FC8C66-B739-4461-9E5A-F737AF6C17E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{15FC8C66-B739-4461-9E5A-F737AF6C17E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{15FC8C66-B739-4461-9E5A-F737AF6C17E4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

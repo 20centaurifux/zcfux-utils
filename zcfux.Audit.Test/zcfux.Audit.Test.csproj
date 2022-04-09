@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <OutputType>Library</OutputType>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="linq2db" Version="3.6.0" />
+      <PackageReference Include="linq2db.PostgreSQL" Version="3.6.0" />
+      <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
+      <PackageReference Include="Npgsql" Version="6.0.2" />
+      <PackageReference Include="NUnit" Version="3.13.2" />
+      <PackageReference Include="NUnit3TestAdapter" Version="4.2.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\zcfux.Audit\zcfux.Audit.csproj" />
+      <ProjectReference Include="..\zcfux.Audit.LinqToPg\zcfux.Audit.LinqToPg.csproj" />
+      <ProjectReference Include="..\zcfux.Data\zcfux.Data.csproj" />
+      <ProjectReference Include="..\zcfux.Data.LinqToDB\zcfux.Data.LinqToDB.csproj" />
+    </ItemGroup>
+
+</Project>

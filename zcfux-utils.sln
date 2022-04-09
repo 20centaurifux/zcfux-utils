@@ -63,6 +63,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Pool.Test", "zcfux.Po
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Audit", "zcfux.Audit\zcfux.Audit.csproj", "{55B04F02-3226-4FBF-9B6D-440FEEC71C39}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Audit.LinqToPg", "zcfux.Audit.LinqToPg\zcfux.Audit.LinqToPg.csproj", "{9E88E9AA-7E3F-4683-8529-FD7D8E07B674}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -193,5 +195,9 @@ Global
 		{55B04F02-3226-4FBF-9B6D-440FEEC71C39}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{55B04F02-3226-4FBF-9B6D-440FEEC71C39}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{55B04F02-3226-4FBF-9B6D-440FEEC71C39}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9E88E9AA-7E3F-4683-8529-FD7D8E07B674}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E88E9AA-7E3F-4683-8529-FD7D8E07B674}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E88E9AA-7E3F-4683-8529-FD7D8E07B674}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E88E9AA-7E3F-4683-8529-FD7D8E07B674}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

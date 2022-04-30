@@ -46,12 +46,8 @@ public abstract class ADbTest
     }
 
     [TearDown]
-    public void Teardown()
-    {
-        _transaction.Commit = true;
-        _transaction?.Dispose();
-    }
-    //=> _transaction?.Dispose();
+    public void Teardown() 
+        => _transaction?.Dispose();
 
     protected abstract IDbTestMethods Methods { get; }
 }

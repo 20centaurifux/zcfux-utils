@@ -67,4 +67,26 @@ public sealed class ExtensionsTests
 
         Assert.That(() => "BCDEFG".FromHex(), Throws.Exception);
     }
+
+    [Test]
+    public void BytesToMemoryStream()
+    {
+        var bytes = new byte[20];
+        
+        TestContext.CurrentContext.Random.NextBytes(bytes);
+
+        var ms = bytes.ToMemoryStream();
+        
+        Assert.AreEqual(bytes, ms.ToArray());
+    }
+    
+    [Test]
+    public void StringToMemoryStream()
+    {
+        var text = TestContext.CurrentContext.Random.GetString();
+        
+        var ms = text.ToMemoryStream();
+        
+        Assert.AreEqual(text.GetBytes(), ms.ToArray());
+    }
 }

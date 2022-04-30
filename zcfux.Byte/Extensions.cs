@@ -26,7 +26,10 @@ namespace zcfux.Byte;
 public static class Extensions
 {
     public static byte[] GetBytes(this string self)
-        => Encoding.UTF8.GetBytes(self);
+        => self.GetBytes(Encoding.UTF8);
+
+    public static byte[] GetBytes(this string self, Encoding encoding)
+        => encoding.GetBytes(self);
 
     public static string ToHex(this IEnumerable<byte> self)
     {
@@ -60,4 +63,13 @@ public static class Extensions
 
         return bytes;
     }
+    
+    public static MemoryStream ToMemoryStream(this IEnumerable<byte> self)
+        => new(self.ToArray());
+
+    public static MemoryStream ToMemoryStream(this string self)
+        => self.ToMemoryStream(Encoding.UTF8);
+    
+    public static MemoryStream ToMemoryStream(this string self, Encoding encoding)
+        => encoding.GetBytes(self).ToMemoryStream();
 }

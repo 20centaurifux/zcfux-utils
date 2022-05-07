@@ -71,6 +71,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.KeyValueStore", "zcfu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.KeyValueStore.Test", "zcfux.KeyValueStore.Test\zcfux.KeyValueStore.Test.csproj", "{20FDB172-E015-4771-8825-E89FDA3E2D77}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.KeyValueStore.Persistent", "zcfux.KeyValueStore.Persistent\zcfux.KeyValueStore.Persistent.csproj", "{E2AFCF64-278D-4056-8B8A-82FF3151EA2D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -217,5 +219,9 @@ Global
 		{20FDB172-E015-4771-8825-E89FDA3E2D77}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{20FDB172-E015-4771-8825-E89FDA3E2D77}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{20FDB172-E015-4771-8825-E89FDA3E2D77}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2AFCF64-278D-4056-8B8A-82FF3151EA2D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2AFCF64-278D-4056-8B8A-82FF3151EA2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2AFCF64-278D-4056-8B8A-82FF3151EA2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2AFCF64-278D-4056-8B8A-82FF3151EA2D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

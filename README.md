@@ -36,8 +36,11 @@ This is a collection of various utilities and abstractions I use in .NET project
 * Customizable job queue (library comes with an in-memory queue).
 
 ## KeyValueStore
-* key-value store abstractions & in-memory implementation.
-* 
+* Key-value store abstractions & in-memory implementation.
+ 
+## KeyValueStore.Persistent
+* A persistent key-value store implementation for storing large blobs.
+ 
 ## Logging
 * Logging abstractions.
 

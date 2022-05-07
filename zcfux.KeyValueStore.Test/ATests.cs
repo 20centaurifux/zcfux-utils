@@ -26,6 +26,14 @@ namespace zcfux.KeyValueStore.Test;
 public abstract class ATests
 {
     [Test]
+    public void CreateAndSetup()
+    {
+        var store = CreateAndSetupStore();
+
+        Assert.IsInstanceOf<IStore>(store);
+    }
+    
+    [Test]
     public void PutAndFetch()
     {
         using (var store = CreateAndSetupStore())
@@ -42,8 +50,8 @@ public abstract class ATests
 
             using (var stream = store.Fetch(key))
             {
-                ms.Seek(0, SeekOrigin.Begin);
-                
+                ms = new MemoryStream();
+
                 stream.CopyTo(ms);
 
                 Assert.IsTrue(value.SequenceEqual(ms.ToArray()));
@@ -76,8 +84,8 @@ public abstract class ATests
 
             using (var stream = store.Fetch(key))
             {
-                ms.Seek(0, SeekOrigin.Begin);
-                
+                ms = new MemoryStream();
+
                 stream.CopyTo(ms);
 
                 Assert.IsFalse(first.SequenceEqual(ms.ToArray()));

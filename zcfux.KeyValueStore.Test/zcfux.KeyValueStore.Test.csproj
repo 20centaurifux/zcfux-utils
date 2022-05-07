@@ -13,6 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\zcfux.KeyValueStore.Persistent\zcfux.KeyValueStore.Persistent.csproj" />
       <ProjectReference Include="..\zcfux.KeyValueStore\zcfux.KeyValueStore.csproj" />
     </ItemGroup>
 

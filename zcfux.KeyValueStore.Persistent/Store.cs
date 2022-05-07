@@ -97,6 +97,5 @@ public sealed class Store : IStore
         => _storage!.Remove(key);
 
     public void Dispose()
-    {
-    }
+        => _storage?.Dispose();
 }

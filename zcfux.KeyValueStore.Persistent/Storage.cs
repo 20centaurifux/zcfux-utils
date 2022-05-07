@@ -24,7 +24,7 @@ using zcfux.Byte;
 
 namespace zcfux.KeyValueStore.Persistent;
 
-internal sealed class Storage
+internal sealed class Storage : IDisposable
 {
     readonly string _path;
     DirectoryInfo? _blobs;
@@ -79,44 +79,32 @@ internal sealed class Storage
 
     void RemoveOrphanFiles()
     {
-        var orphans = BlobsFromFs(_blobs!, ImmutableList.Create<string>())
+        var orphans = new BlobsFromFs(_blobs!.FullName).FindAll()
             .Where(t => _db!.IsOrphan(t.Item1))
             .Select(t => new FileInfo(t.Item2))
             .ToArray();
 
         foreach (var orphan in orphans)
         {
-            orphan.Delete();
+            if (FileLock.TryEnterWriteLock(orphan.FullName, TimeSpan.FromSeconds(5)))
+            {
+                try
+                {
+                    orphan.Delete();
+                }
+                finally
+                {
+                    FileLock.ExitWriteLock(orphan.FullName);
+                }
+            }
         }
     }
-
+    
     void RemoveOrphanBlobsFromDb()
         => _db!.RemoveOrphans();
 
     void Vacuum()
         => _db!.Vacuum();
-
-    static IEnumerable<(string, string)> BlobsFromFs(DirectoryInfo directory, ImmutableList<string> parts)
-    {
-        var subdirectories = directory.GetDirectories();
-
-        foreach (var subdirectory in subdirectories)
-        {
-            foreach (var hex in BlobsFromFs(subdirectory, parts.Add(subdirectory.Name)))
-            {
-                yield return hex;
-            }
-        }
-
-        foreach (var file in directory.GetFiles())
-        {
-            parts = parts.Add(file.Name);
-
-            var hex = string.Join(string.Empty, parts);
-
-            yield return (hex, file.FullName);
-        }
-    }
 
     public FileStream CreateTemporaryFile()
     {
@@ -205,4 +193,7 @@ internal sealed class Storage
 
     public void Remove(string key)
         => _db!.Remove(key);
+
+    public void Dispose()
+        => _db?.Dispose();
 }

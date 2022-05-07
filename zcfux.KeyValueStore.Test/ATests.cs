@@ -20,6 +20,7 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using NUnit.Framework;
+using zcfux.Byte;
 
 namespace zcfux.KeyValueStore.Test;
 
@@ -28,9 +29,10 @@ public abstract class ATests
     [Test]
     public void CreateAndSetup()
     {
-        var store = CreateAndSetupStore();
-
-        Assert.IsInstanceOf<IStore>(store);
+        using (var store = CreateAndSetupStore())
+        {
+            Assert.IsInstanceOf<IStore>(store);
+        }
     }
     
     [Test]
@@ -43,14 +45,12 @@ public abstract class ATests
             var value = new byte[20];
             
             TestContext.CurrentContext.Random.NextBytes(value);
-            
-            var ms = new MemoryStream(value);
-            
-            store.Put(key, ms);
+
+            store.Put(key, value.ToMemoryStream());
 
             using (var stream = store.Fetch(key))
             {
-                ms = new MemoryStream();
+                var ms = new MemoryStream();
 
                 stream.CopyTo(ms);
 
@@ -69,22 +69,18 @@ public abstract class ATests
             var first = new byte[20];
             
             TestContext.CurrentContext.Random.NextBytes(first);
-            
-            var ms = new MemoryStream(first);
-            
-            store.Put(key, ms);
+
+            store.Put(key, first.ToMemoryStream());
             
             var second = new byte[20];
             
             TestContext.CurrentContext.Random.NextBytes(second);
-            
-            ms = new MemoryStream(second);
-            
-            store.Put(key, ms);
+
+            store.Put(key, second.ToMemoryStream());
 
             using (var stream = store.Fetch(key))
             {
-                ms = new MemoryStream();
+                var ms = new MemoryStream();
 
                 stream.CopyTo(ms);
 
@@ -118,10 +114,8 @@ public abstract class ATests
             var value = new byte[20];
             
             TestContext.CurrentContext.Random.NextBytes(value);
-            
-            var ms = new MemoryStream(value);
-            
-            store.Put(key, ms);
+
+            store.Put(key, value.ToMemoryStream());
             
             store.Remove(key);
 

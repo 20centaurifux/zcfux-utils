@@ -19,38 +19,43 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Collections.Concurrent;
+using System.Collections.Immutable;
 
 namespace zcfux.KeyValueStore.Persistent;
 
-static class FileTable
+internal sealed class BlobsFromFs
 {
-    static readonly object Lock = new();
-    static readonly Dictionary<string, long> Map = new();
-
-    public static long Increment(string path)
-    {
-        lock (Lock)
-        {
-            var count = Map.GetValueOrDefault(path) + 1;
-
-            Map[path] = count;
-
-            return count;
-        }
-    }
+    readonly string _path;
     
-    public static long Decrement(string path)
+    public BlobsFromFs(string path)
+        => _path = path;
+
+    public IEnumerable<(string, string)> FindAll()
     {
-        lock (Lock)
+        var directory = new DirectoryInfo(_path);
+
+        return Search(directory, ImmutableList.Create<string>());
+    }
+
+    static IEnumerable<(string, string)> Search(DirectoryInfo directory, ImmutableList<string> parts)
+    {
+        var subdirectories = directory.GetDirectories();
+
+        foreach (var subdirectory in subdirectories)
         {
-            var count = Map.GetValueOrDefault(path);
-            
-            count = Math.Min(count - 1, 0);
+            foreach (var hex in Search(subdirectory, parts.Add(subdirectory.Name)))
+            {
+                yield return hex;
+            }
+        }
 
-            Map[path] = count;
+        foreach (var file in directory.GetFiles())
+        {
+            parts = parts.Add(file.Name);
 
-            return count;
+            var hex = string.Join(string.Empty, parts);
+
+            yield return (hex, file.FullName);
         }
     }
 }

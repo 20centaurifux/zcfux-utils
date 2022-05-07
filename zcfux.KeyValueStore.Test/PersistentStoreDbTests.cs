@@ -19,6 +19,7 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using Microsoft.Data.Sqlite;
 using zcfux.KeyValueStore.Persistent;
 
 namespace zcfux.KeyValueStore.Test;
@@ -27,7 +28,11 @@ public sealed class PersistentStoreDbTests : ATests
 {
     protected override IStore CreateAndSetupStore()
     {
+        SqliteConnection.ClearAllPools();
+        
         var path = Path.Combine(Path.GetTempPath(), typeof(PersistentStoreDbTests).FullName!);
+        
+        Directory.Delete(path, recursive: true);
 
         var opts = new Store.Options(path, 512);
 

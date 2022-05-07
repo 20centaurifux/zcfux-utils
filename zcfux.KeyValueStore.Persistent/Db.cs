@@ -23,7 +23,7 @@ using Microsoft.Data.Sqlite;
 
 namespace zcfux.KeyValueStore.Persistent;
 
-internal sealed class Db
+internal sealed class Db : IDisposable
 {
     internal sealed record Association(string Key, string Hash, byte[]? Blob);
 
@@ -177,7 +177,7 @@ internal sealed class Db
         using (var readerConnection = new SqliteConnection(_connectionString))
         {
             readerConnection.Open();
-            
+
             using (var cmd = readerConnection.CreateCommand())
             {
                 cmd.CommandText = @"SELECT Association.Hash, Blob.Length, Blob.Contents
@@ -239,7 +239,7 @@ internal sealed class Db
                 cmd.CommandText = "SELECT COUNT(Key) FROM Association WHERE Hash=@hash";
 
                 cmd.Parameters.AddWithValue("@hash", hex);
-                
+
                 var result = cmd.ExecuteScalar();
 
                 return Convert.ToInt32(result) == 0;
@@ -260,7 +260,7 @@ internal sealed class Db
             }
         }
     }
-    
+
     public void Vacuum()
     {
         lock (_writerLock)
@@ -272,4 +272,7 @@ internal sealed class Db
             }
         }
     }
+
+    public void Dispose()
+        => _writerConnection.Dispose();
 }

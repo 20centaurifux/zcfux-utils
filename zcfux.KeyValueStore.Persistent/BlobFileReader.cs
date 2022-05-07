@@ -28,9 +28,9 @@ internal sealed class BlobFileReader : Stream
 
     public BlobFileReader(FileStream stream)
     {
-        _stream = stream;
+        FileLock.EnterReadLock(stream.Name);
 
-        FileTable.Increment(stream.Name);
+        _stream = stream;
     }
 
     public override void Flush()
@@ -69,7 +69,7 @@ internal sealed class BlobFileReader : Stream
 
         if (!_disposed && disposing)
         {
-            FileTable.Decrement(_stream.Name);
+            FileLock.ExitReadLock(_stream.Name);
         }
 
         _disposed = true;

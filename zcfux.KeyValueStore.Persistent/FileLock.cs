@@ -51,6 +51,16 @@ internal static class FileLock
         }
     }
 
+    public static void EnterWriteLock(string path)
+    {
+        lock (Lock)
+        {
+            var lockSlim = GetLockSlim_Unlocked(path);
+
+            lockSlim.EnterWriteLock();
+        }
+    }
+    
     public static bool TryEnterWriteLock(string path, TimeSpan timeout)
     {
         lock (Lock)

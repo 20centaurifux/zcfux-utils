@@ -138,14 +138,16 @@ internal sealed class Storage : IDisposable
 
         try
         {
-            File.Move(filename, fullPath, overwrite: false);
-        }
-        catch (IOException)
-        {
-            if (!File.Exists(filename))
+            FileLock.EnterWriteLock(fullPath);
+
+            if (!File.Exists(fullPath))
             {
-                throw;
+                File.Move(filename, fullPath);
             }
+        }
+        finally
+        {
+            FileLock.ExitWriteLock(fullPath);
         }
 
         _db!.Associate(key, hashAsHex);

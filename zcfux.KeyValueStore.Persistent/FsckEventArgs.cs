@@ -19,43 +19,14 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Collections.Immutable;
-
 namespace zcfux.KeyValueStore.Persistent;
 
-internal sealed class BlobsFromFs
+public sealed class FsckEventArgs
 {
-    readonly string _path;
-    
-    public BlobsFromFs(string path)
-        => _path = path;
+    public string Hash { get; }
+ 
+    public ELocation Location { get; }
 
-    public IEnumerable<(string, string)> FindAll()
-    {
-        var directory = new DirectoryInfo(_path);
-
-        return Search(directory, ImmutableList.Create<string>());
-    }
-
-    static IEnumerable<(string, string)> Search(DirectoryInfo directory, ImmutableList<string> parts)
-    {
-        var subdirectories = directory.GetDirectories();
-
-        foreach (var subdirectory in subdirectories)
-        {
-            foreach (var hex in Search(subdirectory, parts.Add(subdirectory.Name)))
-            {
-                yield return hex;
-            }
-        }
-
-        foreach (var file in directory.GetFiles())
-        {
-            parts = parts.Add(file.Name);
-
-            var hex = string.Join(string.Empty, parts);
-
-            yield return (hex, file.FullName);
-        }
-    }
+    public FsckEventArgs(string hash, ELocation location)
+        => (Hash, Location) = (hash, location);
 }

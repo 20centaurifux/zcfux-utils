@@ -79,7 +79,7 @@ internal sealed class Storage : IDisposable
 
     void RemoveOrphanFiles()
     {
-        var orphans = new BlobsFromFs(_blobs!.FullName).FindAll()
+        var orphans = new BlobDirectory(_blobs!.FullName).FindAll()
             .Where(t => _db!.IsOrphan(t.Item1))
             .Select(t => new FileInfo(t.Item2))
             .ToArray();
@@ -99,7 +99,7 @@ internal sealed class Storage : IDisposable
             }
         }
     }
-    
+
     void RemoveOrphanBlobsFromDb()
         => _db!.RemoveOrphans();
 

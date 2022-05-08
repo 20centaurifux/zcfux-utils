@@ -33,11 +33,14 @@ public sealed class PersistentStoreFsTests : ATests
     {
         SqliteConnection.ClearAllPools();
 
-        var path = BuildPath();
+        var buildStoragePath = BuildStoragePath();
 
-        Directory.Delete(path, recursive: true);
+        if (Directory.Exists(buildStoragePath))
+        {
+            Directory.Delete(buildStoragePath, recursive: true);
+        }
 
-        var opts = new Store.Options(path, 1);
+        var opts = new Store.Options(buildStoragePath, 1);
 
         var store = new Store(opts);
 
@@ -45,9 +48,6 @@ public sealed class PersistentStoreFsTests : ATests
 
         return store;
     }
-
-    string BuildPath()
-        => Path.Combine(Path.GetTempPath(), typeof(PersistentStoreFsTests).FullName!);
 
     [Test]
     public void DeleteOrphans()
@@ -60,7 +60,7 @@ public sealed class PersistentStoreFsTests : ATests
 
             TestContext.CurrentContext.Random.NextBytes(value);
 
-            var firstHash = Hash(value);
+            var firstHash = SHA256.HashData(value).ToHex();
 
             store.Put(first, value.ToMemoryStream());
 
@@ -74,9 +74,9 @@ public sealed class PersistentStoreFsTests : ATests
 
             (store as Store)!.CollectGarbage();
 
-            var blobsPath = Path.Combine(BuildPath(), "blobs");
+            var blobsPath = Path.Combine(BuildStoragePath(), "blobs");
 
-            var blobs = new BlobsFromFs(blobsPath)
+            var blobs = new BlobDirectory(blobsPath)
                 .FindAll()
                 .ToArray();
 
@@ -96,7 +96,7 @@ public sealed class PersistentStoreFsTests : ATests
 
             TestContext.CurrentContext.Random.NextBytes(value);
 
-            var hash = Hash(value);
+            var hash = SHA256.HashData(value).ToHex();
 
             store.Put(key, value.ToMemoryStream());
 
@@ -107,9 +107,9 @@ public sealed class PersistentStoreFsTests : ATests
             // write lock can not be acquired if the read lock is held by same thread
             Task.Factory.StartNew(() => (store as Store)!.CollectGarbage()).Wait();
 
-            var blobsPath = Path.Combine(BuildPath(), "blobs");
+            var blobsPath = Path.Combine(BuildStoragePath(), "blobs");
 
-            var (receivedHash, _) = new BlobsFromFs(blobsPath)
+            var (receivedHash, _) = new BlobDirectory(blobsPath)
                 .FindAll()
                 .Single();
 
@@ -119,7 +119,7 @@ public sealed class PersistentStoreFsTests : ATests
 
             (store as Store)!.CollectGarbage();
 
-            var blobs = new BlobsFromFs(blobsPath)
+            var blobs = new BlobDirectory(blobsPath)
                 .FindAll()
                 .ToArray();
 
@@ -127,12 +127,178 @@ public sealed class PersistentStoreFsTests : ATests
         }
     }
 
-    static string Hash(byte[] bytes)
+    [Test]
+    public void Fsck_CheckFilesystem()
     {
-        var sha256 = SHA256.Create();
+        string firstHash;
 
-        var hash = sha256.ComputeHash(bytes);
+        // insert two test blobs:
+        using (var store = CreateAndSetupStore())
+        {
+            var first = TestContext.CurrentContext.Random.GetString();
 
-        return hash.ToHex();
+            var value = new byte[20];
+
+            TestContext.CurrentContext.Random.NextBytes(value);
+
+            firstHash = SHA256.HashData(value).ToHex();
+
+            store.Put(first, value.ToMemoryStream());
+
+            var second = TestContext.CurrentContext.Random.GetString();
+
+            TestContext.CurrentContext.Random.NextBytes(value);
+
+            store.Put(second, value.ToMemoryStream());
+        }
+
+        // overwrite first blob's contents:
+        var storagePath = BuildStoragePath();
+
+        var blobPath = PathBuilder.BuildBlobPath(storagePath, firstHash);
+
+        var newValue = new byte[20];
+
+        TestContext.CurrentContext.Random.NextBytes(newValue);
+
+        File.WriteAllBytes(blobPath, newValue);
+
+        // dry run:
+        var fsck = new Fsck(storagePath)
+        {
+            Dry = true
+        };
+
+        var corrupted = new List<FsckEventArgs>();
+        var deleted = new List<FsckEventArgs>();
+        var missing = new List<FsckEventArgs>();
+
+        fsck.Corrupted += (_, e) =>
+        {
+            Assert.AreEqual(ELocation.Filesystem, e.Location);
+
+            corrupted.Add(e);
+        };
+
+        fsck.Missing += (_, e) => missing.Add(e);
+
+        fsck.Deleted += (_, e) =>
+        {
+            Assert.IsTrue(e.Location is ELocation.Index or ELocation.Filesystem);
+
+            deleted.Add(e);
+        };
+
+        fsck.CheckFilesystem();
+
+        Assert.AreEqual(1, corrupted.Count);
+        Assert.AreEqual(firstHash, corrupted.First().Hash);
+
+        Assert.AreEqual(0, missing.Count);
+
+        Assert.AreEqual(0, deleted.Count);
+
+        // delete corrupted blobs:
+        corrupted.Clear();
+
+        fsck.Dry = false;
+
+        fsck.CheckFilesystem();
+
+        Assert.AreEqual(1, corrupted.Count);
+        Assert.AreEqual(firstHash, corrupted.First().Hash);
+
+        Assert.AreEqual(0, missing.Count);
+
+        Assert.AreEqual(2, deleted.Count);
+        Assert.AreEqual(firstHash, deleted.ElementAt(0).Hash);
+        Assert.AreEqual(firstHash, deleted.ElementAt(1).Hash);
+        Assert.IsTrue(deleted.ElementAt(0).Location != deleted.ElementAt(1).Location);
     }
+
+    [Test]
+    public void Fsck_CheckIndex()
+    {
+        string firstHash;
+
+        // insert two test blobs:
+        using (var store = CreateAndSetupStore())
+        {
+            var first = TestContext.CurrentContext.Random.GetString();
+
+            var value = new byte[20];
+
+            TestContext.CurrentContext.Random.NextBytes(value);
+
+            firstHash = SHA256.HashData(value).ToHex();
+
+            store.Put(first, value.ToMemoryStream());
+
+            var second = TestContext.CurrentContext.Random.GetString();
+
+            TestContext.CurrentContext.Random.NextBytes(value);
+
+            store.Put(second, value.ToMemoryStream());
+        }
+
+        // overwrite first blob:
+        var storagePath = BuildStoragePath();
+
+        var blobPath = PathBuilder.BuildBlobPath(storagePath, firstHash);
+
+        File.Delete(blobPath);
+
+        // dry run:
+        var fsck = new Fsck(storagePath)
+        {
+            Dry = true
+        };
+
+        var corrupted = new List<string>();
+        var deleted = new List<FsckEventArgs>();
+        var missing = new List<FsckEventArgs>();
+
+        fsck.Corrupted += (_, e) => corrupted.Add(e.Hash);
+
+        fsck.Missing += (_, e) =>
+        {
+            Assert.IsTrue(e.Location == ELocation.Filesystem);
+
+            missing.Add(e);
+        };
+
+        fsck.Deleted += (_, e) =>
+        {
+            Assert.IsTrue(e.Location == ELocation.Index);
+
+            deleted.Add(e);
+        };
+
+        fsck.CheckIndex();
+
+        Assert.AreEqual(0, corrupted.Count);
+
+        Assert.AreEqual(1, missing.Count);
+        Assert.AreEqual(firstHash, missing.First().Hash);
+
+        Assert.AreEqual(0, deleted.Count);
+
+        // delete missing blobs from index:
+        missing.Clear();
+
+        fsck.Dry = false;
+
+        fsck.CheckIndex();
+
+        Assert.AreEqual(0, corrupted.Count);
+
+        Assert.AreEqual(1, missing.Count);
+        Assert.AreEqual(firstHash, missing.First().Hash);
+
+        Assert.AreEqual(1, deleted.Count);
+        Assert.AreEqual(firstHash, deleted.First().Hash);
+    }
+
+    static string BuildStoragePath()
+        => Path.Combine(Path.GetTempPath(), typeof(PersistentStoreFsTests).FullName!);
 }

@@ -40,7 +40,7 @@ internal sealed class Db : IDisposable
         _writerConnection = new SqliteConnection(_connectionString);
     }
 
-    string BuildConnectionString(string directory)
+    internal static string BuildConnectionString(string directory)
     {
         var builder = new SqliteConnectionStringBuilder();
 
@@ -213,6 +213,56 @@ internal sealed class Db : IDisposable
         }
     }
 
+    public IEnumerable<(string, byte[])> FetchSmallBlobs()
+    {
+        using (var readerConnection = new SqliteConnection(_connectionString))
+        {
+            readerConnection.Open();
+
+            using (var cmd = readerConnection.CreateCommand())
+            {
+                cmd.CommandText = "SELECT Hash, Length, Contents FROM Blob WHERE Length>0";
+
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var hash = reader.GetString(0);
+                        var length = reader.GetInt32(1);
+
+                        var bytes = new byte[length];
+
+                        reader.GetBytes(2, 0, bytes, 0, length);
+
+                        yield return (hash, bytes);
+                    }
+                }
+            }
+        }
+    }
+    
+    public IEnumerable<string> FetchLargeBlobs()
+    {
+        using (var readerConnection = new SqliteConnection(_connectionString))
+        {
+            readerConnection.Open();
+
+            using (var cmd = readerConnection.CreateCommand())
+            {
+                cmd.CommandText = @"SELECT Hash FROM Association
+                                    WHERE NOT EXISTS (SELECT Hash FROM Blob WHERE Blob.Hash=Association.Hash)";
+
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        yield return reader.GetString(0);
+                    }
+                }
+            }
+        }
+    }
+
     public void Remove(string key)
     {
         lock (_writerLock)
@@ -224,6 +274,36 @@ internal sealed class Db : IDisposable
                 cmd.Parameters.AddWithValue("@key", key);
 
                 cmd.ExecuteNonQuery();
+            }
+        }
+    }
+
+    public int RemoveBlobAssociations(string hash)
+    {
+        lock (_writerLock)
+        {
+            using (var cmd = _writerConnection.CreateCommand())
+            {
+                cmd.CommandText = "DELETE FROM Association WHERE Hash=@hash";
+
+                cmd.Parameters.AddWithValue("@hash", hash);
+
+                return cmd.ExecuteNonQuery();
+            }
+        }
+    }
+    
+    public bool RemoveSmallBlob(string hash)
+    {
+        lock (_writerLock)
+        {
+            using (var cmd = _writerConnection.CreateCommand())
+            {
+                cmd.CommandText = "DELETE FROM Blob WHERE Hash=@hash";
+
+                cmd.Parameters.AddWithValue("@hash", hash);
+
+                return Convert.ToInt32(cmd.ExecuteNonQuery()) > 0;
             }
         }
     }

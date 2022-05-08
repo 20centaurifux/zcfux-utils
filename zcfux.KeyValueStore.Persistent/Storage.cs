@@ -140,10 +140,7 @@ internal sealed class Storage : IDisposable
         {
             FileLock.EnterWriteLock(fullPath);
 
-            if (!File.Exists(fullPath))
-            {
-                File.Move(filename, fullPath);
-            }
+            File.Move(filename, fullPath, overwrite: true);
         }
         finally
         {

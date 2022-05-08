@@ -24,7 +24,7 @@ namespace zcfux.Audit.LinqToPg;
 internal sealed class EdgeCollector<TEventView>
     where TEventView : IEventView
 {
-    public record EventEdgePair(TEventView Event, EdgeView? Edge);
+    public sealed record EventEdgePair(TEventView Event, EdgeView? Edge);
 
     public event EventHandler? Completed;
 

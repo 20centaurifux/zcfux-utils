@@ -181,9 +181,9 @@ internal sealed class Db : IDisposable
             using (var cmd = readerConnection.CreateCommand())
             {
                 cmd.CommandText = @"SELECT Association.Hash, Blob.Length, Blob.Contents
-                                FROM Association
-                                LEFT JOIN Blob ON Blob.Hash=Association.Hash
-                                WHERE Key=@key";
+                                      FROM Association
+                                      LEFT JOIN Blob ON Blob.Hash=Association.Hash
+                                      WHERE Key=@key";
 
                 cmd.Parameters.AddWithValue("@key", key);
 
@@ -240,7 +240,7 @@ internal sealed class Db : IDisposable
             }
         }
     }
-    
+
     public IEnumerable<string> FetchLargeBlobs()
     {
         using (var readerConnection = new SqliteConnection(_connectionString))
@@ -250,7 +250,7 @@ internal sealed class Db : IDisposable
             using (var cmd = readerConnection.CreateCommand())
             {
                 cmd.CommandText = @"SELECT Hash FROM Association
-                                    WHERE NOT EXISTS (SELECT Hash FROM Blob WHERE Blob.Hash=Association.Hash)";
+                                      WHERE NOT EXISTS (SELECT Hash FROM Blob WHERE Blob.Hash=Association.Hash)";
 
                 using (var reader = cmd.ExecuteReader())
                 {
@@ -292,7 +292,7 @@ internal sealed class Db : IDisposable
             }
         }
     }
-    
+
     public bool RemoveSmallBlob(string hash)
     {
         lock (_writerLock)
@@ -334,7 +334,7 @@ internal sealed class Db : IDisposable
             using (var cmd = _writerConnection.CreateCommand())
             {
                 cmd.CommandText = @"DELETE FROM Blob
-                                    WHERE NOT EXISTS (SELECT * FROM Association WHERE Hash=Blob.Hash)";
+                                      WHERE NOT EXISTS (SELECT * FROM Association WHERE Hash=Blob.Hash)";
 
                 cmd.ExecuteNonQuery();
             }

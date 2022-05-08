@@ -24,7 +24,7 @@ namespace zcfux.KeyValueStore.Persistent;
 public sealed class Store : IStore
 {
     public sealed record Options(string StoragePath, int SwapThreshold);
-    
+
     readonly Options _options;
     Storage? _storage;
 
@@ -58,9 +58,9 @@ public sealed class Store : IStore
         var copyUtil = new CopyUtil();
 
         var ms = new MemoryStream();
-        
+
         copyUtil.Copy(stream, ms);
-        
+
         _storage!.StoreSmallBlob(key, copyUtil.Hash!, ms.ToArray());
     }
 
@@ -75,16 +75,20 @@ public sealed class Store : IStore
             if (copyUtil.Length < _options.SwapThreshold)
             {
                 var ms = new MemoryStream();
-                
+
                 tmpStream.Seek(0, SeekOrigin.Begin);
                 tmpStream.CopyTo(ms);
 
                 _storage!.StoreSmallBlob(key, copyUtil.Hash!, ms.ToArray());
+
+                tmpStream.Close();
+
+                File.Delete(tmpStream.Name);
             }
             else
             {
                 tmpStream.Close();
-                
+
                 _storage.MoveBlob(key, copyUtil.Hash!, tmpStream.Name);
             }
         }

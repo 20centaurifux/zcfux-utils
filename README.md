@@ -3,7 +3,7 @@
 This is a collection of various utilities and abstractions I use in .NET projects.
 
 ## Audit
-* Store & query activities.
+* Store and query activities.
 
 ## Audit.LinqToPg
 * Data.LinqToDB Audit provider for Postgres.
@@ -36,10 +36,13 @@ This is a collection of various utilities and abstractions I use in .NET project
 * Customizable job queue (library comes with an in-memory queue).
 
 ## KeyValueStore
-* Key-value store abstractions & in-memory implementation.
+* Key-value store abstractions and in-memory implementation.
  
 ## KeyValueStore.Persistent
 * A persistent key-value store implementation for storing large blobs.
+* Small blobs are stored in a SQLite database.
+* Large blobs are stored as files.
+* Blobs are addressable by their content to ensure integrity and save disk space.
  
 ## Logging
 * Logging abstractions.

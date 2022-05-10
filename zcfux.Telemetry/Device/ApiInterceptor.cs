@@ -334,6 +334,16 @@ sealed class ApiInterceptor : IInterceptor
                 {
                     var payload = _serializer.Deserialize(e.Payload, ev.ParameterType);
 
+                    _logger?.Trace(
+                        "Proxy (client=`{0}') produces value (domain=`{1}', kind=`{2}', id={3}, api=`{4}', topic=`{5}'): `{6}'",
+                        _connection.ClientId,
+                        _device.Domain,
+                        _device.Kind,
+                        _device.Id,
+                        e.Api,
+                        e.Topic,
+                        payload!);
+
                     ev.Producer.Write(payload!);
                 }
                 catch (Exception ex)
@@ -393,10 +403,28 @@ sealed class ApiInterceptor : IInterceptor
 
         if ((State & EFlag.Compatible) == EFlag.Compatible)
         {
+            _logger?.Trace(
+                "API `{0}' is compatible, `{1}' returning producer (client=`{2}', domain=`{3}', kind=`{4}', id={5}).",
+                _apiTopic,
+                propertyName,
+                _connection.ClientId,
+                _device.Domain,
+                _device.Kind,
+                _device.Id);
+
             invocation.ReturnValue = ev.Producer;
         }
         else
         {
+            _logger?.Warn(
+                "API `{0}' not compatible, `{1}' returning empty enumerable (client=`{2}', domain=`{3}', kind=`{4}', id={5}).",
+                _apiTopic,
+                propertyName,
+                _connection.ClientId,
+                _device.Domain,
+                _device.Kind,
+                _device.Id);
+
             var producedType = ev
                 .Producer
                 .GetType()

@@ -54,6 +54,14 @@ sealed class DiscoveredDevice : IDiscoveredDevice
             if (Interlocked.Exchange(ref _status, (long)value) != (long)value)
             {
                 StatusChanged?.Invoke(this, new StatusEventArgs(value));
+
+                if (value == EDeviceStatus.Offline)
+                {
+                    lock(_proxiesLock)
+                    {
+                        _proxies.Clear();
+                    }
+                }
             }
         }
     }

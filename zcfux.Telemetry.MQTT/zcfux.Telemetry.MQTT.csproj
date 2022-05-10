@@ -16,7 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\zcfux.Logging\zcfux.Logging.csproj" />
     <ProjectReference Include="..\zcfux.Telemetry\zcfux.Telemetry.csproj" />
   </ItemGroup>
 

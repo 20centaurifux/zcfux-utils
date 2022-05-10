@@ -127,7 +127,8 @@ public sealed class Discoverer
         {
             if (TryGetDiscoveredDevice(e.Device) is { } device)
             {
-                if (!device.HasApi(e.Api, e.Version))
+                if (device.Status != EDeviceStatus.Offline
+                    && !device.HasApi(e.Api, e.Version))
                 {
                     _logger?.Debug(
                         "Registering api `{0}' (version=`{1}', domain=`{2}', kind=`{3}', id={4}).",

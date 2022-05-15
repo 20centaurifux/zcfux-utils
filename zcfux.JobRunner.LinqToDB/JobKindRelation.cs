@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,29 +19,21 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Collections.Concurrent;
+using LinqToDB.Mapping;
 
-namespace zcfux.JobRunner.Test.Jobs;
+namespace zcfux.JobRunner.LinqToDB;
 
-public sealed class Twice : AJob
+[Table(Schema = "scheduler", Name = "JobKind")]
+internal class JobKindRelation
 {
-    static readonly ConcurrentBag<Guid> State = new();
+    [Column(Name = "Id"), PrimaryKey, Identity]
+    public int? Id { get; set; }
 
-    protected override void Action()
-    {
-    }
+#pragma warning disable CS8618
+    [Column(Name = "Assembly"), NotNull]
+    public string Assembly { get; set; }
 
-    protected override DateTime? Schedule()
-    {
-        DateTime? nextDue = null;
-
-        if (!State.Contains(Guid))
-        {
-            State.Add(Guid);
-
-            nextDue = DateTime.UtcNow.AddMilliseconds(500);
-        }
-
-        return nextDue;
-    }
+    [Column(Name = "FullName"), NotNull]
+    public string FullName { get; set; }
+#pragma warning restore CS8618
 }

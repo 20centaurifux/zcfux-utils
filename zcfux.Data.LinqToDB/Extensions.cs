@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,29 +19,12 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Collections.Concurrent;
+using LinqToDB.Data;
 
-namespace zcfux.JobRunner.Test.Jobs;
+namespace zcfux.Data.LinqToDB;
 
-public sealed class Twice : AJob
+public static class Extensions
 {
-    static readonly ConcurrentBag<Guid> State = new();
-
-    protected override void Action()
-    {
-    }
-
-    protected override DateTime? Schedule()
-    {
-        DateTime? nextDue = null;
-
-        if (!State.Contains(Guid))
-        {
-            State.Add(Guid);
-
-            nextDue = DateTime.UtcNow.AddMilliseconds(500);
-        }
-
-        return nextDue;
-    }
+    public static DataConnection Db(this Transaction self)
+        => (self.Handle as Handle)!.Db();
 }

@@ -19,8 +19,6 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Collections.Concurrent;
-
 namespace zcfux.JobRunner.Test.Jobs;
 
 public sealed class Simple : AJob

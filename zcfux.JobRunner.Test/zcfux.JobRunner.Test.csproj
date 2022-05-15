@@ -14,6 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\zcfux.JobRunner.LinqToDB\zcfux.JobRunner.LinqToDB.csproj" />
       <ProjectReference Include="..\zcfux.JobRunner\zcfux.JobRunner.csproj" />
     </ItemGroup>
 

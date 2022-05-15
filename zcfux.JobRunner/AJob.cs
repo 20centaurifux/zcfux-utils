@@ -23,6 +23,31 @@ namespace zcfux.JobRunner;
 
 public abstract class AJob : IJobDetails
 {
+    public AJob()
+    {
+    }
+
+    public virtual void Freeze()
+    {
+    }
+
+    public void Restore(IJobDetails jobDetails)
+    {
+        Guid = jobDetails.Guid;
+        Status = jobDetails.Status;
+        Created = jobDetails.Created;
+        Args = jobDetails.Args;
+        LastDone = jobDetails.LastDone;
+        NextDue = jobDetails.NextDue;
+        Errors = jobDetails.Errors;
+
+        Restore();
+    }
+
+    protected virtual void Restore()
+    {
+    }
+
     public Guid Guid { get; internal set; }
 
     public EStatus Status { get; internal set; }

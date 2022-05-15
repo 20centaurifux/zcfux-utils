@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -23,7 +23,7 @@ using NUnit.Framework;
 
 namespace zcfux.JobRunner.Test;
 
-public sealed class RunnerTests
+public abstract class ARunnerTests
 {
     AJobQueue _queue = default!;
     Runner _runner = default!;
@@ -31,7 +31,7 @@ public sealed class RunnerTests
     [SetUp]
     public void Setup()
     {
-        _queue = new Memory.JobQueue();
+        _queue = CreateQueue();
 
         _queue.Setup();
 
@@ -39,6 +39,8 @@ public sealed class RunnerTests
 
         _runner.Start();
     }
+
+    protected abstract AJobQueue CreateQueue();
 
     [TearDown]
     public void TearDown()

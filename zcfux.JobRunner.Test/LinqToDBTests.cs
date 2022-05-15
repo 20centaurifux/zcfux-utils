@@ -19,29 +19,33 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Collections.Concurrent;
+using LinqToDB.Configuration;
+using zcfux.Data.LinqToDB;
 
-namespace zcfux.JobRunner.Test.Jobs;
+namespace zcfux.JobRunner.Test;
 
-public sealed class Twice : AJob
+public sealed class LinqtoDBTests : ARunnerTests
 {
-    static readonly ConcurrentBag<Guid> State = new();
+    const string DefaultConnectionString
+        = "User ID=test;Host=localhost;Port=5432;Database=test;";
 
-    protected override void Action()
+    protected override AJobQueue CreateQueue()
     {
-    }
+        var connectionString = Environment.GetEnvironmentVariable("PG_TEST_CONNECTIONSTRING")
+                               ?? DefaultConnectionString;
 
-    protected override DateTime? Schedule()
-    {
-        DateTime? nextDue = null;
+        var builder = new LinqToDbConnectionOptionsBuilder();
 
-        if (!State.Contains(Guid))
-        {
-            State.Add(Guid);
+        builder.UsePostgreSQL(connectionString);
 
-            nextDue = DateTime.UtcNow.AddMilliseconds(500);
-        }
+        var opts = builder.Build();
 
-        return nextDue;
+        var engine = new Engine(opts);
+
+        engine.Setup();
+
+        var queue = new LinqToDB.JobQueue(engine);
+
+        return queue;
     }
 }

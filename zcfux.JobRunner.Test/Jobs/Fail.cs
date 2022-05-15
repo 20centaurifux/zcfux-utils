@@ -19,22 +19,23 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using System.Collections.Concurrent;
+
 namespace zcfux.JobRunner.Test.Jobs;
 
 public sealed class Fail : AJob
 {
+    static readonly ConcurrentDictionary<Guid, long> State = new();
+
     public static long Fails = 1;
-
-    long _counter;
-
-    public Fail()
-        => _counter = 0;
 
     protected override void Action()
     {
-        if (_counter <= Fails)
+        State.TryGetValue(Guid, out var counter);
+
+        if (counter <= Fails)
         {
-            _counter++;
+            State[Guid] = counter + 1;
 
             throw new Exception();
         }

@@ -35,6 +35,9 @@ This is a collection of various utilities and abstractions I use in .NET project
 * Run and schedule (periodic) tasks.
 * Customizable job queue (library comes with an in-memory queue).
 
+## JobRunner.LinqToDB
+* Persistent job queue using LinqToDB.
+
 ## KeyValueStore
 * Key-value store abstractions and in-memory implementation.
  

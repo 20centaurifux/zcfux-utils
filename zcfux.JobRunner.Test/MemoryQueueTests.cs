@@ -19,29 +19,12 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Collections.Concurrent;
+using NUnit.Framework;
 
-namespace zcfux.JobRunner.Test.Jobs;
+namespace zcfux.JobRunner.Test;
 
-public sealed class Twice : AJob
+public sealed class MemoryQueueTests : ARunnerTests
 {
-    static readonly ConcurrentBag<Guid> State = new();
-
-    protected override void Action()
-    {
-    }
-
-    protected override DateTime? Schedule()
-    {
-        DateTime? nextDue = null;
-
-        if (!State.Contains(Guid))
-        {
-            State.Add(Guid);
-
-            nextDue = DateTime.UtcNow.AddMilliseconds(500);
-        }
-
-        return nextDue;
-    }
+    protected override AJobQueue CreateQueue()
+        => new Memory.JobQueue();
 }

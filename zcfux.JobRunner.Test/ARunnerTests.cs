@@ -147,4 +147,23 @@ public abstract class ARunnerTests
 
         Assert.AreEqual(2, Interlocked.Read(ref counter));
     }
+
+    [Test]
+    public void Arguments()
+    {
+        var source = new TaskCompletionSource<string[]?>();
+
+        _runner.Done += (s, e) => source.TrySetResult(e.Job.Args);
+
+        var job = _queue.Create<Jobs.Simple>(new []{ "hello", "world" });
+
+        var result = source.Task.Result;
+
+        Assert.IsNotNull(result);
+
+        Assert.AreEqual(2, result!.Length);
+
+        Assert.AreEqual("hello", result[0]);
+        Assert.AreEqual("world", result[1]);
+    }
 }

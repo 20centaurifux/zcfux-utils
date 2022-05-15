@@ -20,6 +20,7 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using LinqToDB.Configuration;
+using NUnit.Framework;
 using zcfux.Data.LinqToDB;
 
 namespace zcfux.JobRunner.Test;
@@ -47,5 +48,29 @@ public sealed class LinqtoDBTests : ARunnerTests
         var queue = new LinqToDB.JobQueue(engine);
 
         return queue;
+    }
+
+    [Test]
+    public void QueueIsPersistent()
+    {
+        // Create queue & insert job.
+        var queue = CreateQueue();
+
+        var guid = queue.Create<Jobs.Simple>().Guid;
+
+        // Start runner with a new queue & wait for job.
+        var newQueue = CreateQueue();
+
+        var runner = new Runner(newQueue, new(MaxJobs: 2, MaxErrors: 2, RetrySecs: 1));
+
+        var source = new TaskCompletionSource<Guid>();
+
+        runner.Done += (s, e) => source.TrySetResult(e.Job.Guid);
+
+        runner.Start();
+
+        Assert.AreEqual(guid, source.Task.Result);
+
+        runner.Stop();
     }
 }

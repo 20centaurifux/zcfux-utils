@@ -104,15 +104,23 @@ public abstract class ARunnerTests
     {
         long counter = 0;
 
-        _runner.Done += (s, e) => Interlocked.Increment(ref counter);
+        var source = new TaskCompletionSource<Guid>();
+
+        _runner.Done += (s, e) =>
+        {
+            if (Interlocked.Increment(ref counter) == 2)
+            {
+                source.SetResult(e.Job.Guid);
+            }
+        };
 
         _queue.Create<Jobs.Twice>();
 
-        Thread.Sleep(1000);
+        source.Task.Wait();
 
         var count = Interlocked.Read(ref counter);
 
-        Assert.GreaterOrEqual(2, count);
+        Assert.AreEqual(2, count);
     }
 
     [Test]

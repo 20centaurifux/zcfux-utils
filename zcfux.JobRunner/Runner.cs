@@ -130,10 +130,9 @@ public sealed class Runner
                     Run?.Invoke(this, job);
 
                     job.Run();
+                    job.Done();
 
                     Done?.Invoke(this, job);
-
-                    job.Done();
                 }
                 catch (Exception ex)
                 {

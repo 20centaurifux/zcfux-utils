@@ -25,7 +25,9 @@ namespace zcfux.JobRunner.Test.Jobs;
 
 public sealed class Twice : AJob
 {
-    static readonly ConcurrentBag<Guid> State = new();
+    static readonly ConcurrentDictionary<Guid, bool> State = new();
+
+    bool _executed;
 
     protected override void Action()
     {
@@ -35,13 +37,27 @@ public sealed class Twice : AJob
     {
         DateTime? nextDue = null;
 
-        if (!State.Contains(Guid))
+        if (!_executed)
         {
-            State.Add(Guid);
+            _executed = true;
 
             nextDue = DateTime.UtcNow.AddMilliseconds(500);
         }
 
         return nextDue;
+    }
+
+    public override void Freeze()
+    {
+        base.Freeze();
+
+        State[Guid] = _executed;
+    }
+
+    protected override void Restore()
+    {
+        base.Restore();
+
+        _executed = State[Guid];
     }
 }

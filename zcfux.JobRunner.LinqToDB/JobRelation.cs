@@ -77,8 +77,6 @@ internal class JobRelation : IJobDetails
 
         var job = (instance as AJob);
 
-        job?.Restore(this);
-
         return job;
     }
 }

@@ -56,14 +56,14 @@ public sealed class JobQueue : AJobQueue
                 .GetTable<JobRelation>()
                 .SingleOrDefault(j => j.Guid == job.Guid);
 
+            job.Freeze();
+
             if (existingJob == null)
             {
                 Enqueue(t.Db(), job);
             }
             else
             {
-                job.Freeze();
-
                 ReEnqueue(t.Db(), job);
             }
 
@@ -134,7 +134,12 @@ public sealed class JobQueue : AJobQueue
                 .OrderBy(j => j.NextDue)
                 .FirstOrDefault();
 
-            job = jobRelation?.NewJobInstance();
+            if (jobRelation != null)
+            {
+                job = jobRelation.NewJobInstance();
+
+                job?.Restore(jobRelation);
+            }
         }
 
         return (job != null);
@@ -161,7 +166,9 @@ public sealed class JobQueue : AJobQueue
 
             var job = jobRelation.NewJobInstance();
 
-            return job!;
+            job!.Restore(jobRelation);
+
+            return job;
         }
     }
 

@@ -29,15 +29,29 @@ public sealed class Fail : AJob
 
     public static long Fails = 1;
 
+    long _counter;
+
     protected override void Action()
     {
-        State.TryGetValue(Guid, out var counter);
-
-        if (counter <= Fails)
+        if (_counter <= Fails)
         {
-            State[Guid] = counter + 1;
+            ++_counter;
 
             throw new Exception();
         }
+    }
+
+    public override void Freeze()
+    {
+        base.Freeze();
+
+        State[Guid] = _counter;
+    }
+
+    protected override void Restore()
+    {
+        base.Restore();
+
+        _counter = State[Guid];
     }
 }

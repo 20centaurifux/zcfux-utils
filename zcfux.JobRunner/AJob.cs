@@ -78,9 +78,17 @@ public abstract class AJob : IJobDetails
     {
         LastDone = DateTime.UtcNow;
         Errors = 0;
-        Status = EStatus.Done;
 
         NextDue = Schedule();
+
+        if (NextDue.HasValue)
+        {
+            Status = EStatus.Active;
+        }
+        else
+        {
+            Status = EStatus.Done;
+        }
     }
 
     protected virtual DateTime? Schedule()

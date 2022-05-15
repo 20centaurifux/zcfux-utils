@@ -27,4 +27,30 @@ public sealed class MemoryQueueTests : ARunnerTests
 {
     protected override AJobQueue CreateQueue()
         => new Memory.JobQueue();
+
+    [Test]
+    public void QueueIsNotPersistent()
+    {
+        // Create queue & insert job.
+        var queue = CreateQueue();
+
+        queue.Create<Jobs.Simple>();
+
+        // Start runner with a new queue & wait for job.
+        var newQueue = CreateQueue();
+
+        var runner = new Runner(newQueue, new(MaxJobs: 2, MaxErrors: 2, RetrySecs: 1));
+
+        var source = new TaskCompletionSource<Guid>();
+
+        runner.Done += (s, e) => source.TrySetResult(e.Job.Guid);
+
+        runner.Start();
+
+        source.Task.Wait(5000);
+
+        Assert.IsFalse(source.Task.IsCompleted);
+
+        runner.Stop();
+    }
 }

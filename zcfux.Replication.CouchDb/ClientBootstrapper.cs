@@ -32,6 +32,6 @@ internal class ClientBootstrapper : MyCouchClientBootstrapper
 
     protected override void ConfigureServerConnectionFn()
     {
-        ServerConnectionFn = cnInfo => new ServerConnection(cnInfo);;
+        ServerConnectionFn = cnInfo => new ServerConnection(cnInfo);
     }
 }

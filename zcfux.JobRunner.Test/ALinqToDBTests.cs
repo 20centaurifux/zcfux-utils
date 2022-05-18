@@ -25,7 +25,7 @@ using zcfux.Data.LinqToDB;
 
 namespace zcfux.JobRunner.Test;
 
-public sealed class LinqtoDBTests : ARunnerTests
+public abstract class ALinqtoDBTests : ARunnerTests
 {
     const string DefaultConnectionString
         = "User ID=test;Host=localhost;Port=5432;Database=test;";
@@ -45,10 +45,14 @@ public sealed class LinqtoDBTests : ARunnerTests
 
         engine.Setup();
 
-        var queue = new LinqToDB.JobQueue(engine);
+        var options = CreateOptions();
+
+        var queue = new LinqToDB.JobQueue(engine, options);
 
         return queue;
     }
+
+    protected abstract LinqToDB.Options CreateOptions();
 
     [Test]
     public void QueueIsPersistent()

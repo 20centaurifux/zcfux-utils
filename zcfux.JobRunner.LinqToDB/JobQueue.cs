@@ -19,6 +19,7 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using System.Collections.Concurrent;
 using LinqToDB;
 using LinqToDB.Data;
 using zcfux.Data.LinqToDB;
@@ -28,9 +29,11 @@ namespace zcfux.JobRunner.LinqToDB;
 public sealed class JobQueue : AJobQueue
 {
     readonly Engine _engine;
+    readonly Options _options;
+    readonly ConcurrentDictionary<Guid, AJob> _cache = new();
 
-    public JobQueue(Engine engine)
-        => _engine = engine;
+    public JobQueue(Engine engine, Options options)
+        => (_engine, _options) = (engine, options);
 
     public override void Setup()
     {
@@ -56,7 +59,16 @@ public sealed class JobQueue : AJobQueue
                 .GetTable<JobRelation>()
                 .SingleOrDefault(j => j.Guid == job.Guid);
 
-            job.Freeze();
+            var diff = (DateTime.UtcNow - job.NextDue);
+
+            if (diff < _options.FreezeThreshold)
+            {
+                _cache[job.Guid] = job;
+            }
+            else
+            {
+                job.Freeze();
+            }
 
             if (existingJob == null)
             {
@@ -108,7 +120,7 @@ public sealed class JobQueue : AJobQueue
         return jobKindRelation;
     }
 
-    static void ReEnqueue(DataConnection db, AJob job)
+    void ReEnqueue(DataConnection db, AJob job)
     {
         db.GetTable<JobRelation>()
             .Where(j => j.Guid == job.Guid)
@@ -118,6 +130,11 @@ public sealed class JobQueue : AJobQueue
             .Set(j => j.NextDue, job.NextDue)
             .Set(j => j.Errors, job.Errors)
             .Update();
+
+        if (job.Status != EStatus.Active)
+        {
+            _cache.Remove(job.Guid, out _);
+        }
     }
 
     protected override bool TryPeek(out AJob? job)
@@ -134,7 +151,8 @@ public sealed class JobQueue : AJobQueue
                 .OrderBy(j => j.NextDue)
                 .FirstOrDefault();
 
-            if (jobRelation != null)
+            if (jobRelation != null
+                && !_cache.TryGetValue(jobRelation.Guid, out job))
             {
                 job = jobRelation.NewJobInstance();
 
@@ -164,9 +182,12 @@ public sealed class JobQueue : AJobQueue
 
             t.Commit = true;
 
-            var job = jobRelation.NewJobInstance();
+            if (!_cache.TryGetValue(jobRelation.Guid, out var job))
+            {
+                job = jobRelation.NewJobInstance();
 
-            job!.Restore(jobRelation);
+                job!.Restore(jobRelation);
+            }
 
             return job;
         }

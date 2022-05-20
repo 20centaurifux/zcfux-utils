@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -23,31 +23,8 @@ using NUnit.Framework;
 
 namespace zcfux.JobRunner.Test;
 
-public sealed class MemoryQueueTests
+public sealed class MemoryQueueRunnerTests : ARunnerTests
 {
-    [Test]
-    public void QueueIsNotPersistent()
-    {
-        // Create queue & insert job.
-        var queue = new Memory.JobQueue();
-
-        queue.Create<Jobs.Simple>();
-
-        // Start runner with a new queue & wait for job.
-        var newQueue =  new Memory.JobQueue();
-
-        var runner = new Runner(newQueue, new(MaxJobs: 2, MaxErrors: 2, RetrySecs: 1));
-
-        var source = new TaskCompletionSource<Guid>();
-
-        runner.Done += (s, e) => source.TrySetResult(e.Job.Guid);
-
-        runner.Start();
-
-        source.Task.Wait(5000);
-
-        Assert.IsFalse(source.Task.IsCompleted);
-
-        runner.Stop();
-    }
+    protected override AJobQueue CreateQueue()
+        => new Memory.JobQueue();
 }

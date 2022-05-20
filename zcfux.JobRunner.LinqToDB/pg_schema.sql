@@ -57,3 +57,20 @@ CREATE INDEX "Job_Running_Idx" ON scheduler."Job" ("Running");
 CREATE INDEX "Job_Status_Idx" ON scheduler."Job" ("Status");
 
 CREATE INDEX "Job_NextDue_Idx" ON scheduler."Job" ("NextDue");
+
+CREATE OR REPLACE VIEW scheduler."Jobs"
+AS
+SELECT "Job"."Guid",
+       "JobKind"."FullName" AS "Type",
+       "Job"."Status",
+       "Job"."Created",
+       "Job"."Args",
+       "Job"."LastDone",
+       "Job"."NextDue",
+       "Job"."Errors"
+FROM scheduler."Job"
+         JOIN scheduler."JobKind" ON "Job"."KindId" = "JobKind"."Id"
+WHERE "Job"."Running" = false;
+
+ALTER TABLE scheduler."Jobs"
+    OWNER TO test;

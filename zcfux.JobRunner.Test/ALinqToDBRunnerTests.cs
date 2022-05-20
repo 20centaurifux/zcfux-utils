@@ -19,10 +19,48 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using LinqToDB.Configuration;
+using NUnit.Framework;
+using zcfux.Data.LinqToDB;
+using zcfux.JobRunner.LinqToDB;
+
 namespace zcfux.JobRunner.Test;
 
-public sealed class LinqToDBWithoutCacheTests : ALinqtoDBTests
+public abstract class ALinqToDBRunnerTests : ARunnerTests
 {
-    protected override LinqToDB.Options CreateOptions()
-        => new (TimeSpan.Zero);
+    const string DefaultConnectionString
+        = "User ID=test;Host=localhost;Port=5432;Database=test;";
+
+    [SetUp]
+    [TearDown]
+    public void DeleteTestJobs()
+    {
+        var queue = CreateQueue();
+
+        (queue as JobQueue)!.Delete();
+    }
+
+    protected override AJobQueue CreateQueue()
+    {
+        var connectionString = Environment.GetEnvironmentVariable("PG_TEST_CONNECTIONSTRING")
+                               ?? DefaultConnectionString;
+
+        var builder = new LinqToDbConnectionOptionsBuilder();
+
+        builder.UsePostgreSQL(connectionString);
+
+        var opts = builder.Build();
+
+        var engine = new Engine(opts);
+
+        engine.Setup();
+
+        var options = CreateOptions();
+
+        var queue = new JobQueue(engine, options);
+
+        return queue;
+    }
+
+    protected abstract LinqToDB.Options CreateOptions();
 }

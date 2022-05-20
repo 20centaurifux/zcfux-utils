@@ -1,4 +1,5 @@
-﻿/***************************************************************************
+﻿
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,35 +20,38 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using NUnit.Framework;
+using LinqToDB.Mapping;
 
-namespace zcfux.JobRunner.Test;
+namespace zcfux.JobRunner.LinqToDB;
 
-public sealed class MemoryQueueTests
+[Table(Schema = "scheduler", Name = "Jobs")]
+internal class JobViewRelation : IJobDetails
 {
-    [Test]
-    public void QueueIsNotPersistent()
+    public JobViewRelation()
     {
-        // Create queue & insert job.
-        var queue = new Memory.JobQueue();
-
-        queue.Create<Jobs.Simple>();
-
-        // Start runner with a new queue & wait for job.
-        var newQueue =  new Memory.JobQueue();
-
-        var runner = new Runner(newQueue, new(MaxJobs: 2, MaxErrors: 2, RetrySecs: 1));
-
-        var source = new TaskCompletionSource<Guid>();
-
-        runner.Done += (s, e) => source.TrySetResult(e.Job.Guid);
-
-        runner.Start();
-
-        source.Task.Wait(5000);
-
-        Assert.IsFalse(source.Task.IsCompleted);
-
-        runner.Stop();
     }
+    
+    [Column(Name = "Guid"), PrimaryKey]
+    public Guid Guid { get; set; }
+
+    [Column(Name = "Status")]
+    public EStatus Status { get; set; }
+    
+    [Column(Name = "Type")]
+    public string Type { get; set; } = null!;
+
+    [Column(Name = "Created")]
+    public DateTime Created { get; set; }
+
+    [Column(Name = "Args")]
+    public string[]? Args { get; set; } = Array.Empty<string>();
+
+    [Column(Name = "LastDone")]
+    public DateTime? LastDone { get; set; }
+
+    [Column(Name = "NextDue")]
+    public DateTime? NextDue { get; set; }
+
+    [Column(Name = "Errors")]
+    public int Errors { get; set; }
 }

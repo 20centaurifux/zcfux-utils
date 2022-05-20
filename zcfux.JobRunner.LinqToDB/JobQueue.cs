@@ -23,6 +23,8 @@ using System.Collections.Concurrent;
 using LinqToDB;
 using LinqToDB.Data;
 using zcfux.Data.LinqToDB;
+using zcfux.Filter;
+using zcfux.Filter.Linq;
 
 namespace zcfux.JobRunner.LinqToDB;
 
@@ -212,6 +214,46 @@ public sealed class JobQueue : AJobQueue
         using (var t = _engine.NewTransaction())
         {
             ReEnqueue(t.Db(), job);
+
+            t.Commit = true;
+        }
+    }
+
+    public IEnumerable<IJobDetails> Query(Query query)
+    {
+        using (var t = _engine.NewTransaction())
+        {
+            return t.Db().GetTable<JobViewRelation>().Query(query);
+        }
+    }
+
+    public void Delete()
+    {
+        using (var t = _engine.NewTransaction())
+        {
+            t.Db()
+                .GetTable<JobRelation>()
+                .Delete();
+
+            t.Commit = true;
+        }
+    }
+
+    public void Delete(INode filter)
+    {
+        using (var t = _engine.NewTransaction())
+        {
+            var expr = filter.ToExpression<JobViewRelation>();
+
+            var ids = t.Db()
+                .GetTable<JobViewRelation>()
+                .Where(expr)
+                .Select(j => j.Guid);
+
+            t.Db()
+                .GetTable<JobRelation>()
+                .Where(j => ids.Contains(j.Guid))
+                .Delete();
 
             t.Commit = true;
         }

@@ -11,6 +11,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\zcfux.Data.LinqToDB\zcfux.Data.LinqToDB.csproj" />
+      <ProjectReference Include="..\zcfux.Filter\zcfux.Filter.csproj" />
       <ProjectReference Include="..\zcfux.JobRunner\zcfux.JobRunner.csproj" />
     </ItemGroup>
 

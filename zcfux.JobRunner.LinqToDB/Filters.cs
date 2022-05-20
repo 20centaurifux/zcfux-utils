@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,10 +19,23 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.JobRunner.Test;
+using zcfux.Filter;
 
-public sealed class LinqToDBWithCacheTests : ALinqtoDBTests
+namespace zcfux.JobRunner.LinqToDB;
+
+public static class Filters
 {
-    protected override LinqToDB.Options CreateOptions()
-        => new (TimeSpan.FromMinutes(1));
+    public static Column<Guid> Guid { get; } = Column<Guid>.FromMember();
+    
+    public static Column<string> Type { get; } = Column<string>.FromMember();
+    
+    public static Column<EStatus> Status { get; } = Column<EStatus>.FromMember();
+    
+    public static Column<DateTime> Created { get; } = Column<DateTime>.FromMember();
+    
+    public static Column<DateTime?> NextDue { get; } = Column<DateTime?>.FromMember();
+    
+    public static Column<DateTime?> LastDone { get; } = Column<DateTime?>.FromMember();
+    
+    public static Column<int> Errors { get; } = Column<int>.FromMember();
 }

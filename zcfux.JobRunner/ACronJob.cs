@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,45 +19,26 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Collections.Concurrent;
+using NCrontab;
 
-namespace zcfux.JobRunner.Test.Jobs;
+namespace zcfux.JobRunner;
 
-public sealed class Twice : ARegularJob
+public abstract class ACronJob : AJob
 {
-    static readonly ConcurrentDictionary<Guid, bool> State = new();
-
-    bool _executed;
-
-    protected override void Action()
+    static readonly CrontabSchedule.ParseOptions CronParseOptions = new()
     {
+        IncludingSeconds = true
+    };
+
+    CrontabSchedule? _schedule;
+
+    internal void ParseExpression(string expression)
+    {
+        _schedule = CrontabSchedule.Parse(expression, CronParseOptions);
+
+        NextDue = Schedule();
     }
 
     protected override DateTime? Schedule()
-    {
-        DateTime? nextDue = null;
-
-        if (!_executed)
-        {
-            _executed = true;
-
-            nextDue = DateTime.UtcNow.AddMilliseconds(500);
-        }
-
-        return nextDue;
-    }
-
-    public override void Freeze()
-    {
-        base.Freeze();
-
-        State[Guid] = _executed;
-    }
-
-    protected override void Restore()
-    {
-        base.Restore();
-
-        _executed = State[Guid];
-    }
+        => _schedule?.GetNextOccurrence(LastDone ?? DateTime.UtcNow);
 }

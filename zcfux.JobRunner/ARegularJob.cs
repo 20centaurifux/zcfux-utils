@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,45 +19,8 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Collections.Concurrent;
+namespace zcfux.JobRunner;
 
-namespace zcfux.JobRunner.Test.Jobs;
-
-public sealed class Twice : ARegularJob
+public abstract class ARegularJob : AJob
 {
-    static readonly ConcurrentDictionary<Guid, bool> State = new();
-
-    bool _executed;
-
-    protected override void Action()
-    {
-    }
-
-    protected override DateTime? Schedule()
-    {
-        DateTime? nextDue = null;
-
-        if (!_executed)
-        {
-            _executed = true;
-
-            nextDue = DateTime.UtcNow.AddMilliseconds(500);
-        }
-
-        return nextDue;
-    }
-
-    public override void Freeze()
-    {
-        base.Freeze();
-
-        State[Guid] = _executed;
-    }
-
-    protected override void Restore()
-    {
-        base.Restore();
-
-        _executed = State[Guid];
-    }
 }

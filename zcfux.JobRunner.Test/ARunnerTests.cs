@@ -19,6 +19,7 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using System.Diagnostics;
 using NUnit.Framework;
 
 namespace zcfux.JobRunner.Test;
@@ -124,6 +125,35 @@ public abstract class ARunnerTests
     }
 
     [Test]
+    public void RunCronJob()
+    {
+        var source = new TaskCompletionSource();
+
+        var moments = new List<DateTime>();
+        
+        _runner.Done += (s, e) =>
+        {
+            moments.Add(DateTime.UtcNow);
+
+            if (moments.Count == 5)
+            {
+                source.SetResult();
+            }
+        };
+        
+        _queue.CreateCronJob<Jobs.Cron>("*/2 * * * * *");
+
+        source.Task.Wait();
+
+        for (var i = 1; i < 5; ++i)
+        {
+            var diff = Convert.ToInt32((moments[i] - moments[i - 1]).TotalSeconds);
+            
+            Assert.AreEqual(2, diff);
+        }
+    }
+
+    [Test]
     public void RunParallel()
     {
         long counter = 0;
@@ -155,7 +185,7 @@ public abstract class ARunnerTests
 
         _runner.Done += (s, e) => source.TrySetResult(e.Job.Args);
 
-        var job = _queue.Create<Jobs.Simple>(new []{ "hello", "world" });
+        var job = _queue.Create<Jobs.Simple>(new[] { "hello", "world" });
 
         var result = source.Task.Result;
 

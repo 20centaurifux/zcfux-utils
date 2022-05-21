@@ -23,7 +23,7 @@ using System.Collections.Concurrent;
 
 namespace zcfux.JobRunner.Test.Jobs;
 
-public sealed class Fail : AJob
+public sealed class Fail : ARegularJob
 {
     static readonly ConcurrentDictionary<Guid, long> State = new();
 

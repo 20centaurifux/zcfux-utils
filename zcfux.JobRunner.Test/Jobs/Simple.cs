@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.JobRunner.Test.Jobs;
 
-public sealed class Simple : AJob
+public sealed class Simple : ARegularJob
 {
     protected override void Action()
     {

@@ -116,23 +116,41 @@ public abstract class AJobQueue
 
     protected abstract AJob Dequeue();
 
-    public IJobDetails Create<T>() where T : AJob
+    public IJobDetails Create<T>() where T : ARegularJob
         => Schedule<T>(DateTime.UtcNow, Array.Empty<string>());
 
-    public IJobDetails Create<T>(string[] args) where T : AJob
+    public IJobDetails Create<T>(string[] args) where T : ARegularJob
         => Schedule<T>(DateTime.UtcNow, args);
 
-    public IJobDetails Schedule<T>(DateTime nextDue) where T : AJob
+    public IJobDetails Schedule<T>(DateTime nextDue) where T : ARegularJob
         => Schedule<T>(nextDue, Array.Empty<string>());
 
-    public IJobDetails Schedule<T>(DateTime nextDue, string[] args) where T : AJob
+    public IJobDetails Schedule<T>(DateTime nextDue, string[] args) where T : ARegularJob
     {
-        var job = (Activator.CreateInstance(typeof(T)) as AJob)!;
+        var job = (Activator.CreateInstance(typeof(T)) as ARegularJob)!;
 
         job.Guid = Guid.NewGuid();
         job.Created = DateTime.Now;
         job.Args = args;
         job.NextDue = nextDue;
+
+        Put(job);
+
+        return job;
+    }
+
+    public IJobDetails CreateCronJob<T>(string expression) where T : ACronJob
+        => CreateCronJob<T>(expression, Array.Empty<string>());
+
+    public IJobDetails CreateCronJob<T>(string expression, string[] args) where T : ACronJob
+    {
+        var job = (Activator.CreateInstance(typeof(T)) as ACronJob)!;
+
+        job.Guid = Guid.NewGuid();
+        job.Created = DateTime.Now;
+        job.Args = args;
+
+        job.ParseExpression(expression);
 
         Put(job);
 

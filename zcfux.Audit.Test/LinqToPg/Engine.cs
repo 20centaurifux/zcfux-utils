@@ -26,7 +26,7 @@ namespace zcfux.Audit.Test.LinqToPg;
 
 public class Engine : zcfux.Data.LinqToDB.Engine
 {
-    public Engine(LinqToDbConnectionOptions options) : base(options)
+    public Engine(LinqToDBConnectionOptions options) : base(options)
     {
     }
 

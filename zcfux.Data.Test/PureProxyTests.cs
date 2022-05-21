@@ -46,7 +46,7 @@ public sealed class PureProxyTests : APureTests
         var connectionString = Environment.GetEnvironmentVariable("PG_TEST_CONNECTIONSTRING")
                                ?? DefaultConnectionString;
 
-        var builder = new LinqToDbConnectionOptionsBuilder();
+        var builder = new LinqToDBConnectionOptionsBuilder();
 
         builder.UsePostgreSQL(connectionString);
 

@@ -26,7 +26,7 @@ namespace zcfux.Data.Test.LinqToDB;
 
 public class Engine : zcfux.Data.LinqToDB.Engine
 {
-    public Engine(LinqToDbConnectionOptions opts)
+    public Engine(LinqToDBConnectionOptions opts)
         : base(opts)
     {
     }

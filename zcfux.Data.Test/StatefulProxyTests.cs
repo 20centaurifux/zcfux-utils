@@ -139,7 +139,7 @@ public sealed class StatefulProxyTests
         var connectionString = Environment.GetEnvironmentVariable("PG_TEST_CONNECTIONSTRING")
                                ?? DefaultConnectionString;
 
-        var builder = new LinqToDbConnectionOptionsBuilder();
+        var builder = new LinqToDBConnectionOptionsBuilder();
 
         builder.UsePostgreSQL(connectionString);
 

@@ -43,6 +43,9 @@ internal class JobViewRelation : IJobDetails
     [Column(Name = "Created")]
     public DateTime Created { get; set; }
 
+    [Column(Name = "InitParams")]
+    public string[]? InitParams { get; set; } = Array.Empty<string>();
+    
     [Column(Name = "Args")]
     public string[]? Args { get; set; } = Array.Empty<string>();
 

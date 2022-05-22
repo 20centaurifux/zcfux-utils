@@ -27,16 +27,20 @@ public abstract class AJob : IJobDetails
     {
     }
 
+    public virtual void Setup(string[] initParams)
+        => InitParams = initParams;
+
     public virtual void Freeze()
     {
     }
 
-    public void Restore(IJobDetails jobDetails)
+    public virtual void Restore(IJobDetails jobDetails)
     {
         Guid = jobDetails.Guid;
         Status = jobDetails.Status;
         Created = jobDetails.Created;
         Args = jobDetails.Args;
+        InitParams = jobDetails.InitParams;
         LastDone = jobDetails.LastDone;
         NextDue = jobDetails.NextDue;
         Errors = jobDetails.Errors;
@@ -50,9 +54,11 @@ public abstract class AJob : IJobDetails
 
     public Guid Guid { get; internal set; }
 
-    public EStatus Status { get; internal set; }
+    public EStatus Status { get; private set; }
 
     public DateTime Created { get; internal set; }
+
+    public string[]? InitParams { get; private set; }
 
     public string[]? Args { get; internal set; }
 

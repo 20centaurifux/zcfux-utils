@@ -150,7 +150,11 @@ public abstract class AJobQueue
         job.Created = DateTime.Now;
         job.Args = args;
 
-        job.ParseExpression(expression);
+        job.Setup(new[]
+        {
+            "--cron-expression",
+            expression
+        });
 
         Put(job);
 

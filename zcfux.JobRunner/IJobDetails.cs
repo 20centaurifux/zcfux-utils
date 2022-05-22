@@ -29,6 +29,8 @@ public interface IJobDetails
 
     public DateTime Created { get; }
 
+    public string[]? InitParams { get; }
+
     public string[]? Args { get; }
 
     public DateTime? LastDone { get; }

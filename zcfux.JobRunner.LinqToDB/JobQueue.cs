@@ -61,13 +61,21 @@ public sealed class JobQueue : AJobQueue
                 .GetTable<JobRelation>()
                 .SingleOrDefault(j => j.Guid == job.Guid);
 
-            var diff = (DateTime.UtcNow - job.NextDue);
+            var cached = false;
 
-            if (diff < _options.FreezeThreshold)
+            if (_options.FreezeThreshold > TimeSpan.Zero)
             {
-                _cache[job.Guid] = job;
+                var diff = (DateTime.UtcNow - job.NextDue);
+
+                if (diff < _options.FreezeThreshold)
+                {
+                    _cache[job.Guid] = job;
+
+                    cached = true;
+                }
             }
-            else
+
+            if (!cached)
             {
                 job.Freeze();
             }

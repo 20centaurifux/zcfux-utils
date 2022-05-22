@@ -35,6 +35,7 @@ internal class JobRelation : IJobDetails
         Guid = jobDetails.Guid;
         Status = jobDetails.Status;
         Created = jobDetails.Created;
+        InitParams = jobDetails.InitParams;
         Args = jobDetails.Args;
         LastDone = jobDetails.LastDone;
         NextDue = jobDetails.NextDue;
@@ -59,6 +60,9 @@ internal class JobRelation : IJobDetails
     [Column(Name = "Created")]
     public DateTime Created { get; set; }
 
+    [Column(Name = "InitParams")]
+    public string[]? InitParams { get; set; } = Array.Empty<string>();
+    
     [Column(Name = "Args")]
     public string[]? Args { get; set; } = Array.Empty<string>();
 

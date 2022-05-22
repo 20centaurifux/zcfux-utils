@@ -19,6 +19,7 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using CommandLine;
 using NCrontab;
 
 namespace zcfux.JobRunner;
@@ -30,13 +31,52 @@ public abstract class ACronJob : AJob
         IncludingSeconds = true
     };
 
+    sealed class Options
+    {
+        [Option("cron-expression", Required = true)]
+        public string? CronExpression { get; set; }
+    }
+
     CrontabSchedule? _schedule;
 
-    internal void ParseExpression(string expression)
+    public override void Setup(string[] initParams)
+    {
+        base.Setup(initParams);
+
+        ParseExpressionFromInitParams();
+    }
+
+    public override void Restore(IJobDetails jobDetails)
+    {
+        base.Restore(jobDetails);
+
+        ParseExpressionFromInitParams();
+    }
+
+    void ParseExpressionFromInitParams()
+    {
+        Parser.Default.ParseArguments<Options>(InitParams)
+            .WithParsed(opts =>
+            {
+                ParseExpression(opts.CronExpression!);
+            })
+            .WithNotParsed(errors =>
+            {
+                if (errors.Any(err => err.Tag is ErrorType.MissingRequiredOptionError or ErrorType.MissingValueOptionError))
+                {
+                    throw new ArgumentException("--cron-expression parameter is missing.");
+                }
+            });
+    }
+
+    void ParseExpression(string expression)
     {
         _schedule = CrontabSchedule.Parse(expression, CronParseOptions);
 
-        NextDue = Schedule();
+        if (!NextDue.HasValue)
+        {
+            NextDue = Schedule();
+        }
     }
 
     protected override DateTime? Schedule()

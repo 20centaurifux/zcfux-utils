@@ -19,23 +19,44 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using zcfux.Filter;
+using LinqToDB.Configuration;
+using zcfux.Data;
+using zcfux.Data.LinqToDB;
+using zcfux.JobRunner.Data.LinqToDB;
 
-namespace zcfux.JobRunner.LinqToDB;
+namespace zcfux.JobRunner.Test;
 
-public static class Filters
+public sealed class LinqToDBJobDbTests : AJobDbTests
 {
-    public static Column<Guid> Guid { get; } = Column<Guid>.FromMember();
+    const string DefaultConnectionString
+        = "User ID=test;Host=localhost;Port=5432;Database=test;";
+
+    Engine _engine = null!;
     
-    public static Column<string> Type { get; } = Column<string>.FromMember();
-    
-    public static Column<EStatus> Status { get; } = Column<EStatus>.FromMember();
-    
-    public static Column<DateTime> Created { get; } = Column<DateTime>.FromMember();
-    
-    public static Column<DateTime?> NextDue { get; } = Column<DateTime?>.FromMember();
-    
-    public static Column<DateTime?> LastDone { get; } = Column<DateTime?>.FromMember();
-    
-    public static Column<int> Errors { get; } = Column<int>.FromMember();
+    protected override IEngine CreateAndSetupEngine()
+    {
+        var connectionString = Environment.GetEnvironmentVariable("PG_TEST_CONNECTIONSTRING")
+                               ?? DefaultConnectionString;
+
+        var builder = new LinqToDBConnectionOptionsBuilder();
+
+        builder.UsePostgreSQL(connectionString);
+
+        var opts = builder.Build();
+
+        _engine = new Engine(opts);
+
+        _engine.Setup();
+
+        return _engine;
+    }
+
+    protected override AJobQueue CreateQueue()
+    {
+        var options = new Data.LinqToDB.Options(TimeSpan.FromMinutes(1));
+
+        var queue = new JobQueue(_engine, options);
+
+        return queue;
+    }
 }

@@ -71,9 +71,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.KeyValueStore.Test", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.KeyValueStore.Persistent", "zcfux.KeyValueStore.Persistent\zcfux.KeyValueStore.Persistent.csproj", "{E2AFCF64-278D-4056-8B8A-82FF3151EA2D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.JobRunner.LinqToDB", "zcfux.JobRunner.LinqToDB\zcfux.JobRunner.LinqToDB.csproj", "{1101B427-EB72-4A00-AE7C-467B2037690D}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.JobRunner.Test", "zcfux.JobRunner.Test\zcfux.JobRunner.Test.csproj", "{62B3B5B2-D916-4F0E-93D0-B6205DCCF379}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.JobRunner.Data", "zcfux.JobRunner.Data\zcfux.JobRunner.Data.csproj", "{D91CAF3C-7A73-493B-B0AA-226C2BE35658}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.JobRunner.Data.LinqToDB", "zcfux.JobRunner.Data.LinqToDB\zcfux.JobRunner.Data.LinqToDB.csproj", "{E306E534-E507-4D1F-ACF8-00906BA66E97}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -221,13 +223,17 @@ Global
 		{E2AFCF64-278D-4056-8B8A-82FF3151EA2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E2AFCF64-278D-4056-8B8A-82FF3151EA2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E2AFCF64-278D-4056-8B8A-82FF3151EA2D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1101B427-EB72-4A00-AE7C-467B2037690D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1101B427-EB72-4A00-AE7C-467B2037690D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1101B427-EB72-4A00-AE7C-467B2037690D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1101B427-EB72-4A00-AE7C-467B2037690D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{62B3B5B2-D916-4F0E-93D0-B6205DCCF379}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{62B3B5B2-D916-4F0E-93D0-B6205DCCF379}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{62B3B5B2-D916-4F0E-93D0-B6205DCCF379}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{62B3B5B2-D916-4F0E-93D0-B6205DCCF379}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D91CAF3C-7A73-493B-B0AA-226C2BE35658}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D91CAF3C-7A73-493B-B0AA-226C2BE35658}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D91CAF3C-7A73-493B-B0AA-226C2BE35658}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D91CAF3C-7A73-493B-B0AA-226C2BE35658}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E306E534-E507-4D1F-ACF8-00906BA66E97}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E306E534-E507-4D1F-ACF8-00906BA66E97}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E306E534-E507-4D1F-ACF8-00906BA66E97}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E306E534-E507-4D1F-ACF8-00906BA66E97}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

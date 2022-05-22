@@ -19,21 +19,27 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using LinqToDB.Mapping;
+using zcfux.Filter;
 
-namespace zcfux.JobRunner.LinqToDB;
+namespace zcfux.JobRunner.Data;
 
-[Table(Schema = "scheduler", Name = "JobKind")]
-internal class JobKindRelation
+public interface IJobDb
 {
-    [Column(Name = "Id"), PrimaryKey, Identity]
-    public int? Id { get; set; }
+    IJobDetails Create<T>(object handle) where T : ARegularJob;
 
-#pragma warning disable CS8618
-    [Column(Name = "Assembly"), NotNull]
-    public string Assembly { get; set; }
+    IJobDetails Create<T>(object handle, string[] args) where T : ARegularJob;
 
-    [Column(Name = "FullName"), NotNull]
-    public string FullName { get; set; }
-#pragma warning restore CS8618
+    IJobDetails Schedule<T>(object handle, DateTime nextDue) where T : ARegularJob;
+
+    IJobDetails Schedule<T>(object handle, DateTime nextDue, string[] args) where T : ARegularJob;
+
+    IJobDetails CreateCronJob<T>(object handle, string expression) where T : ACronJob;
+
+    IJobDetails CreateCronJob<T>(object handle, string expression, string[] args) where T : ACronJob;
+
+    IEnumerable<IJobDetails> Query(object handle, Query query);
+
+    void Delete(object handle);
+
+    void Delete(object handle, INode filter);
 }

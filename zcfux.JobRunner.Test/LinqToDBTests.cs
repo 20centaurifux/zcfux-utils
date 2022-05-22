@@ -21,9 +21,11 @@
  ***************************************************************************/
 using LinqToDB.Configuration;
 using NUnit.Framework;
+using zcfux.Data;
 using zcfux.Data.LinqToDB;
 using zcfux.Filter;
-using zcfux.JobRunner.LinqToDB;
+using zcfux.JobRunner.Data;
+using zcfux.JobRunner.Data.LinqToDB;
 
 namespace zcfux.JobRunner.Test;
 
@@ -32,16 +34,10 @@ public sealed class LinqToDBTests
     const string DefaultConnectionString
         = "User ID=test;Host=localhost;Port=5432;Database=test;";
 
+    Engine _engine = null!;
+
     [SetUp]
-    [TearDown]
-    public void DeleteTestJobs()
-    {
-        var queue = CreateQueue();
-
-        queue.Delete();
-    }
-
-    static JobQueue CreateQueue()
+    public void Setup()
     {
         var connectionString = Environment.GetEnvironmentVariable("PG_TEST_CONNECTIONSTRING")
                                ?? DefaultConnectionString;
@@ -52,13 +48,30 @@ public sealed class LinqToDBTests
 
         var opts = builder.Build();
 
-        var engine = new Engine(opts);
+        _engine = new Engine(opts);
 
-        engine.Setup();
+        _engine.Setup();
+        
+        DeleteJobs();
+    }
+    
+    void DeleteJobs()
+    {
+        var queue = CreateQueue();
 
-        var options = new LinqToDB.Options(TimeSpan.FromMinutes(1));
+        using (var t = _engine.NewTransaction())
+        {
+            queue.Delete(t.Handle);
+            
+            t.Commit = true;
+        }
+    }
 
-        var queue = new JobQueue(engine, options);
+    JobQueue CreateQueue()
+    {
+        var options = new Data.LinqToDB.Options(TimeSpan.FromMinutes(1));
+
+        var queue = new JobQueue(_engine!, options);
 
         return queue;
     }
@@ -69,7 +82,7 @@ public sealed class LinqToDBTests
         // Create queue & insert job.
         var queue = CreateQueue();
 
-        var guid = queue.Create<Jobs.Simple>().Guid;
+        var guid = queue.Create<Jobs.Simple>(_transaction).Guid;
 
         // Start runner with a new queue & wait for job.
         var newQueue = CreateQueue();
@@ -92,9 +105,9 @@ public sealed class LinqToDBTests
     {
         var queue = CreateQueue();
 
-        var first = queue.Create<Jobs.Simple>();
+        var first = queue.Create<Jobs.Simple>(_transaction);
 
-        queue.Create<Jobs.Simple>();
+        queue.Create<Jobs.Simple>(_transaction);
 
         var qb = new QueryBuilder()
             .WithFilter(Filters.Guid.EqualTo(first.Guid));
@@ -109,9 +122,9 @@ public sealed class LinqToDBTests
     {
         var queue = CreateQueue();
 
-        var first = queue.Create<Jobs.Simple>();
+        var first = queue.Create<Jobs.Simple>(_transaction);
 
-        queue.Create<Jobs.Fail>();
+        queue.Create<Jobs.Fail>(_transaction);
 
         var qb = new QueryBuilder()
             .WithFilter(Filters.Type.EqualTo(typeof(Jobs.Simple).FullName!));
@@ -126,11 +139,11 @@ public sealed class LinqToDBTests
     {
         var queue = CreateQueue();
 
-        var first = queue.Create<Jobs.Simple>();
+        var first = queue.Create<Jobs.Simple>(_transaction);
 
         Thread.Sleep(1000);
 
-        var second = queue.Create<Jobs.Simple>();
+        var second = queue.Create<Jobs.Simple>(_transaction);
 
         var diff = Convert.ToInt32((second.Created - first.Created).TotalSeconds);
 
@@ -149,7 +162,7 @@ public sealed class LinqToDBTests
     {
         var queue = CreateQueue();
 
-        queue.Create<Jobs.Simple>();
+        queue.Create<Jobs.Simple>(_transaction);
 
         var runner = new Runner(queue, new(MaxJobs: 2, MaxErrors: 2, RetrySecs: 1));
 
@@ -163,7 +176,7 @@ public sealed class LinqToDBTests
 
         runner.Stop();
 
-        var active = queue.Create<Jobs.Simple>();
+        var active = queue.Create<Jobs.Simple>(_transaction);
 
         var qb = new QueryBuilder()
             .WithFilter(Filters.Status.EqualTo(EStatus.Active));
@@ -178,7 +191,7 @@ public sealed class LinqToDBTests
     {
         var queue = CreateQueue();
 
-        queue.Create<Jobs.Fail>();
+        queue.Create<Jobs.Fail>(_transaction);
 
         var runner = new Runner(queue, new(MaxJobs: 2, MaxErrors: 2, RetrySecs: 1));
 
@@ -192,7 +205,7 @@ public sealed class LinqToDBTests
 
         runner.Stop();
 
-        var active = queue.Create<Jobs.Simple>();
+        var active = queue.Create<Jobs.Simple>(_transaction);
 
         var qb = new QueryBuilder()
             .WithFilter(Filters.Errors.EqualTo(0));
@@ -207,9 +220,9 @@ public sealed class LinqToDBTests
     {
         var queue = CreateQueue();
 
-        queue.Create<Jobs.Simple>();
+        queue.Create<Jobs.Simple>(_transaction);
 
-        var second = queue.Schedule<Jobs.Simple>(DateTime.UtcNow.AddMinutes(1));
+        var second = queue.Schedule<Jobs.Simple>(_transaction, DateTime.UtcNow.AddMinutes(1));
 
         var qb = new QueryBuilder()
             .WithFilter(Filters.NextDue.GreaterThan(DateTime.UtcNow));
@@ -224,7 +237,7 @@ public sealed class LinqToDBTests
     {
         var queue = CreateQueue();
 
-        queue.Create<Jobs.Simple>();
+        queue.Create<Jobs.Simple>(_transaction);
 
         var runner = new Runner(queue, new(MaxJobs: 2, MaxErrors: 2, RetrySecs: 1));
 
@@ -238,7 +251,7 @@ public sealed class LinqToDBTests
 
         runner.Stop();
 
-        var active = queue.Create<Jobs.Simple>();
+        var active = queue.Create<Jobs.Simple>(_transaction);
 
         var qb = new QueryBuilder()
             .WithFilter(Filters.LastDone.IsNull());
@@ -255,9 +268,9 @@ public sealed class LinqToDBTests
 
         var jobs = new[]
         {
-            queue.Create<Jobs.Simple>(),
-            queue.Create<Jobs.Simple>(),
-            queue.Create<Jobs.Simple>()
+            queue.Create<Jobs.Simple>(_transaction),
+            queue.Create<Jobs.Simple>(_transaction),
+            queue.Create<Jobs.Simple>(_transaction)
         }.OrderBy(job => job.Guid).ToArray();
 
         var qb = new QueryBuilder()
@@ -277,9 +290,9 @@ public sealed class LinqToDBTests
 
         var jobs = new[]
         {
-            queue.Create<Jobs.Fail>(),
-            queue.Create<Jobs.Simple>(),
-            queue.Create<Jobs.Twice>()
+            queue.Create<Jobs.Fail>(_transaction),
+            queue.Create<Jobs.Simple>(_transaction),
+            queue.Create<Jobs.Twice>(_transaction)
         }.OrderBy(job => job.GetType().FullName).ToArray();
 
         var qb = new QueryBuilder()
@@ -301,7 +314,7 @@ public sealed class LinqToDBTests
 
         for (var i = 0; i < jobs.Length; ++i)
         {
-            jobs[i] = queue.Create<Jobs.Simple>();
+            jobs[i] = queue.Create<Jobs.Simple>(_transaction);
 
             if (i < (jobs.Length - 1))
             {
@@ -324,7 +337,7 @@ public sealed class LinqToDBTests
     {
         var queue = CreateQueue();
 
-        queue.Create<Jobs.Simple>();
+        queue.Create<Jobs.Simple>(_transaction);
 
         var runner = new Runner(queue, new(MaxJobs: 2, MaxErrors: 2, RetrySecs: 1));
 
@@ -338,7 +351,7 @@ public sealed class LinqToDBTests
 
         runner.Stop();
 
-        queue.Create<Jobs.Simple>();
+        queue.Create<Jobs.Simple>(_transaction);
 
         var qb = new QueryBuilder()
             .WithOrderBy("Status");
@@ -360,7 +373,7 @@ public sealed class LinqToDBTests
     {
         var queue = CreateQueue();
 
-        queue.Create<Jobs.Fail>();
+        queue.Create<Jobs.Fail>(_transaction);
 
         var runner = new Runner(queue, new(MaxJobs: 2, MaxErrors: 2, RetrySecs: 1));
 
@@ -374,7 +387,7 @@ public sealed class LinqToDBTests
 
         runner.Stop();
 
-        queue.Create<Jobs.Simple>();
+        queue.Create<Jobs.Simple>(_transaction);
 
         var qb = new QueryBuilder()
             .WithOrderBy("Errors");
@@ -389,9 +402,9 @@ public sealed class LinqToDBTests
     {
         var queue = CreateQueue();
 
-        var first = queue.Create<Jobs.Simple>();
+        var first = queue.Create<Jobs.Simple>(_transaction);
 
-        var second = queue.Schedule<Jobs.Simple>(DateTime.UtcNow.AddMinutes(1));
+        var second = queue.Schedule<Jobs.Simple>(_transaction, DateTime.UtcNow.AddMinutes(1));
 
         var qb = new QueryBuilder()
             .WithOrderByDescending("NextDue");
@@ -409,7 +422,7 @@ public sealed class LinqToDBTests
 
         Guid RunJob()
         {
-            queue.Create<Jobs.Simple>();
+            queue.Create<Jobs.Simple>(_transaction);
 
             var runner = new Runner(queue, new(MaxJobs: 1, MaxErrors: 2, RetrySecs: 1));
 
@@ -448,9 +461,9 @@ public sealed class LinqToDBTests
 
         var jobs = new[]
         {
-            queue.Create<Jobs.Simple>(),
-            queue.Create<Jobs.Simple>(),
-            queue.Create<Jobs.Simple>()
+            queue.Create<Jobs.Simple>(_transaction),
+            queue.Create<Jobs.Simple>(_transaction),
+            queue.Create<Jobs.Simple>(_transaction)
         }.OrderBy(job => job.Guid).ToArray();
 
         var qb = new QueryBuilder()
@@ -469,9 +482,9 @@ public sealed class LinqToDBTests
 
         var jobs = new[]
         {
-            queue.Create<Jobs.Simple>(),
-            queue.Create<Jobs.Simple>(),
-            queue.Create<Jobs.Simple>()
+            queue.Create<Jobs.Simple>(_transaction),
+            queue.Create<Jobs.Simple>(_transaction),
+            queue.Create<Jobs.Simple>(_transaction)
         }.OrderBy(job => job.Guid).ToArray();
 
         var qb = new QueryBuilder()
@@ -490,9 +503,9 @@ public sealed class LinqToDBTests
 
         var jobs = new[]
         {
-            queue.Create<Jobs.Simple>(),
-            queue.Create<Jobs.Simple>(),
-            queue.Create<Jobs.Simple>()
+            queue.Create<Jobs.Simple>(_transaction),
+            queue.Create<Jobs.Simple>(_transaction),
+            queue.Create<Jobs.Simple>(_transaction)
         }.OrderBy(job => job.Guid).ToArray();
 
         var qb = new QueryBuilder()
@@ -510,10 +523,10 @@ public sealed class LinqToDBTests
     {
         var queue = CreateQueue();
 
-        queue.Create<Jobs.Simple>();
-        queue.Create<Jobs.Simple>();
+        queue.Create<Jobs.Simple>(_transaction);
+        queue.Create<Jobs.Simple>(_transaction);
 
-        queue.Delete();
+        queue.Delete(_transaction);
 
         Assert.IsEmpty(queue.Query(QueryBuilder.All()));
     }
@@ -523,10 +536,10 @@ public sealed class LinqToDBTests
     {
         var queue = CreateQueue();
 
-        var first = queue.Create<Jobs.Simple>();
-        var second = queue.Create<Jobs.Simple>();
+        var first = queue.Create<Jobs.Simple>(_transaction);
+        var second = queue.Create<Jobs.Simple>(_transaction);
 
-        queue.Delete(Filters.Guid.EqualTo(first.Guid));
+        queue.Delete(_transaction, Filters.Guid.EqualTo(first.Guid));
 
         var fetched = queue.Query(QueryBuilder.All()).Single();
 
@@ -538,11 +551,11 @@ public sealed class LinqToDBTests
     {
         var queue = (CreateQueue() as JobQueue)!;
 
-        queue.Create<Jobs.Fail>();
+        queue.Create<Jobs.Fail>(_transaction);
 
-        var second = queue.Create<Jobs.Simple>();
+        var second = queue.Create<Jobs.Simple>(_transaction);
 
-        queue.Delete(Filters.Type.EqualTo(typeof(Jobs.Fail).FullName!));
+        queue.Delete(_transaction, Filters.Type.EqualTo(typeof(Jobs.Fail).FullName!));
 
         var fetched = queue.Query(QueryBuilder.All()).Single();
 
@@ -554,17 +567,17 @@ public sealed class LinqToDBTests
     {
         var queue = CreateQueue();
 
-        var first = queue.Create<Jobs.Simple>();
+        var first = queue.Create<Jobs.Simple>(_transaction);
 
         Thread.Sleep(1000);
 
-        var second = queue.Create<Jobs.Simple>();
+        var second = queue.Create<Jobs.Simple>(_transaction);
 
         var diff = Convert.ToInt32((second.Created - first.Created).TotalSeconds);
 
         Assert.Greater(diff, 0);
 
-        queue.Delete(Filters.Created.EqualTo(first.Created));
+        queue.Delete(_transaction, Filters.Created.EqualTo(first.Created));
 
         var fetched = queue.Query(QueryBuilder.All()).Single();
 
@@ -576,7 +589,7 @@ public sealed class LinqToDBTests
     {
         var queue = CreateQueue();
 
-        queue.Create<Jobs.Simple>();
+        queue.Create<Jobs.Simple>(_transaction);
 
         var runner = new Runner(queue, new(MaxJobs: 2, MaxErrors: 2, RetrySecs: 1));
 
@@ -590,9 +603,9 @@ public sealed class LinqToDBTests
 
         runner.Stop();
 
-        var active = queue.Create<Jobs.Simple>();
+        var active = queue.Create<Jobs.Simple>(_transaction);
 
-        queue.Delete(Filters.Status.EqualTo(EStatus.Done));
+        queue.Delete(_transaction, Filters.Status.EqualTo(EStatus.Done));
 
         var fetched = queue.Query(QueryBuilder.All()).Single();
 
@@ -604,7 +617,7 @@ public sealed class LinqToDBTests
     {
         var queue = CreateQueue();
 
-        queue.Create<Jobs.Fail>();
+        queue.Create<Jobs.Fail>(_transaction);
 
         var runner = new Runner(queue, new(MaxJobs: 2, MaxErrors: 2, RetrySecs: 1));
 
@@ -618,9 +631,9 @@ public sealed class LinqToDBTests
 
         runner.Stop();
 
-        var active = queue.Create<Jobs.Simple>();
+        var active = queue.Create<Jobs.Simple>(_transaction);
 
-        queue.Delete(Filters.Errors.GreaterThan(0));
+        queue.Delete(_transaction, Filters.Errors.GreaterThan(0));
 
         var fetched = queue.Query(QueryBuilder.All()).Single();
 
@@ -632,11 +645,11 @@ public sealed class LinqToDBTests
     {
         var queue = CreateQueue();
 
-        var first = queue.Create<Jobs.Simple>();
+        var first = queue.Create<Jobs.Simple>(_transaction);
 
-        queue.Schedule<Jobs.Simple>(DateTime.UtcNow.AddMinutes(1));
+        queue.Schedule<Jobs.Simple>(_transaction, DateTime.UtcNow.AddMinutes(1));
 
-        queue.Delete(Filters.NextDue.GreaterThan(DateTime.UtcNow));
+        queue.Delete(_transaction, Filters.NextDue.GreaterThan(DateTime.UtcNow));
 
         var fetched = queue.Query(QueryBuilder.All()).Single();
 
@@ -648,7 +661,7 @@ public sealed class LinqToDBTests
     {
         var queue = CreateQueue();
 
-        queue.Create<Jobs.Simple>();
+        queue.Create<Jobs.Simple>(_transaction);
 
         var runner = new Runner(queue, new(MaxJobs: 2, MaxErrors: 2, RetrySecs: 1));
 
@@ -662,9 +675,9 @@ public sealed class LinqToDBTests
 
         runner.Stop();
 
-        var active = queue.Create<Jobs.Simple>();
+        var active = queue.Create<Jobs.Simple>(_transaction);
 
-        queue.Delete(Logical.Not(Filters.LastDone.IsNull()));
+        queue.Delete(_transaction, Logical.Not(Filters.LastDone.IsNull()));
 
         var fetched = queue.Query(QueryBuilder.All()).Single();
 

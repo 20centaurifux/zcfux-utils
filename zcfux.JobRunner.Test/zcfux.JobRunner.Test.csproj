@@ -16,8 +16,12 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\zcfux.JobRunner.LinqToDB\zcfux.JobRunner.LinqToDB.csproj" />
+      <ProjectReference Include="..\zcfux.JobRunner.Data.LinqToDB\zcfux.JobRunner.Data.LinqToDB.csproj" />
       <ProjectReference Include="..\zcfux.JobRunner\zcfux.JobRunner.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="LinqToDBTests.cs" />
     </ItemGroup>
 
 </Project>

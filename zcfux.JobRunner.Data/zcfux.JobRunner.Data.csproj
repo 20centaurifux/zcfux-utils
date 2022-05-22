@@ -10,15 +10,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="CommandLineParser" Version="2.9.1" />
-      <PackageReference Include="ncrontab" Version="3.3.1" />
-      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+      <ProjectReference Include="..\zcfux.Data\zcfux.Data.csproj" />
+      <ProjectReference Include="..\zcfux.Filter\zcfux.Filter.csproj" />
+      <ProjectReference Include="..\zcfux.JobRunner\zcfux.JobRunner.csproj" />
     </ItemGroup>
-	
-  <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-    <_Parameter1>zcfux.JobRunner.Data</_Parameter1>
-    </AssemblyAttribute>
-  </ItemGroup>
 
 </Project>

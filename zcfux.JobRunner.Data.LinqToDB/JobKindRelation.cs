@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,10 +19,21 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.JobRunner.Test;
+using LinqToDB.Mapping;
 
-public sealed class LinqToDBWithCacheRunnerTests : ALinqToDBRunnerTests
+namespace zcfux.JobRunner.Data.LinqToDB;
+
+[Table(Schema = "scheduler", Name = "JobKind")]
+internal class JobKindRelation
 {
-    protected override Data.LinqToDB.Options CreateOptions()
-        => new (TimeSpan.FromMinutes(1));
+    [Column(Name = "Id"), PrimaryKey, Identity]
+    public int? Id { get; set; }
+
+#pragma warning disable CS8618
+    [Column(Name = "Assembly"), NotNull]
+    public string Assembly { get; set; }
+
+    [Column(Name = "FullName"), NotNull]
+    public string FullName { get; set; }
+#pragma warning restore CS8618
 }

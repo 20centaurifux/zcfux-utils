@@ -21,7 +21,7 @@
  ***************************************************************************/
 using LinqToDB.Mapping;
 
-namespace zcfux.JobRunner.LinqToDB;
+namespace zcfux.JobRunner.Data.LinqToDB;
 
 [Table(Schema = "scheduler", Name = "Job")]
 internal class JobRelation : IJobDetails

@@ -1,5 +1,4 @@
-﻿
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -20,41 +19,23 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using LinqToDB.Mapping;
+using zcfux.Filter;
 
-namespace zcfux.JobRunner.LinqToDB;
+namespace zcfux.JobRunner.Data;
 
-[Table(Schema = "scheduler", Name = "Jobs")]
-internal class JobViewRelation : IJobDetails
+public static class Filters
 {
-    public JobViewRelation()
-    {
-    }
+    public static Column<Guid> Guid { get; } = Column<Guid>.FromMember();
     
-    [Column(Name = "Guid"), PrimaryKey]
-    public Guid Guid { get; set; }
-
-    [Column(Name = "Status")]
-    public EStatus Status { get; set; }
+    public static Column<string> Type { get; } = Column<string>.FromMember();
     
-    [Column(Name = "Type")]
-    public string Type { get; set; } = null!;
-
-    [Column(Name = "Created")]
-    public DateTime Created { get; set; }
-
-    [Column(Name = "InitParams")]
-    public string[]? InitParams { get; set; } = Array.Empty<string>();
+    public static Column<EStatus> Status { get; } = Column<EStatus>.FromMember();
     
-    [Column(Name = "Args")]
-    public string[]? Args { get; set; } = Array.Empty<string>();
-
-    [Column(Name = "LastDone")]
-    public DateTime? LastDone { get; set; }
-
-    [Column(Name = "NextDue")]
-    public DateTime? NextDue { get; set; }
-
-    [Column(Name = "Errors")]
-    public int Errors { get; set; }
+    public static Column<DateTime> Created { get; } = Column<DateTime>.FromMember();
+    
+    public static Column<DateTime?> NextDue { get; } = Column<DateTime?>.FromMember();
+    
+    public static Column<DateTime?> LastDone { get; } = Column<DateTime?>.FromMember();
+    
+    public static Column<int> Errors { get; } = Column<int>.FromMember();
 }

@@ -127,14 +127,21 @@ public abstract class AJobQueue
 
     public IJobDetails Schedule<T>(DateTime nextDue, string[] args) where T : ARegularJob
     {
+        var job = NewRegularJob<T>(nextDue, args);
+
+        Put(job);
+
+        return job;
+    }
+
+    protected static ARegularJob NewRegularJob<T>(DateTime nextDue, string[] args) where T : ARegularJob
+    {
         var job = (Activator.CreateInstance(typeof(T)) as ARegularJob)!;
 
         job.Guid = Guid.NewGuid();
         job.Created = DateTime.Now;
         job.Args = args;
         job.NextDue = nextDue;
-
-        Put(job);
 
         return job;
     }
@@ -143,6 +150,15 @@ public abstract class AJobQueue
         => CreateCronJob<T>(expression, Array.Empty<string>());
 
     public IJobDetails CreateCronJob<T>(string expression, string[] args) where T : ACronJob
+    {
+        var job = NewCronJob<T>(expression, args);
+
+        Put(job);
+
+        return job;
+    }
+
+    protected static ACronJob NewCronJob<T>(string expression, string[] args) where T : ACronJob
     {
         var job = (Activator.CreateInstance(typeof(T)) as ACronJob)!;
 
@@ -155,8 +171,6 @@ public abstract class AJobQueue
             "--cron-expression",
             expression
         });
-
-        Put(job);
 
         return job;
     }
@@ -182,7 +196,7 @@ public abstract class AJobQueue
             case { Status: EStatus.Active }:
                 Enqueue(job);
 
-                _event.Set();
+                Notify();
                 break;
 
             case { Status: EStatus.Done }:
@@ -194,6 +208,9 @@ public abstract class AJobQueue
                 break;
         }
     }
+
+    protected void Notify()
+        => _event.Set();
 
     protected abstract void Enqueue(AJob job);
 

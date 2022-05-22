@@ -22,7 +22,7 @@
 using LinqToDB.Configuration;
 using NUnit.Framework;
 using zcfux.Data.LinqToDB;
-using zcfux.JobRunner.LinqToDB;
+using zcfux.JobRunner.Data.LinqToDB;
 
 namespace zcfux.JobRunner.Test;
 
@@ -31,36 +31,54 @@ public abstract class ALinqToDBRunnerTests : ARunnerTests
     const string DefaultConnectionString
         = "User ID=test;Host=localhost;Port=5432;Database=test;";
 
-    [SetUp]
-    [TearDown]
-    public void DeleteTestJobs()
-    {
-        var queue = CreateQueue();
+    Engine? _engine;
 
-        (queue as JobQueue)!.Delete();
-    }
+    [TearDown]
+    public void Teardown()
+        => DeleteJobs();
 
     protected override AJobQueue CreateQueue()
     {
+        if (_engine == null)
+        {
+            CreateAndSetupEngine();
+            DeleteJobs();
+        }
+
+        var options = CreateOptions();
+
+        var queue = new JobQueue(_engine!, options);
+
+        return queue;
+    }
+
+    void CreateAndSetupEngine()
+    {
         var connectionString = Environment.GetEnvironmentVariable("PG_TEST_CONNECTIONSTRING")
                                ?? DefaultConnectionString;
-        
+
         var builder = new LinqToDBConnectionOptionsBuilder();
 
         builder.UsePostgreSQL(connectionString);
 
         var opts = builder.Build();
 
-        var engine = new Engine(opts);
+        _engine = new Engine(opts);
 
-        engine.Setup();
-
-        var options = CreateOptions();
-
-        var queue = new JobQueue(engine, options);
-
-        return queue;
+        _engine.Setup();
     }
 
-    protected abstract LinqToDB.Options CreateOptions();
+    protected abstract Data.LinqToDB.Options CreateOptions();
+
+    void DeleteJobs()
+    {
+        using (var t = _engine!.NewTransaction())
+        {
+            var queue = CreateQueue();
+
+            (queue as JobQueue)!.Delete(t.Handle);
+
+            t.Commit = true;
+        }
+    }
 }

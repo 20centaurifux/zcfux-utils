@@ -10,15 +10,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="CommandLineParser" Version="2.9.1" />
-      <PackageReference Include="ncrontab" Version="3.3.1" />
-      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+      <ProjectReference Include="..\zcfux.Data.LinqToDB\zcfux.Data.LinqToDB.csproj" />
+      <ProjectReference Include="..\zcfux.JobRunner.Data\zcfux.JobRunner.Data.csproj" />
     </ItemGroup>
-	
-  <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-    <_Parameter1>zcfux.JobRunner.Data</_Parameter1>
-    </AssemblyAttribute>
-  </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="linq2db" Version="4.0.0" />
+    </ItemGroup>
 
 </Project>

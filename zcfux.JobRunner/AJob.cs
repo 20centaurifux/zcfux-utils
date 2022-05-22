@@ -27,7 +27,7 @@ public abstract class AJob : IJobDetails
     {
     }
 
-    public virtual void Setup(string[] initParams)
+    internal virtual void Setup(string[] initParams)
         => InitParams = initParams;
 
     public virtual void Freeze()

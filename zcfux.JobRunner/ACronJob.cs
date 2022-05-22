@@ -39,7 +39,7 @@ public abstract class ACronJob : AJob
 
     CrontabSchedule? _schedule;
 
-    public override void Setup(string[] initParams)
+    internal override void Setup(string[] initParams)
     {
         base.Setup(initParams);
 

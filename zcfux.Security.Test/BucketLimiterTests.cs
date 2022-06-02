@@ -28,14 +28,17 @@ public sealed class BucketLimiterTests
     [Test]
     public void LimiterTest()
     {
-        var limiter = new RateLimit.BucketLimiter<string>(bucketSize: 2, periodMillis: 500);
+        var limiter = new RateLimit.BucketLimiter<string>(capacity: 2, leakRate: TimeSpan.FromMilliseconds(500));
 
         Assert.IsFalse(limiter.Throttle("a"));
+        
+        Thread.Sleep(100);
+        
         Assert.IsFalse(limiter.Throttle("a"));
         Assert.IsFalse(limiter.Throttle("b"));
         Assert.IsTrue(limiter.Throttle("a"));
 
-        Thread.Sleep(500);
+        Thread.Sleep(400);
 
         Assert.IsFalse(limiter.Throttle("a"));
         Assert.IsTrue(limiter.Throttle("a"));

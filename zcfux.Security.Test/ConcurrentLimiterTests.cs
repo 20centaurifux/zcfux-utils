@@ -28,7 +28,7 @@ public sealed class ConcurrentLimiterTests
     [Test]
     public void LimiterTest()
     {
-        var child = new RateLimit.BucketLimiter<string>(bucketSize: 2, periodMillis: 500);
+        var child = new RateLimit.BucketLimiter<string>(capacity: 2, leakRate: TimeSpan.FromMilliseconds(500));
         var parent = new RateLimit.ConcurrentRateLimiter<string>(child);
 
         var t1 = Task.Factory.StartNew(() => parent.Throttle("a"));

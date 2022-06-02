@@ -24,17 +24,17 @@ namespace zcfux.Security.RateLimit;
 public sealed class BucketLimiter<TKey> : IRateLimiter<TKey> where TKey : notnull
 {
     readonly Dictionary<TKey, Bucket> _buckets = new();
-    readonly int _bucketSize;
-    readonly int _periodMillis;
+    readonly int _capacity;
+    readonly TimeSpan _leakRate;
 
-    public BucketLimiter(int bucketSize, int periodMillis)
-        => (_bucketSize, _periodMillis) = (bucketSize, periodMillis);
+    public BucketLimiter(int capacity, TimeSpan leakRate)
+        => (_capacity, _leakRate) = (capacity, leakRate);
 
     public bool Throttle(TKey key)
     {
         if (!_buckets.TryGetValue(key, out var bucket))
         {
-            bucket = new Bucket(_bucketSize, _periodMillis);
+            bucket = new Bucket(_capacity, _leakRate);
 
             _buckets[key] = bucket;
         }

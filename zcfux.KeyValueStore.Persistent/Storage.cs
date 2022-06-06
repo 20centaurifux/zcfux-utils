@@ -70,6 +70,9 @@ internal sealed class Storage : IDisposable
         _db.Setup();
     }
 
+    public IEnumerable<string> GetKeys()
+        => _db!.GetKeys();
+
     public void CollectGarbage()
     {
         RemoveOrphanFiles();

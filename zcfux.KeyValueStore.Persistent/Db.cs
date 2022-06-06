@@ -19,6 +19,9 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using LinqToDB;
+using LinqToDB.Configuration;
+using LinqToDB.Data;
 using Microsoft.Data.Sqlite;
 
 namespace zcfux.KeyValueStore.Persistent;
@@ -32,12 +35,26 @@ internal sealed class Db : IDisposable
     readonly string _connectionString;
     readonly object _writerLock = new();
     readonly SqliteConnection _writerConnection;
+    readonly LinqToDBConnectionOptions _linqToDbConnection;
 
     public Db(string directory)
     {
         _connectionString = BuildConnectionString(directory);
 
         _writerConnection = new SqliteConnection(_connectionString);
+
+        _linqToDbConnection = BuildLinqToDBConnectionOptions(_connectionString);
+    }
+
+    static LinqToDBConnectionOptions BuildLinqToDBConnectionOptions(string connectionString)
+    {
+        var builder = new LinqToDBConnectionOptionsBuilder();
+
+        builder.UseSQLite(connectionString);
+
+        var opts = builder.Build();
+
+        return opts;
     }
 
     internal static string BuildConnectionString(string directory)
@@ -119,6 +136,7 @@ internal sealed class Db : IDisposable
                                   Key VARCHAR(512) NOT NULL,
                                   Hash CHAR(64) NOT NULL,
                                   PRIMARY KEY (Key))";
+
             cmd.ExecuteNonQuery();
 
             cmd.CommandText = @"CREATE TABLE Blob (
@@ -126,9 +144,15 @@ internal sealed class Db : IDisposable
                                   Length INT NOT NULL,
                                   Contents BLOB,
                                   PRIMARY KEY (Hash))";
+
             cmd.ExecuteNonQuery();
         }
     }
+
+    public IEnumerable<string> GetKeys()
+        => new DataContext(_linqToDbConnection)
+            .GetTable<AssociationRelation>()
+            .Select(assoc => assoc.Key);
 
     public void Put(string key, string hash, byte[] contents)
     {

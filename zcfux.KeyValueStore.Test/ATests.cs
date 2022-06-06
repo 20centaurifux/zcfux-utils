@@ -34,7 +34,7 @@ public abstract class ATests
             Assert.IsInstanceOf<IStore>(store);
         }
     }
-    
+
     [Test]
     public void PutAndFetch()
     {
@@ -43,7 +43,7 @@ public abstract class ATests
             var key = TestContext.CurrentContext.Random.GetString();
 
             var value = new byte[20];
-            
+
             TestContext.CurrentContext.Random.NextBytes(value);
 
             store.Put(key, value.ToMemoryStream());
@@ -58,7 +58,7 @@ public abstract class ATests
             }
         }
     }
-    
+
     [Test]
     public void PutTwiceAndFetch()
     {
@@ -67,13 +67,13 @@ public abstract class ATests
             var key = TestContext.CurrentContext.Random.GetString();
 
             var first = new byte[20];
-            
+
             TestContext.CurrentContext.Random.NextBytes(first);
 
             store.Put(key, first.ToMemoryStream());
-            
+
             var second = new byte[20];
-            
+
             TestContext.CurrentContext.Random.NextBytes(second);
 
             store.Put(key, second.ToMemoryStream());
@@ -89,7 +89,7 @@ public abstract class ATests
             }
         }
     }
-    
+
     [Test]
     public void FetchNonExisting()
     {
@@ -103,7 +103,7 @@ public abstract class ATests
             });
         }
     }
-    
+
     [Test]
     public void Remove()
     {
@@ -112,11 +112,11 @@ public abstract class ATests
             var key = TestContext.CurrentContext.Random.GetString();
 
             var value = new byte[20];
-            
+
             TestContext.CurrentContext.Random.NextBytes(value);
 
             store.Put(key, value.ToMemoryStream());
-            
+
             store.Remove(key);
 
             Assert.Throws<KeyNotFoundException>(() =>
@@ -125,7 +125,7 @@ public abstract class ATests
             });
         }
     }
-    
+
     [Test]
     public void RemoveNonExisting()
     {
@@ -134,6 +134,69 @@ public abstract class ATests
             var key = TestContext.CurrentContext.Random.GetString();
 
             store.Remove(key);
+        }
+    }
+
+    [Test]
+    public void GetAllKeys()
+    {
+        using (var store = CreateAndSetupStore())
+        {
+            var firstKey = TestContext.CurrentContext.Random.GetString();
+
+            var first = new byte[20];
+
+            TestContext.CurrentContext.Random.NextBytes(first);
+
+            store.Put(firstKey, first.ToMemoryStream());
+
+            var secondKey = TestContext.CurrentContext.Random.GetString();
+
+            var second = new byte[20];
+
+            TestContext.CurrentContext.Random.NextBytes(second);
+
+            store.Put(secondKey, second.ToMemoryStream());
+
+            var fetchedKeys = store.GetKeys().ToArray();
+
+            Assert.AreEqual(2, fetchedKeys.Length);
+            Assert.IsTrue(fetchedKeys.Contains(firstKey));
+            Assert.IsTrue(fetchedKeys.Contains(secondKey));
+        }
+    }
+
+    [Test]
+    public void QueryKeys()
+    {
+        using (var store = CreateAndSetupStore())
+        {
+            var first = new byte[20];
+
+            TestContext.CurrentContext.Random.NextBytes(first);
+
+            store.Put("foo.bar", first.ToMemoryStream());
+
+            var second = new byte[20];
+
+            TestContext.CurrentContext.Random.NextBytes(second);
+
+            store.Put("foo.baz", second.ToMemoryStream());
+
+            var third = new byte[20];
+
+            TestContext.CurrentContext.Random.NextBytes(third);
+
+            store.Put("_foo.ba$", third.ToMemoryStream());
+
+            var fetchedKeys = store
+                .GetKeys()
+                .Where(key => key.StartsWith("foo."))
+                .ToArray();
+
+            Assert.AreEqual(2, fetchedKeys.Length);
+            Assert.IsTrue(fetchedKeys.Contains("foo.bar"));
+            Assert.IsTrue(fetchedKeys.Contains("foo.baz"));
         }
     }
 

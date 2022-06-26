@@ -21,7 +21,6 @@
  ***************************************************************************/
 using LinqToDB;
 using LinqToDB.Configuration;
-using LinqToDB.Data;
 using Microsoft.Data.Sqlite;
 
 namespace zcfux.KeyValueStore.Persistent;

@@ -24,7 +24,7 @@ using LinqToDB.Mapping;
 namespace zcfux.KeyValueStore.Persistent;
 
 [Table(Name = "Association")]
-sealed class AssociationRelation
+internal sealed class AssociationRelation
 {
 #pragma warning disable CS8618
 

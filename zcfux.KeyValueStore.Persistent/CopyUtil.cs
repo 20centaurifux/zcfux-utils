@@ -23,7 +23,7 @@ using System.Security.Cryptography;
 
 namespace zcfux.KeyValueStore.Persistent;
 
-public sealed class CopyUtil
+internal sealed class CopyUtil
 {
     byte[]? _hash;
     long _length;

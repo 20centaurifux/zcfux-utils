@@ -25,6 +25,8 @@ public interface IStore : IDisposable
 {
     void Setup();
 
+    IEnumerable<string> GetKeys();
+
     void Put(string key, Stream stream);
     
     Stream Fetch(string key);

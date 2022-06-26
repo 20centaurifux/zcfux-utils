@@ -30,7 +30,10 @@ public sealed class Store : IStore
     public void Setup()
     {
     }
-    
+
+    public IEnumerable<string> GetKeys()
+        => _m.Keys;
+
     public void Put(string key, Stream stream)
     {
         var ms = new MemoryStream();

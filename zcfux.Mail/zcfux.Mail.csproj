@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Authors>Sebastian Fedrau</Authors>
+        <Company>Sebastian Fedrau</Company>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\zcfux.Data\zcfux.Data.csproj" />
+      <ProjectReference Include="..\zcfux.Filter\zcfux.Filter.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="ITransferMessage.cs" />
+      <Compile Remove="ITransferQueue.cs" />
+      <Compile Remove="ITransferQueueItem.cs" />
+      <Compile Remove="TransferQueue.cs" />
+      <Compile Remove="TransferQueueItemFilters.cs" />
+    </ItemGroup>
+
+</Project>

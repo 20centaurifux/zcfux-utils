@@ -77,6 +77,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.JobRunner.Data", "zcf
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.JobRunner.Data.LinqToDB", "zcfux.JobRunner.Data.LinqToDB\zcfux.JobRunner.Data.LinqToDB.csproj", "{E306E534-E507-4D1F-ACF8-00906BA66E97}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Mail", "zcfux.Mail\zcfux.Mail.csproj", "{74E64217-17F7-4A51-ABC0-9BCE64D532BF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -235,5 +237,9 @@ Global
 		{E306E534-E507-4D1F-ACF8-00906BA66E97}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E306E534-E507-4D1F-ACF8-00906BA66E97}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E306E534-E507-4D1F-ACF8-00906BA66E97}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74E64217-17F7-4A51-ABC0-9BCE64D532BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74E64217-17F7-4A51-ABC0-9BCE64D532BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74E64217-17F7-4A51-ABC0-9BCE64D532BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74E64217-17F7-4A51-ABC0-9BCE64D532BF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

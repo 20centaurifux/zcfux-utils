@@ -27,6 +27,8 @@ namespace zcfux.Logging.NLog;
 [Logger("nlog")]
 public sealed class Writer : IWriter
 {
+    const int MaxFrames = 100;
+
     readonly global::NLog.ILogger _logger;
 
     public Writer()
@@ -38,9 +40,23 @@ public sealed class Writer : IWriter
 
     static Assembly GetCallingAssembly()
     {
-        var method = new StackFrame(skipFrames: 4, needFileInfo: false).GetMethod();
+        Assembly executingAssembly = Assembly.GetExecutingAssembly();
 
-        return method!.DeclaringType!.Assembly;
+        for (var skip = 0; skip < MaxFrames; ++skip)
+        {
+            var assembly = new StackFrame(skipFrames: skip, needFileInfo: false)
+                .GetMethod()
+                ?.DeclaringType
+                ?.Assembly;
+
+            if (assembly != null
+                && assembly.FullName != executingAssembly.FullName)
+            {
+                return assembly;
+            }
+        }
+
+        return executingAssembly;
     }
 
     public void WriteMessage(ESeverity severity, string message)

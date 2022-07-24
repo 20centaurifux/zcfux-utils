@@ -1,4 +1,7 @@
-﻿CREATE SCHEMA mail;
+﻿CREATE
+    EXTENSION lo;
+
+CREATE SCHEMA mail;
 
 ALTER
     SCHEMA mail OWNER to test;
@@ -31,7 +34,9 @@ ALTER TABLE ONLY mail."Directory"
 ALTER TABLE ONLY mail."Directory"
     ADD CONSTRAINT "Directory_ParentId_fk "
         FOREIGN KEY ("ParentId")
-            REFERENCES mail."Directory" ("Id") ON DELETE CASCADE;
+            REFERENCES mail."Directory" ("Id") ON
+            DELETE
+            CASCADE;
 
 CREATE SEQUENCE mail.message_id_seq
     START WITH 1
@@ -44,7 +49,7 @@ ALTER SEQUENCE mail.message_id_seq OWNER to test;
 CREATE TABLE mail."Message"
 (
     "Id"          int DEFAULT nextval('mail.message_id_seq'::regclass) NOT NULL,
-    "DirectoryId" int                                                  NOT NULL,
+    "DirectoryId" int,
     "Sender"      character varying(64)                                NOT NULL,
     "To"          character varying[]                                  NOT NULL,
     "Cc"          character varying[],
@@ -66,7 +71,9 @@ ALTER TABLE ONLY mail."Message"
 ALTER TABLE ONLY mail."Message"
     ADD CONSTRAINT "Message_DirectoryId_fk"
         FOREIGN KEY ("DirectoryId")
-            REFERENCES mail."Directory" ("Id") ON DELETE CASCADE;
+            REFERENCES mail."Directory" ("Id") ON
+            DELETE
+            CASCADE;
 
 CREATE SEQUENCE mail.attachment_id_seq
     START WITH 1
@@ -81,7 +88,7 @@ CREATE TABLE mail."Attachment"
     "Id"        int DEFAULT nextval('mail.attachment_id_seq'::regclass) NOT NULL,
     "MessageId" int                                                     NOT NULL,
     "Filename"  character varying(64)                                   NOT NULL,
-    "Oid"       oid                                                     NOT NULL
+    "Oid"       lo                                                      NOT NULL
 );
 
 ALTER TABLE mail."Attachment"
@@ -96,7 +103,16 @@ ALTER TABLE ONLY mail."Attachment"
 ALTER TABLE ONLY mail."Attachment"
     ADD CONSTRAINT "Attachment_MessageId_fk"
         FOREIGN KEY ("MessageId")
-            REFERENCES mail."Message" ("Id") ON DELETE CASCADE;
+            REFERENCES mail."Message" ("Id") ON
+            DELETE
+            CASCADE;
+
+CREATE TRIGGER t_attachment_oid
+    BEFORE UPDATE OR
+        DELETE
+    ON mail."Attachment"
+    FOR EACH ROW
+EXECUTE FUNCTION lo_manage("Oid");
 
 CREATE OR REPLACE VIEW mail."Messages"
 AS
@@ -117,5 +133,6 @@ FROM mail."Message"
          INNER JOIN mail."Directory" ON "Directory"."Id" = "Message"."DirectoryId"
          LEFT JOIN mail."Attachment" ON "Attachment"."MessageId" = "Message"."Id";
 
-ALTER TABLE mail."Messages"
+ALTER
+    VIEW mail."Messages"
     OWNER TO test;

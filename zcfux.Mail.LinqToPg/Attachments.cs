@@ -84,17 +84,9 @@ internal sealed class Attachments
     public void Delete(
         Handle handle,
         long id)
-    {
-        var db = handle.Db();
-
-        var relation = db.GetTable<AttachmentRelation>().Single(attachment => attachment.Id == id);
-
-        var pgConnection = db.Connection as NpgsqlConnection;
-
-        var manager = new NpgsqlLargeObjectManager(pgConnection!);
-
-        manager.Unlink(relation.Oid);
-
-        db.Delete(relation);
-    }
+        => handle
+            .Db()
+            .GetTable<AttachmentRelation>()
+            .Where(att => att.Id == id)
+            .Delete();
 }

@@ -177,21 +177,9 @@ internal sealed class Messages
         Handle handle,
         long id)
     {
-        var db = handle.Db();
-
-        var pgConnection = db.Connection as NpgsqlConnection;
-
-        var manager = new NpgsqlLargeObjectManager(pgConnection!);
-
-        foreach (var attachment in db.GetTable<AttachmentRelation>()
-                     .Where(att => att.MessageId == id))
-        {
-            manager.Unlink(attachment.Oid);
-
-            db.Delete(attachment);
-        }
-
-        db.GetTable<MessageRelation>()
+        handle
+            .Db()
+            .GetTable<MessageRelation>()
             .Where(msg => msg.Id == id)
             .Delete();
     }

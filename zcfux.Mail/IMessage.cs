@@ -25,7 +25,7 @@ public interface IMessage
 {
     long Id { get; }
 
-    IDirectory Directory { get; }
+    IDirectory? Directory { get; }
 
     Address From { get; }
 

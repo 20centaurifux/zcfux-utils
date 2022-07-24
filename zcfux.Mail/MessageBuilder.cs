@@ -152,6 +152,11 @@ public sealed class MessageBuilder
 
     public Message Store()
     {
+        if (_directory == null)
+        {
+            throw new MessageBuilderException("Directory is undefined.");
+        }
+
         ThrowIfIncomplete();
 
         var message = _db.Messages.NewMessage(
@@ -172,10 +177,10 @@ public sealed class MessageBuilder
 
     void StoreAttachments(IMessage message)
     {
-        foreach(var absoluteFilename in _attachments)
+        foreach (var absoluteFilename in _attachments)
         {
             var filename = Path.GetFileName(absoluteFilename);
-            
+
             using (var stream = File.OpenRead(absoluteFilename))
             {
                 _db.Attachments.NewAttachment(_handle, message, filename, stream);
@@ -185,11 +190,6 @@ public sealed class MessageBuilder
 
     void ThrowIfIncomplete()
     {
-        if (_directory == null)
-        {
-            throw new MessageBuilderException("Directory is undefined.");
-        }
-
         if (_from == null)
         {
             throw new MessageBuilderException("Sender is undefined.");

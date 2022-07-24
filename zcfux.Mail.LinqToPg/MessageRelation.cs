@@ -34,8 +34,10 @@ internal sealed class MessageRelation : IMessage
     public MessageRelation(IMessage message)
     {
         Id = message.Id;
-        DirectoryId = message.Directory.Id;
-        Directory = new DirectoryRelation(message.Directory);
+        DirectoryId = message.Directory?.Id;
+        Directory = (message.Directory == null)
+            ? null
+            : new DirectoryRelation(message.Directory);
         From = message.From.ToString();
         To = message.To.Select(addr => addr.ToString()).ToArray();
         Cc = message.Cc.Select(addr => addr.ToString()).ToArray();
@@ -49,12 +51,12 @@ internal sealed class MessageRelation : IMessage
     public long? Id { get; set; }
 
     [Column(Name = "DirectoryId")]
-    public int DirectoryId { get; set; }
+    public int? DirectoryId { get; set; }
 
     [Association(ThisKey = "DirectoryId", OtherKey = "Id")]
-    public DirectoryRelation Directory { get; set; }
+    public DirectoryRelation? Directory { get; set; }
 
-    IDirectory IMessage.Directory => Directory;
+    IDirectory? IMessage.Directory => Directory;
 
     long IMessage.Id => Id!.Value;
 

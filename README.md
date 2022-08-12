@@ -56,6 +56,12 @@ This is a collection of various utilities and abstractions I use in .NET project
 ## Logging.NLog
 * NLog provider for zcfux.Logging.
 
+## Mail
+* Mail storage abstractions.
+
+## Mail.LinqToPg
+* Data.LinqToDB Mail provider for Postgres.
+
 ## Pool
 * Generic and customizable resource pool.
 

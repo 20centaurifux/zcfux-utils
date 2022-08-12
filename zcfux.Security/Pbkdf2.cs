@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,33 +19,22 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using System.Security.Cryptography;
+using zcfux.Byte;
+
 namespace zcfux.Security;
 
-public static class Password
+internal sealed class Pbkdf2 : IPasswordHashAlgorithm
 {
-    public static readonly string DefaultAlgorithm = "PBKDF2";
+    const int Iterations = short.MaxValue;
+    const int HashSize = 20;
 
-    const int SaltSize = 8;
-
-    static readonly Factory Factory = new();
-
-    public static PasswordHash ComputedHash(string secret)
+    public PasswordHash ComputeHash(string plain, byte[] salt)
     {
-        var salt = SecureRandom.GetBytes(SaltSize);
+        var pbkdf2 = new Rfc2898DeriveBytes(plain.GetBytes(), salt, Iterations);
 
-        return ComputedHash(DefaultAlgorithm, secret, salt);
+        var digest = pbkdf2.GetBytes(HashSize);
+
+        return new PasswordHash("PBKDF2", digest, salt);
     }
-    
-    public static PasswordHash ComputedHash(string algorithm, string secret)
-    {
-        var salt = SecureRandom.GetBytes(SaltSize);
-
-        return ComputedHash(algorithm, secret, salt);
-    }
-
-    public static PasswordHash ComputedHash(string secret, byte[] salt)
-        => ComputedHash(DefaultAlgorithm, secret, salt);
-
-    public static PasswordHash ComputedHash(string algorithm, string secret, byte[] salt)
-        => Factory.CreatePasswordAlgorithm(algorithm).ComputeHash(secret, salt);
 }

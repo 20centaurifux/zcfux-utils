@@ -21,31 +21,8 @@
  ***************************************************************************/
 namespace zcfux.Security;
 
-public static class Password
+public static class SecureRandom
 {
-    public static readonly string DefaultAlgorithm = "PBKDF2";
-
-    const int SaltSize = 8;
-
-    static readonly Factory Factory = new();
-
-    public static PasswordHash ComputedHash(string secret)
-    {
-        var salt = SecureRandom.GetBytes(SaltSize);
-
-        return ComputedHash(DefaultAlgorithm, secret, salt);
-    }
-    
-    public static PasswordHash ComputedHash(string algorithm, string secret)
-    {
-        var salt = SecureRandom.GetBytes(SaltSize);
-
-        return ComputedHash(algorithm, secret, salt);
-    }
-
-    public static PasswordHash ComputedHash(string secret, byte[] salt)
-        => ComputedHash(DefaultAlgorithm, secret, salt);
-
-    public static PasswordHash ComputedHash(string algorithm, string secret, byte[] salt)
-        => Factory.CreatePasswordAlgorithm(algorithm).ComputeHash(secret, salt);
+    public static byte[] GetBytes(int length)
+        => System.Security.Cryptography.RandomNumberGenerator.GetBytes(length);
 }

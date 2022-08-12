@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,33 +19,41 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using System.Security.Cryptography;
+
 namespace zcfux.Security;
 
-public static class Password
+public sealed class Factory
 {
-    public static readonly string DefaultAlgorithm = "PBKDF2";
-
-    const int SaltSize = 8;
-
-    static readonly Factory Factory = new();
-
-    public static PasswordHash ComputedHash(string secret)
+    public HashAlgorithm CreateHashAlgorithm(string name)
     {
-        var salt = SecureRandom.GetBytes(SaltSize);
-
-        return ComputedHash(DefaultAlgorithm, secret, salt);
-    }
-    
-    public static PasswordHash ComputedHash(string algorithm, string secret)
-    {
-        var salt = SecureRandom.GetBytes(SaltSize);
-
-        return ComputedHash(algorithm, secret, salt);
+        return name switch
+        {
+            "SHA-256" => SHA256.Create(),
+            "SHA-384" => SHA384.Create(),
+            "SHA-512" => SHA512.Create(),
+            _ => throw new UnsupportedAlgorithmException()
+        };
     }
 
-    public static PasswordHash ComputedHash(string secret, byte[] salt)
-        => ComputedHash(DefaultAlgorithm, secret, salt);
+    public KeyedHashAlgorithm CreateKeyedHashAlgorithm(string name, byte[] secret)
+    {
+        return name switch
+        {
+            "HMAC-SHA-256" => new HMACSHA256(secret),
+            "HMAC-SHA-384" => new HMACSHA384(secret),
+            "HMAC-SHA-512" => new HMACSHA512(secret),
+            _ => throw new UnsupportedAlgorithmException()
+        };
+    }
 
-    public static PasswordHash ComputedHash(string algorithm, string secret, byte[] salt)
-        => Factory.CreatePasswordAlgorithm(algorithm).ComputeHash(secret, salt);
+    public IPasswordHashAlgorithm CreatePasswordAlgorithm(string name)
+    {
+        if (name == "PBKDF2")
+        {
+            return new Pbkdf2();
+        }
+
+        throw new UnsupportedAlgorithmException();
+    }
 }

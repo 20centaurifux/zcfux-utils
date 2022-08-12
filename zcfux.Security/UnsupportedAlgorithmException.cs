@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -21,31 +21,14 @@
  ***************************************************************************/
 namespace zcfux.Security;
 
-public static class Password
+public sealed class UnsupportedAlgorithmException : Exception
 {
-    public static readonly string DefaultAlgorithm = "PBKDF2";
-
-    const int SaltSize = 8;
-
-    static readonly Factory Factory = new();
-
-    public static PasswordHash ComputedHash(string secret)
+    public UnsupportedAlgorithmException()
     {
-        var salt = SecureRandom.GetBytes(SaltSize);
-
-        return ComputedHash(DefaultAlgorithm, secret, salt);
-    }
-    
-    public static PasswordHash ComputedHash(string algorithm, string secret)
-    {
-        var salt = SecureRandom.GetBytes(SaltSize);
-
-        return ComputedHash(algorithm, secret, salt);
     }
 
-    public static PasswordHash ComputedHash(string secret, byte[] salt)
-        => ComputedHash(DefaultAlgorithm, secret, salt);
-
-    public static PasswordHash ComputedHash(string algorithm, string secret, byte[] salt)
-        => Factory.CreatePasswordAlgorithm(algorithm).ComputeHash(secret, salt);
+    public UnsupportedAlgorithmException(string message)
+        : base(message)
+    {
+    }
 }

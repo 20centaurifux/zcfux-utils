@@ -26,23 +26,34 @@ namespace zcfux.Security;
 
 public sealed class MessageAuthenticator
 {
+    public static readonly string DefaultAlgorithm = "HMAC-SHA-256";
+
+    readonly Factory _factory = new();
+    readonly string _algorithm = DefaultAlgorithm;
     readonly byte[] _secret;
 
     public MessageAuthenticator(string secret)
         => _secret = secret.GetBytes();
 
-    public byte[] ComputeHash(byte[] bytes)
-        => NewAlgorithm().ComputeHash(bytes);
+    public MessageAuthenticator(string algorithm, string secret)
+        => (_algorithm, _secret) = (algorithm, secret.GetBytes());
 
-    HashAlgorithm NewAlgorithm()
-        => new HMACSHA256(_secret);
-
-    public byte[] ComputeHash(string message)
+    public Hash ComputeHash(string message)
         => ComputeHash(message.GetBytes());
 
+    public Hash ComputeHash(byte[] bytes)
+    {
+        var digest = NewAlgorithm().ComputeHash(bytes);
+
+        return new Hash(_algorithm, digest);
+    }
+
+    KeyedHashAlgorithm NewAlgorithm()
+        => _factory.CreateKeyedHashAlgorithm(_algorithm, _secret);
+
     public bool Verify(byte[] message, byte[] checksum)
-        => checksum.SequenceEqual(ComputeHash(message));
+        => checksum.SequenceEqual(ComputeHash(message).Digest);
 
     public bool Verify(string message, byte[] checksum)
-        => checksum.SequenceEqual(ComputeHash(message));
+        => checksum.SequenceEqual(ComputeHash(message).Digest);
 }

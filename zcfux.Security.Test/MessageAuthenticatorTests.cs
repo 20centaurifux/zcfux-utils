@@ -31,23 +31,25 @@ public sealed class MessageAuthenticatorTests
     {
         var secret = TestContext.CurrentContext.Random.GetString();
 
-        var auth = new MessageAuthenticator(secret);
+        var auth = new MessageAuthenticator(MessageAuthenticator.DefaultAlgorithm, secret);
 
         var message = TestContext.CurrentContext.Random.GetString();
 
         var hash = auth.ComputeHash(message);
+        
+        Assert.AreEqual(hash.Algorithm, MessageAuthenticator.DefaultAlgorithm);
 
-        Assert.AreEqual(hash, auth.ComputeHash(message.GetBytes()));
-
-        Assert.IsTrue(auth.Verify(message, hash));
-        Assert.IsTrue(auth.Verify(message.GetBytes(), hash));
-
+        Assert.AreEqual(hash.Digest, auth.ComputeHash(message.GetBytes()).Digest);
+        
+        Assert.IsTrue(auth.Verify(message, hash.Digest));
+        Assert.IsTrue(auth.Verify(message.GetBytes(), hash.Digest));
+        
         var newMessage = TestContext.CurrentContext.Random.GetString();
 
-        Assert.IsFalse(auth.Verify(newMessage, hash));
-        Assert.IsFalse(auth.Verify(newMessage.GetBytes(), hash));
+        Assert.IsFalse(auth.Verify(newMessage, hash.Digest));
+        Assert.IsFalse(auth.Verify(newMessage.GetBytes(), hash.Digest));
 
-        var newHash = Random.GetBytes(hash.Length);
+        var newHash = SecureRandom.GetBytes(hash.Digest.Length);
 
         Assert.IsFalse(auth.Verify(message, newHash));
         Assert.IsFalse(auth.Verify(message.GetBytes(), newHash));
@@ -68,6 +70,22 @@ public sealed class MessageAuthenticatorTests
 
         var newAuth = new MessageAuthenticator(newSecret);
 
-        Assert.IsFalse(newAuth.Verify(message, hash));
+        Assert.IsFalse(newAuth.Verify(message, hash.Digest));
+    }
+    
+    [Test]
+    public void WrongAlgorithmTest()
+    {
+        var secret = TestContext.CurrentContext.Random.GetString();
+
+        var auth = new MessageAuthenticator("HMAC-SHA-256", secret);
+
+        var message = TestContext.CurrentContext.Random.GetString();
+
+        var hash = auth.ComputeHash(message);
+
+        var newAuth = new MessageAuthenticator("HMAC-SHA-384", secret);
+
+        Assert.IsFalse(newAuth.Verify(message, hash.Digest));
     }
 }

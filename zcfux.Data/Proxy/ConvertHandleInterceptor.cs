@@ -98,9 +98,16 @@ internal sealed class ConvertHandleInterceptor<TInterface, TImpl> : IInterceptor
         var method = MapMethod(invocation.Method)
                      ?? throw new NotImplementedException();
 
-        var returnValue = method.Invoke(_impl, invocation.Arguments);
+        try
+        {
+            var returnValue = method.Invoke(_impl, invocation.Arguments);
 
-        invocation.ReturnValue = returnValue;
+            invocation.ReturnValue = returnValue;
+        }
+        catch (TargetInvocationException ex) when (ex.InnerException is { })
+        {
+            throw ex.InnerException;
+        }
     }
 
     static MethodInfo? MapMethod(MethodInfo methodInfo)

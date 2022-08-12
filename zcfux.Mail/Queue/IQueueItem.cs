@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,23 +19,19 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Mail;
+namespace zcfux.Mail.Queue;
 
-public sealed class Attachment
+public interface IQueueItem
 {
-    readonly IDb _db;
-    readonly object _handle;
-    readonly IAttachment _attachment;
+    IQueue Queue { get; }
 
-    internal Attachment(IDb db, object handle, IAttachment attachment)
-        => (_db, _handle, _attachment) = (db, handle, attachment);
+    IMessage Message { get; }
 
-    public long Id
-        => _attachment.Id;
+    DateTime Created { get; }
 
-    public string Filename
-        => _attachment.Filename;
+    DateTime EndOfLife { get; }
 
-    public Stream OpenRead()
-        => _db.Messages.ReadAttachment(_handle, Id);
+    DateTime? NextDue { get; }
+
+    int Errors { get; }
 }

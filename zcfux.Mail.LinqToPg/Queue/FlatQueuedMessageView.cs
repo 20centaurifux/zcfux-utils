@@ -21,66 +21,58 @@
  ***************************************************************************/
 using LinqToDB.Mapping;
 
-namespace zcfux.Mail.LinqToPg;
+namespace zcfux.Mail.LinqToPg.Queue;
 
-[Table(Schema = "mail", Name = "Message")]
-internal sealed class MessageRelation : IMessage
+[Table(Schema = "mail", Name = "FlatQueuedMessages")]
+internal sealed class FlatQueuedMessageView
 {
 #pragma warning disable CS8618
-    public MessageRelation()
-    {
-    }
-
-    public MessageRelation(IMessage message)
-    {
-        Id = message.Id;
-        From = message.From.ToString();
-        To = message.To.Select(addr => addr.ToString()).ToArray();
-        Cc = message.Cc.Select(addr => addr.ToString()).ToArray();
-        Bcc = message.Bcc.Select(addr => addr.ToString()).ToArray();
-        Subject = message.Subject;
-        TextBody = message.TextBody;
-        HtmlBody = message.HtmlBody;
-    }
-
     [Column(Name = "Id", IsPrimaryKey = true, IsIdentity = true)]
-    public long? Id { get; set; }
+    public long Id { get; set; }
 
-    long IMessage.Id => Id!.Value;
+    [Column(Name = "QueueId")]
+    public int QueueId { get; set; }
+
+    [Column(Name = "Queue")]
+    public string Queue { get; set; }
 
     [Column(Name = "Sender", CanBeNull = false)]
     public string From { get; set; }
 
-    Address IMessage.From => Address.FromString(From);
-
     [Column(Name = "To", CanBeNull = false)]
-    public string[] To { get; set; }
-
-    IEnumerable<Address> IMessage.To => To.Select(Address.FromString);
+    public string To { get; set; }
 
     [Column(Name = "Cc")]
-    public string[] Cc { get; set; }
-
-    IEnumerable<Address> IMessage.Cc => Cc.Select(Address.FromString);
+    public string Cc { get; set; }
 
     [Column(Name = "Bcc")]
-    public string[] Bcc { get; set; }
-
-    IEnumerable<Address> IMessage.Bcc => Bcc.Select(Address.FromString);
+    public string Bcc { get; set; }
 
     [Column(Name = "Subject", CanBeNull = false)]
     public string Subject { get; set; }
 
-    string IMessage.Subject => Subject;
-
     [Column(Name = "TextBody")]
     public string? TextBody { get; set; }
-
-    string? IMessage.TextBody => TextBody;
 
     [Column(Name = "HtmlBody")]
     public string? HtmlBody { get; set; }
 
-    string? IMessage.HtmlBody => HtmlBody;
+    [Column(Name = "AttachmentId")]
+    public long? AttachmentId { get; set; }
+
+    [Column(Name = "Attachment")]
+    public string? Attachment { get; set; }
+
+    [Column(Name = "Created")]
+    public DateTime Created { get; set; }
+
+    [Column(Name = "EndOfLife")]
+    public DateTime EndOfLife { get; set; }
+
+    [Column(Name = "NextDue")]
+    public DateTime? NextDue { get; set; }
+
+    [Column(Name = "Errors")]
+    public int Errors { get; set; }
 #pragma warning restore CS8618
 }

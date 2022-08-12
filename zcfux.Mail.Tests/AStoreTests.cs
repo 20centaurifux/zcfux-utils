@@ -22,6 +22,7 @@
 using NUnit.Framework;
 using zcfux.Data;
 using zcfux.Filter;
+using zcfux.Mail.Store;
 
 namespace zcfux.Mail.Tests;
 
@@ -52,7 +53,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var name = TestContext.CurrentContext.Random.GetString();
 
@@ -60,7 +61,7 @@ public abstract class AStoreTests
 
             Assert.Greater(directory.Id, 0);
             Assert.AreEqual(name, directory.Name);
-            Assert.IsNull(directory.Parent);
+            Assert.IsNull(directory.GetParent());
             Assert.IsEmpty(directory.GetChildren());
         }
     }
@@ -70,7 +71,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var name = TestContext.CurrentContext.Random.GetString();
 
@@ -88,7 +89,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var firstName = TestContext.CurrentContext.Random.GetString();
 
@@ -111,7 +112,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var name = TestContext.CurrentContext.Random.GetString();
 
@@ -131,11 +132,11 @@ public abstract class AStoreTests
     }
 
     [Test]
-    public void RenameNonExistingDirectory()
+    public void RenameDeletedDirectory()
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var name = TestContext.CurrentContext.Random.GetString();
 
@@ -145,7 +146,7 @@ public abstract class AStoreTests
 
             directory.Delete();
 
-            Assert.Throws<DirectoryNotFoundException>(() =>
+            Assert.Throws<Store.DirectoryNotFoundException>(() =>
             {
                 directory.Rename(name);
             });
@@ -157,7 +158,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var firstName = TestContext.CurrentContext.Random.GetString();
 
@@ -179,7 +180,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var firstName = TestContext.CurrentContext.Random.GetString();
 
@@ -199,11 +200,11 @@ public abstract class AStoreTests
     }
 
     [Test]
-    public void DeleteNonExistingDirectory()
+    public void DeleteAlreadyDeletedDirectory()
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var name = TestContext.CurrentContext.Random.GetString();
 
@@ -211,7 +212,7 @@ public abstract class AStoreTests
 
             directory.Delete();
 
-            Assert.Throws<DirectoryNotFoundException>(() =>
+            Assert.Throws<Store.DirectoryNotFoundException>(() =>
             {
                 directory.Delete();
             });
@@ -223,7 +224,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var parentName = TestContext.CurrentContext.Random.GetString();
 
@@ -236,8 +237,8 @@ public abstract class AStoreTests
             Assert.Greater(child.Id, 0);
             Assert.AreNotEqual(child.Id, parent.Id);
             Assert.AreEqual(child.Name, childName);
-            Assert.AreEqual(child.Parent!.Id, parent.Id);
-            Assert.AreEqual(child.Parent!.Name, parent.Name);
+            Assert.AreEqual(child.GetParent()!.Id, parent.Id);
+            Assert.AreEqual(child.GetParent()!.Name, parent.Name);
             Assert.IsEmpty(child.GetChildren());
 
             var children = parent.GetChildren().ToArray();
@@ -245,8 +246,8 @@ public abstract class AStoreTests
             Assert.AreEqual(1, children.Length);
             Assert.AreEqual(child.Id, children[0].Id);
             Assert.AreEqual(child.Name, children[0].Name);
-            Assert.AreEqual(child.Parent!.Id, children[0].Parent!.Id);
-            Assert.AreEqual(child.Parent!.Name, children[0].Parent!.Name);
+            Assert.AreEqual(child.GetParent()!.Id, children[0].GetParent()!.Id);
+            Assert.AreEqual(child.GetParent()!.Name, children[0].GetParent()!.Name);
             Assert.IsEmpty(children[0].GetChildren());
         }
     }
@@ -256,7 +257,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var parentName = TestContext.CurrentContext.Random.GetString();
 
@@ -274,11 +275,11 @@ public abstract class AStoreTests
     }
 
     [Test]
-    public void CreateSubdirectoryWithNonExistingParent()
+    public void CreateSubdirectoryWithDeletedParent()
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var parentName = TestContext.CurrentContext.Random.GetString();
 
@@ -288,7 +289,7 @@ public abstract class AStoreTests
 
             parent.Delete();
 
-            Assert.Throws<DirectoryNotFoundException>(() =>
+            Assert.Throws<Store.DirectoryNotFoundException>(() =>
             {
                 parent.NewChild(childName);
             });
@@ -300,7 +301,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var parentName = TestContext.CurrentContext.Random.GetString();
 
@@ -323,11 +324,11 @@ public abstract class AStoreTests
     }
 
     [Test]
-    public void GetSubdirectoriesOfNonExistingParent()
+    public void GetSubdirectoriesOfDeletedParent()
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var parentName = TestContext.CurrentContext.Random.GetString();
 
@@ -339,7 +340,7 @@ public abstract class AStoreTests
 
             parent.Delete();
 
-            Assert.Throws<DirectoryNotFoundException>(() =>
+            Assert.Throws<Store.DirectoryNotFoundException>(() =>
             {
                 parent.GetChildren();
             });
@@ -351,7 +352,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var parentName = TestContext.CurrentContext.Random.GetString();
 
@@ -379,7 +380,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var parentName = TestContext.CurrentContext.Random.GetString();
 
@@ -405,7 +406,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var parentName = TestContext.CurrentContext.Random.GetString();
 
@@ -433,7 +434,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var a = store.NewDirectory("a");
 
@@ -441,7 +442,7 @@ public abstract class AStoreTests
 
             b.MoveToRoot();
 
-            Assert.IsNull(b.Parent);
+            Assert.IsNull(b.GetParent());
 
             var children = store.GetDirectories().ToArray();
 
@@ -456,7 +457,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var name = TestContext.CurrentContext.Random.GetString();
 
@@ -472,11 +473,11 @@ public abstract class AStoreTests
     }
 
     [Test]
-    public void MoveNonExistingDirectoryToRoot()
+    public void MoveDeletedDirectoryToRoot()
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var name = TestContext.CurrentContext.Random.GetString();
 
@@ -486,7 +487,7 @@ public abstract class AStoreTests
 
             child.Delete();
 
-            Assert.Throws<DirectoryNotFoundException>(() =>
+            Assert.Throws<Store.DirectoryNotFoundException>(() =>
             {
                 child.MoveToRoot();
             });
@@ -498,7 +499,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var a = store.NewDirectory("a");
 
@@ -508,8 +509,8 @@ public abstract class AStoreTests
 
             c.Move(b);
 
-            Assert.AreEqual(c.Parent!.Id, b.Id);
-            Assert.AreEqual(c.Parent!.Name, b.Name);
+            Assert.AreEqual(c.GetParent()!.Id, b.Id);
+            Assert.AreEqual(c.GetParent()!.Name, b.Name);
 
             var children = a.GetChildren().ToArray();
 
@@ -527,7 +528,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var name = TestContext.CurrentContext.Random.GetString();
 
@@ -549,7 +550,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var a = store.NewDirectory("a");
 
@@ -569,7 +570,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var a = store.NewDirectory("a");
 
@@ -581,11 +582,11 @@ public abstract class AStoreTests
     }
 
     [Test]
-    public void MoveDirectoryToNonExistingParent()
+    public void MoveDirectoryDeletedParent()
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var a = store.NewDirectory("a");
 
@@ -594,7 +595,7 @@ public abstract class AStoreTests
             var b = store.NewDirectory("b");
             var c = b.NewChild("c");
 
-            Assert.Throws<DirectoryNotFoundException>(() =>
+            Assert.Throws<Store.DirectoryNotFoundException>(() =>
             {
                 c.Move(a);
             });
@@ -602,11 +603,11 @@ public abstract class AStoreTests
     }
 
     [Test]
-    public void MoveNonExistingDirectoryToParent()
+    public void MoveDeletedDirectoryToParent()
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var a = store.NewDirectory("a");
             var b = store.NewDirectory("b");
@@ -614,7 +615,7 @@ public abstract class AStoreTests
 
             c.Delete();
 
-            Assert.Throws<DirectoryNotFoundException>(() =>
+            Assert.Throws<Store.DirectoryNotFoundException>(() =>
             {
                 c.Move(a);
             });
@@ -626,7 +627,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var a = store.NewDirectory("a");
 
@@ -634,8 +635,8 @@ public abstract class AStoreTests
 
             b.Move(a);
 
-            Assert.AreEqual(b.Parent!.Id, a.Id);
-            Assert.AreEqual(b.Parent!.Name, a.Name);
+            Assert.AreEqual(b.GetParent()!.Id, a.Id);
+            Assert.AreEqual(b.GetParent()!.Name, a.Name);
 
             var children = a.GetChildren().ToArray();
 
@@ -649,7 +650,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -717,19 +718,43 @@ public abstract class AStoreTests
     }
 
     [Test]
-    public void CreateMessageInNonExistingDirectory()
+    public void CreateMessageBuilderWithDeletedDirectory()
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
             directory.Delete();
 
-            Assert.Throws<DirectoryNotFoundException>(() =>
+            Assert.Throws<Store.DirectoryNotFoundException>(() =>
             {
                 directory.CreateMessageBuilder();
+            });
+        }
+    }
+
+    [Test]
+    public void CreateMessageInDeletedDirectory()
+    {
+        using (var t = _engine.NewTransaction())
+        {
+            var store = CreateStore(t.Handle);
+
+            var directory = store.NewDirectory("Inbox");
+
+            var builder = directory.CreateMessageBuilder()
+                .WithFrom("Alice", "alice@example.org")
+                .WithTo("Bob", "bob@example.org")
+                .WithSubject("test")
+                .WithTextBody("hello world");
+
+            directory.Delete();
+
+            Assert.Throws<Store.DirectoryNotFoundException>(() =>
+            {
+                builder.Store();
             });
         }
     }
@@ -739,7 +764,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -754,7 +779,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -791,17 +816,17 @@ public abstract class AStoreTests
     }
 
     [Test]
-    public void GetMailsFromNonExistingDirectory()
+    public void GetMailsFromDeletedDirectory()
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
             directory.Delete();
 
-            Assert.Throws<DirectoryNotFoundException>(() =>
+            Assert.Throws<Store.DirectoryNotFoundException>(() =>
             {
                 directory.GetMessages().ToArray();
             });
@@ -813,7 +838,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -852,11 +877,11 @@ public abstract class AStoreTests
     }
 
     [Test]
-    public void DeleteNonExistingMessage()
+    public void DeleteAlreadyDeletedMessage()
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -871,7 +896,7 @@ public abstract class AStoreTests
 
             message.Delete();
 
-            Assert.Throws<MessageNotFoundException>(() =>
+            Assert.Throws<DirectoryEntryNotFoundException>(() =>
             {
                 message.Delete();
             });
@@ -883,7 +908,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var name = TestContext.CurrentContext.Random.GetString();
 
@@ -921,7 +946,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var name = TestContext.CurrentContext.Random.GetString();
 
@@ -947,11 +972,11 @@ public abstract class AStoreTests
     }
 
     [Test]
-    public void MoveMessageToNonExistingDirectory()
+    public void MoveMessageToDeletedDirectory()
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var name = TestContext.CurrentContext.Random.GetString();
 
@@ -972,7 +997,7 @@ public abstract class AStoreTests
                 .WithTextBody("hello world")
                 .Store();
 
-            Assert.Throws<DirectoryNotFoundException>(() =>
+            Assert.Throws<Store.DirectoryNotFoundException>(() =>
             {
                 message.Move(secondDirectory);
             });
@@ -980,11 +1005,11 @@ public abstract class AStoreTests
     }
 
     [Test]
-    public void MoveNonExistingMessage()
+    public void MoveDeletedMessage()
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var name = TestContext.CurrentContext.Random.GetString();
 
@@ -1005,7 +1030,7 @@ public abstract class AStoreTests
 
             message.Delete();
 
-            Assert.Throws<MessageNotFoundException>(() =>
+            Assert.Throws<DirectoryEntryNotFoundException>(() =>
             {
                 message.Move(secondDirectory);
             });
@@ -1017,7 +1042,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -1038,7 +1063,7 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.Id.EqualTo(first.Id));
+                .WithFilter(StoredMessageFilters.Id.EqualTo(first.Id));
 
             var fetched = store.Query(qb.Build()).Single();
 
@@ -1051,7 +1076,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var a = store.NewDirectory("a");
 
@@ -1076,7 +1101,7 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(b.Id));
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(b.Id));
 
             var fetched = store.Query(qb.Build()).Single();
 
@@ -1089,7 +1114,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var a = store.NewDirectory("a");
 
@@ -1114,7 +1139,7 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.Directory.EqualTo(a.Name));
+                .WithFilter(StoredMessageFilters.Directory.EqualTo(a.Name));
 
             var fetched = store.Query(qb.Build()).Single();
 
@@ -1127,7 +1152,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -1148,7 +1173,7 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.From.Contains("alice@example.org"));
+                .WithFilter(StoredMessageFilters.From.Contains("alice@example.org"));
 
             var fetched = store.Query(qb.Build()).Single();
 
@@ -1161,7 +1186,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -1183,7 +1208,7 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.To.Contains("bob@example.org"));
+                .WithFilter(StoredMessageFilters.To.Contains("bob@example.org"));
 
             var fetched = store.Query(qb.Build()).Single();
 
@@ -1196,7 +1221,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -1220,7 +1245,7 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.Cc.Contains("chuck@example.org"));
+                .WithFilter(StoredMessageFilters.Cc.Contains("chuck@example.org"));
 
             var fetched = store.Query(qb.Build()).Single();
 
@@ -1233,7 +1258,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -1257,7 +1282,7 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.Bcc.Contains("carol@example.org"));
+                .WithFilter(StoredMessageFilters.Bcc.Contains("carol@example.org"));
 
             var fetched = store.Query(qb.Build()).Single();
 
@@ -1270,7 +1295,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -1291,7 +1316,7 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.Subject.EqualTo("hello"));
+                .WithFilter(StoredMessageFilters.Subject.EqualTo("hello"));
 
             var fetched = store.Query(qb.Build()).Single();
 
@@ -1304,7 +1329,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -1325,7 +1350,7 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.TextBody.EqualTo("bar"));
+                .WithFilter(StoredMessageFilters.TextBody.EqualTo("bar"));
 
             var fetched = store.Query(qb.Build()).Single();
 
@@ -1338,7 +1363,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -1359,7 +1384,7 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.HtmlBody.IsNull());
+                .WithFilter(StoredMessageFilters.HtmlBody.IsNull());
 
             var fetched = store.Query(qb.Build()).Single();
 
@@ -1372,7 +1397,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -1408,7 +1433,7 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.AttachmentId.EqualTo(attachmentId));
+                .WithFilter(StoredMessageFilters.AttachmentId.EqualTo(attachmentId));
 
             var fetched = store.Query(qb.Build()).Single();
 
@@ -1421,7 +1446,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -1456,7 +1481,7 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.Attachment.EqualTo("bar.txt"));
+                .WithFilter(StoredMessageFilters.Attachment.EqualTo("bar.txt"));
 
             var fetched = store.Query(qb.Build()).Single();
 
@@ -1469,7 +1494,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -1490,8 +1515,8 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(directory.Id))
-                .WithOrderBy(MessageFilters.Id);
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(directory.Id))
+                .WithOrderBy(StoredMessageFilters.Id);
 
             var messages = store.Query(qb.Build()).ToArray();
 
@@ -1499,8 +1524,8 @@ public abstract class AStoreTests
             Assert.Greater(messages[1].Id, messages[0].Id);
 
             qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(directory.Id))
-                .WithOrderByDescending(MessageFilters.Id);
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(directory.Id))
+                .WithOrderByDescending(StoredMessageFilters.Id);
 
             messages = store.Query(qb.Build()).ToArray();
 
@@ -1514,7 +1539,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var a = store.NewDirectory("a");
 
@@ -1540,9 +1565,9 @@ public abstract class AStoreTests
 
             var qb = new QueryBuilder()
                 .WithFilter(Logical.Or(
-                    MessageFilters.DirectoryId.EqualTo(a.Id),
-                    MessageFilters.DirectoryId.EqualTo(b.Id)))
-                .WithOrderBy(MessageFilters.DirectoryId);
+                    StoredMessageFilters.DirectoryId.EqualTo(a.Id),
+                    StoredMessageFilters.DirectoryId.EqualTo(b.Id)))
+                .WithOrderBy(StoredMessageFilters.DirectoryId);
 
             var messages = store.Query(qb.Build()).ToArray();
 
@@ -1552,9 +1577,9 @@ public abstract class AStoreTests
 
             qb = new QueryBuilder()
                 .WithFilter(Logical.Or(
-                    MessageFilters.DirectoryId.EqualTo(a.Id),
-                    MessageFilters.DirectoryId.EqualTo(b.Id)))
-                .WithOrderByDescending(MessageFilters.DirectoryId);
+                    StoredMessageFilters.DirectoryId.EqualTo(a.Id),
+                    StoredMessageFilters.DirectoryId.EqualTo(b.Id)))
+                .WithOrderByDescending(StoredMessageFilters.DirectoryId);
 
             messages = store.Query(qb.Build()).ToArray();
 
@@ -1569,7 +1594,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var a = store.NewDirectory("a");
 
@@ -1595,9 +1620,9 @@ public abstract class AStoreTests
 
             var qb = new QueryBuilder()
                 .WithFilter(Logical.Or(
-                    MessageFilters.DirectoryId.EqualTo(a.Id),
-                    MessageFilters.DirectoryId.EqualTo(b.Id)))
-                .WithOrderBy(MessageFilters.Directory);
+                    StoredMessageFilters.DirectoryId.EqualTo(a.Id),
+                    StoredMessageFilters.DirectoryId.EqualTo(b.Id)))
+                .WithOrderBy(StoredMessageFilters.Directory);
 
             var messages = store.Query(qb.Build()).ToArray();
 
@@ -1607,9 +1632,9 @@ public abstract class AStoreTests
 
             qb = new QueryBuilder()
                 .WithFilter(Logical.Or(
-                    MessageFilters.DirectoryId.EqualTo(a.Id),
-                    MessageFilters.DirectoryId.EqualTo(b.Id)))
-                .WithOrderByDescending(MessageFilters.Directory);
+                    StoredMessageFilters.DirectoryId.EqualTo(a.Id),
+                    StoredMessageFilters.DirectoryId.EqualTo(b.Id)))
+                .WithOrderByDescending(StoredMessageFilters.Directory);
 
             messages = store.Query(qb.Build()).ToArray();
 
@@ -1624,7 +1649,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -1647,8 +1672,8 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(directory.Id))
-                .WithOrderBy(MessageFilters.From);
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(directory.Id))
+                .WithOrderBy(StoredMessageFilters.From);
 
             var messages = store.Query(qb.Build()).ToArray();
 
@@ -1657,8 +1682,8 @@ public abstract class AStoreTests
             Assert.AreEqual(second.Id, messages[1].Id);
 
             qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(directory.Id))
-                .WithOrderByDescending(MessageFilters.From);
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(directory.Id))
+                .WithOrderByDescending(StoredMessageFilters.From);
 
             messages = store.Query(qb.Build()).ToArray();
 
@@ -1673,7 +1698,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Sent");
 
@@ -1698,8 +1723,8 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(directory.Id))
-                .WithOrderBy(MessageFilters.To);
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(directory.Id))
+                .WithOrderBy(StoredMessageFilters.To);
 
             var messages = store.Query(qb.Build()).ToArray();
 
@@ -1708,8 +1733,8 @@ public abstract class AStoreTests
             Assert.AreEqual(first.Id, messages[1].Id);
 
             qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(directory.Id))
-                .WithOrderByDescending(MessageFilters.To);
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(directory.Id))
+                .WithOrderByDescending(StoredMessageFilters.To);
 
             messages = store.Query(qb.Build()).ToArray();
 
@@ -1724,7 +1749,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Sent");
 
@@ -1751,8 +1776,8 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(directory.Id))
-                .WithOrderBy(MessageFilters.Cc);
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(directory.Id))
+                .WithOrderBy(StoredMessageFilters.Cc);
 
             var messages = store.Query(qb.Build()).ToArray();
 
@@ -1761,8 +1786,8 @@ public abstract class AStoreTests
             Assert.AreEqual(first.Id, messages[1].Id);
 
             qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(directory.Id))
-                .WithOrderByDescending(MessageFilters.Cc);
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(directory.Id))
+                .WithOrderByDescending(StoredMessageFilters.Cc);
 
             messages = store.Query(qb.Build()).ToArray();
 
@@ -1777,7 +1802,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Sent");
 
@@ -1804,8 +1829,8 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(directory.Id))
-                .WithOrderBy(MessageFilters.Bcc);
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(directory.Id))
+                .WithOrderBy(StoredMessageFilters.Bcc);
 
             var messages = store.Query(qb.Build()).ToArray();
 
@@ -1814,8 +1839,8 @@ public abstract class AStoreTests
             Assert.AreEqual(first.Id, messages[1].Id);
 
             qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(directory.Id))
-                .WithOrderByDescending(MessageFilters.Bcc);
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(directory.Id))
+                .WithOrderByDescending(StoredMessageFilters.Bcc);
 
             messages = store.Query(qb.Build()).ToArray();
 
@@ -1830,7 +1855,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -1851,8 +1876,8 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(directory.Id))
-                .WithOrderBy(MessageFilters.Subject);
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(directory.Id))
+                .WithOrderBy(StoredMessageFilters.Subject);
 
             var messages = store.Query(qb.Build()).ToArray();
 
@@ -1861,8 +1886,8 @@ public abstract class AStoreTests
             Assert.AreEqual(second.Id, messages[1].Id);
 
             qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(directory.Id))
-                .WithOrderByDescending(MessageFilters.Subject);
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(directory.Id))
+                .WithOrderByDescending(StoredMessageFilters.Subject);
 
             messages = store.Query(qb.Build()).ToArray();
 
@@ -1877,7 +1902,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -1898,8 +1923,8 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(directory.Id))
-                .WithOrderBy(MessageFilters.TextBody);
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(directory.Id))
+                .WithOrderBy(StoredMessageFilters.TextBody);
 
             var messages = store.Query(qb.Build()).ToArray();
 
@@ -1908,8 +1933,8 @@ public abstract class AStoreTests
             Assert.AreEqual(second.Id, messages[1].Id);
 
             qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(directory.Id))
-                .WithOrderByDescending(MessageFilters.TextBody);
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(directory.Id))
+                .WithOrderByDescending(StoredMessageFilters.TextBody);
 
             messages = store.Query(qb.Build()).ToArray();
 
@@ -1924,7 +1949,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -1945,8 +1970,8 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(directory.Id))
-                .WithOrderBy(MessageFilters.HtmlBody);
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(directory.Id))
+                .WithOrderBy(StoredMessageFilters.HtmlBody);
 
             var messages = store.Query(qb.Build()).ToArray();
 
@@ -1955,8 +1980,8 @@ public abstract class AStoreTests
             Assert.AreEqual(second.Id, messages[1].Id);
 
             qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(directory.Id))
-                .WithOrderByDescending(MessageFilters.HtmlBody);
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(directory.Id))
+                .WithOrderByDescending(StoredMessageFilters.HtmlBody);
 
             messages = store.Query(qb.Build()).ToArray();
 
@@ -1971,7 +1996,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -2012,8 +2037,8 @@ public abstract class AStoreTests
                 .Id;
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(directory.Id))
-                .WithOrderBy(MessageFilters.AttachmentId);
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(directory.Id))
+                .WithOrderBy(StoredMessageFilters.AttachmentId);
 
             var messages = store.Query(qb.Build()).ToArray();
 
@@ -2033,8 +2058,8 @@ public abstract class AStoreTests
             }
 
             qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(directory.Id))
-                .WithOrderByDescending(MessageFilters.AttachmentId);
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(directory.Id))
+                .WithOrderByDescending(StoredMessageFilters.AttachmentId);
 
             messages = store.Query(qb.Build()).ToArray();
 
@@ -2060,7 +2085,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -2091,8 +2116,8 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(directory.Id))
-                .WithOrderBy(MessageFilters.Attachment);
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(directory.Id))
+                .WithOrderBy(StoredMessageFilters.Attachment);
 
             var messages = store.Query(qb.Build()).ToArray();
 
@@ -2101,8 +2126,8 @@ public abstract class AStoreTests
             Assert.AreEqual(first.Id, messages[1].Id);
 
             qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(directory.Id))
-                .WithOrderByDescending(MessageFilters.Attachment);
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(directory.Id))
+                .WithOrderByDescending(StoredMessageFilters.Attachment);
 
             messages = store.Query(qb.Build()).ToArray();
 
@@ -2117,7 +2142,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -2145,8 +2170,8 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(directory.Id))
-                .WithOrderBy(MessageFilters.Id)
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(directory.Id))
+                .WithOrderBy(StoredMessageFilters.Id)
                 .WithSkip(1);
 
             var messages = store.Query(qb.Build()).ToArray();
@@ -2162,7 +2187,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -2190,8 +2215,8 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(directory.Id))
-                .WithOrderBy(MessageFilters.Id)
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(directory.Id))
+                .WithOrderBy(StoredMessageFilters.Id)
                 .WithLimit(2);
 
             var messages = store.Query(qb.Build()).ToArray();
@@ -2207,7 +2232,7 @@ public abstract class AStoreTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var store = OpenStore(t.Handle);
+            var store = CreateStore(t.Handle);
 
             var directory = store.NewDirectory("Inbox");
 
@@ -2235,8 +2260,8 @@ public abstract class AStoreTests
                 .Store();
 
             var qb = new QueryBuilder()
-                .WithFilter(MessageFilters.DirectoryId.EqualTo(directory.Id))
-                .WithOrderBy(MessageFilters.Id)
+                .WithFilter(StoredMessageFilters.DirectoryId.EqualTo(directory.Id))
+                .WithOrderBy(StoredMessageFilters.Id)
                 .WithSkip(1)
                 .WithLimit(1);
 
@@ -2247,7 +2272,7 @@ public abstract class AStoreTests
         }
     }
 
-    void CompareMessages(Message a, Message b)
+    void CompareMessages(StoredMessage a, StoredMessage b)
     {
         Assert.AreEqual(a.Id, b.Id);
         Assert.AreEqual(a.From, b.From);
@@ -2267,21 +2292,13 @@ public abstract class AStoreTests
                 .SequenceEqual(b.GetAttachments().Select(attachment => attachment.Filename)));
     }
 
-    Store OpenStore(object handle)
+    Store.Store CreateStore(object handle)
     {
-        var factory = CreateFactory();
+        var db = CreateDb();
+        var store = new Store.Store(db, handle);
 
-        return factory.OpenStore(handle);
+        return store;
     }
 
-    Factory CreateFactory()
-    {
-        var db = CreateMailDb();
-
-        var factory = new Factory(db);
-
-        return factory;
-    }
-
-    protected abstract IMailDb CreateMailDb();
+    protected abstract IDb CreateDb();
 }

@@ -19,23 +19,38 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Mail;
+using LinqToDB.Mapping;
+using zcfux.Mail.Store;
 
-public sealed class Attachment
+namespace zcfux.Mail.LinqToPg.Store;
+
+[Table(Schema = "mail", Name = "Directory")]
+internal sealed class DirectoryRelation : IDirectory
 {
-    readonly IDb _db;
-    readonly object _handle;
-    readonly IAttachment _attachment;
+#pragma warning disable CS8618
 
-    internal Attachment(IDb db, object handle, IAttachment attachment)
-        => (_db, _handle, _attachment) = (db, handle, attachment);
+    public DirectoryRelation()
+    {
+    }
 
-    public long Id
-        => _attachment.Id;
+    public DirectoryRelation(IDirectory directory)
+    {
+        Id = directory.Id;
+        Name = directory.Name;
+        ParentId = directory.ParentId;
+    }
 
-    public string Filename
-        => _attachment.Filename;
+    [Column(Name = "Id", IsPrimaryKey = true, IsIdentity = true)]
+    public int? Id { get; set; }
 
-    public Stream OpenRead()
-        => _db.Messages.ReadAttachment(_handle, Id);
+    int IDirectory.Id => Id!.Value;
+
+    [Column(Name = "Name", CanBeNull = false)]
+    public string Name { get; set; }
+
+    string IDirectory.Name => Name;
+
+    [Column(Name = "ParentId")]
+    public int? ParentId { get; set; }
+#pragma warning restore CS8618
 }

@@ -71,7 +71,14 @@ internal sealed class PrependHandleInterceptor<TImpl>
 
         arguments.AddRange(invocation.Arguments);
 
-        invocation.ReturnValue = method!.Invoke(_impl, arguments.ToArray());
+        try
+        {
+            invocation.ReturnValue = method!.Invoke(_impl, arguments.ToArray());
+        }
+        catch(TargetInvocationException ex) when (ex.InnerException is { })
+        {
+            throw ex.InnerException;
+        }
     }
 
     static string ToKey(string name, Type[] types)

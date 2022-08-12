@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,23 +19,25 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Mail;
+namespace zcfux.Mail.LinqToPg;
 
-public sealed class Attachment
+internal sealed class Message : IMessage
 {
-    readonly IDb _db;
-    readonly object _handle;
-    readonly IAttachment _attachment;
+#pragma warning disable CS8618
+    public long Id { get; set; }
 
-    internal Attachment(IDb db, object handle, IAttachment attachment)
-        => (_db, _handle, _attachment) = (db, handle, attachment);
+    public Address From { get; set; }
 
-    public long Id
-        => _attachment.Id;
+    public IEnumerable<Address> To { get; set; }
 
-    public string Filename
-        => _attachment.Filename;
+    public IEnumerable<Address> Cc { get; set; }
 
-    public Stream OpenRead()
-        => _db.Messages.ReadAttachment(_handle, Id);
+    public IEnumerable<Address> Bcc { get; set; }
+
+    public string Subject { get; set; }
+
+    public string? TextBody { get; set; }
+
+    public string? HtmlBody { get; set; }
+#pragma warning restore CS8618
 }

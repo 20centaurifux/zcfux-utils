@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,23 +19,16 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using zcfux.Mail.Store;
+using zcfux.Mail.Queue;
+
 namespace zcfux.Mail;
 
-public sealed class Attachment
+public interface IDb
 {
-    readonly IDb _db;
-    readonly object _handle;
-    readonly IAttachment _attachment;
+    IMessageDb Messages { get; }
 
-    internal Attachment(IDb db, object handle, IAttachment attachment)
-        => (_db, _handle, _attachment) = (db, handle, attachment);
+    IStoreDb Store { get; }
 
-    public long Id
-        => _attachment.Id;
-
-    public string Filename
-        => _attachment.Filename;
-
-    public Stream OpenRead()
-        => _db.Messages.ReadAttachment(_handle, Id);
+    IQueueDb Queues { get; }
 }

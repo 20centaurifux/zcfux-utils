@@ -19,23 +19,33 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Mail;
+using zcfux.Filter;
 
-public sealed class Attachment
+namespace zcfux.Mail.Store;
+
+public static class StoredMessageFilters
 {
-    readonly IDb _db;
-    readonly object _handle;
-    readonly IAttachment _attachment;
+    public static Column<long> Id { get; } = Column<long>.FromMember();
 
-    internal Attachment(IDb db, object handle, IAttachment attachment)
-        => (_db, _handle, _attachment) = (db, handle, attachment);
+    public static Column<int> DirectoryId { get; } = Column<int>.FromMember();
 
-    public long Id
-        => _attachment.Id;
+    public static Column<string> Directory { get; } = Column<string>.FromMember();
 
-    public string Filename
-        => _attachment.Filename;
-
-    public Stream OpenRead()
-        => _db.Messages.ReadAttachment(_handle, Id);
+    public static Column<string> From { get; } = Column<string>.FromMember();
+    
+    public static Column<string> To { get; } = Column<string>.FromMember();
+    
+    public static Column<string> Cc { get; } = Column<string>.FromMember();
+    
+    public static Column<string> Bcc { get; } = Column<string>.FromMember();
+    
+    public static Column<string> Subject { get; } = Column<string>.FromMember();
+    
+    public static Column<string> TextBody { get; } = Column<string>.FromMember();
+    
+    public static Column<string> HtmlBody { get; } = Column<string>.FromMember();
+    
+    public static Column<long> AttachmentId { get; } = Column<long>.FromMember();
+    
+    public static Column<string> Attachment { get; } = Column<string>.FromMember();
 }

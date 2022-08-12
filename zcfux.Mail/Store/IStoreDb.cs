@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,23 +19,31 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Mail;
+using zcfux.Filter;
 
-public sealed class Attachment
+namespace zcfux.Mail.Store;
+
+public interface IStoreDb
 {
-    readonly IDb _db;
-    readonly object _handle;
-    readonly IAttachment _attachment;
+    IDirectory NewDirectory(object handle, string name);
 
-    internal Attachment(IDb db, object handle, IAttachment attachment)
-        => (_db, _handle, _attachment) = (db, handle, attachment);
+    IDirectory NewDirectory(object handle, IDirectory parent, string name);
 
-    public long Id
-        => _attachment.Id;
+    IDirectory GetDirectory(object handle, int id);
 
-    public string Filename
-        => _attachment.Filename;
+    IEnumerable<IDirectory> GetDirectories(object handle);
 
-    public Stream OpenRead()
-        => _db.Messages.ReadAttachment(_handle, Id);
+    IEnumerable<IDirectory> GetDirectories(object handle, IDirectory parent);
+
+    void UpdateDirectory(object handle, IDirectory directory);
+
+    void DeleteDirectory(object handle, IDirectory directory);
+
+    IDirectoryEntry LinkMessage(object handle, IMessage message, IDirectory directory);
+
+    void UnlinkMessage(object handle, IDirectoryEntry directoryEntry);
+
+    IDirectoryEntry MoveMessage(object handle, IMessage message, IDirectory from, IDirectory to);
+
+    IEnumerable<IDirectoryEntry> QueryMessages(object handle, Query query);
 }

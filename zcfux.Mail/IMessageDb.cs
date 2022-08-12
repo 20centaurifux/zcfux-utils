@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,23 +19,44 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using zcfux.Filter;
+
 namespace zcfux.Mail;
-
-public sealed class Attachment
+public interface IMessageDb
 {
-    readonly IDb _db;
-    readonly object _handle;
-    readonly IAttachment _attachment;
+    IMessage NewMessage(
+        object handle,
+        Address from,
+        IEnumerable<Address> to,
+        IEnumerable<Address> cc,
+        IEnumerable<Address> bcc,
+        string subject,
+        string? textBody,
+        string? htmlBody);
 
-    internal Attachment(IDb db, object handle, IAttachment attachment)
-        => (_db, _handle, _attachment) = (db, handle, attachment);
+    IMessage GetMessage(
+        object handle,
+        long id);
+    
+    void DeleteMessage(
+        object handle,
+        IMessage message);
 
-    public long Id
-        => _attachment.Id;
+    IAttachment NewAttachment(
+        object handle,
+        IMessage message,
+        string filename,
+        Stream stream);
 
-    public string Filename
-        => _attachment.Filename;
+    IEnumerable<IAttachment> GetAttachments(
+        object handle,
+        IMessage message);
 
-    public Stream OpenRead()
-        => _db.Messages.ReadAttachment(_handle, Id);
+    Stream ReadAttachment(
+        object handle,
+        long id);
+
+    void DeleteAttachment(
+        object handle,
+        IAttachment attachment);
 }

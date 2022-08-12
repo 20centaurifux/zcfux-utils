@@ -25,8 +25,6 @@ public interface IMessage
 {
     long Id { get; }
 
-    IDirectory? Directory { get; }
-
     Address From { get; }
 
     IEnumerable<Address> To { get; }

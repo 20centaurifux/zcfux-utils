@@ -21,21 +21,10 @@
  ***************************************************************************/
 namespace zcfux.Mail;
 
-public sealed class Attachment
+public sealed class BuilderException : Exception
 {
-    readonly IDb _db;
-    readonly object _handle;
-    readonly IAttachment _attachment;
-
-    internal Attachment(IDb db, object handle, IAttachment attachment)
-        => (_db, _handle, _attachment) = (db, handle, attachment);
-
-    public long Id
-        => _attachment.Id;
-
-    public string Filename
-        => _attachment.Filename;
-
-    public Stream OpenRead()
-        => _db.Messages.ReadAttachment(_handle, Id);
+    public BuilderException(string message)
+        : base(message)
+    {
+    }
 }

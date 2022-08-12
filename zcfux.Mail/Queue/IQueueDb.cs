@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,23 +19,27 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Mail;
+using zcfux.Filter;
 
-public sealed class Attachment
+namespace zcfux.Mail.Queue;
+
+public interface IQueueDb
 {
-    readonly IDb _db;
-    readonly object _handle;
-    readonly IAttachment _attachment;
+    IQueue NewQueue(object handle, string name);
 
-    internal Attachment(IDb db, object handle, IAttachment attachment)
-        => (_db, _handle, _attachment) = (db, handle, attachment);
+    void UpdateQueue(object handle, IQueue queue);
 
-    public long Id
-        => _attachment.Id;
+    void DeleteQueue(object handle, IQueue queue);
 
-    public string Filename
-        => _attachment.Filename;
+    IQueue GetQueue(object handle, int id);
 
-    public Stream OpenRead()
-        => _db.Messages.ReadAttachment(_handle, Id);
+    IEnumerable<IQueue> GetQueues(object handle);
+
+    IQueueItem NewQueueItem(object handle, IQueue queue, IMessage message, TimeSpan timeToLive, DateTime nextDue);
+
+    void UpdateQueueItem(object handle, IQueueItem queueItem);
+
+    void DeleteQueueItem(object handle, IQueueItem queueItem);
+
+    IEnumerable<IQueueItem> Query(object handle, Query query);
 }

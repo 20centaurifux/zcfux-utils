@@ -20,36 +20,50 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using LinqToDB.Mapping;
+using zcfux.Mail.Store;
 
-namespace zcfux.Mail.LinqToPg;
+namespace zcfux.Mail.LinqToPg.Store;
 
-[Table(Schema = "mail", Name = "Attachment")]
-internal sealed class AttachmentRelation : IAttachment
-#pragma warning disable CS8618
+[Table(Schema = "mail", Name = "DirectoryEntry")]
+internal sealed class DirectoryEntryRelation : IDirectoryEntry
 {
-    public AttachmentRelation()
+#pragma warning disable CS8618
+    public DirectoryEntryRelation()
     {
     }
 
-    [Column(Name = "Id", IsPrimaryKey = true, IsIdentity = true)]
-    public long? Id { get; set; }
+    public DirectoryEntryRelation(IDirectoryEntry directoryEntry)
+    {
+        MessageId = directoryEntry.Message.Id;
+        Message = new MessageRelation(directoryEntry.Message);
 
-    long IAttachment.Id => Id!.Value;
+        DirectoryId = directoryEntry.Directory.Id;
+        Directory = new DirectoryRelation(directoryEntry.Directory);
+    }
 
-    [Column(Name = "MessageId")]
+    public DirectoryEntryRelation(IMessage message, IDirectory directory)
+    {
+        MessageId = message.Id;
+        Message = new MessageRelation(message);
+
+        DirectoryId = directory.Id;
+        Directory = new DirectoryRelation(directory);
+    }
+
+    [Column(Name = "DirectoryId", IsPrimaryKey = true)]
+    public int DirectoryId { get; set; }
+
+    [Association(ThisKey = "DirectoryId", OtherKey = "Id")]
+    public DirectoryRelation Directory { get; set; }
+
+    IDirectory IDirectoryEntry.Directory => Directory;
+
+    [Column(Name = "MessageId", IsPrimaryKey = true)]
     public long MessageId { get; set; }
 
     [Association(ThisKey = "MessageId", OtherKey = "Id")]
     public MessageRelation Message { get; set; }
-    
-    IMessage IAttachment.Message => Message;
 
-    [Column(Name = "Filename")]
-    public string Filename { get; set; }
-
-    string IAttachment.Filename => Filename;
-
-    [Column(Name = "Oid")]
-    public uint Oid { get; set; }
+    IMessage IDirectoryEntry.Message => Message;
 #pragma warning restore CS8618
 }

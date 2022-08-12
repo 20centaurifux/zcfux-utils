@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,37 +19,54 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using LinqToDB.Mapping;
+using zcfux.Filter;
 
 namespace zcfux.Mail.LinqToPg;
 
-[Table(Schema = "mail", Name = "Attachment")]
-internal sealed class AttachmentRelation : IAttachment
-#pragma warning disable CS8618
+sealed class FlatMessageViewTest : IVisitor
 {
-    public AttachmentRelation()
+    public static bool ColumnRequiresFlatView(string columName)
+        => (columName is "To" or "Cc" or "Bcc" or "AttachmentId" or "Attachment");
+
+    public bool RequiresView { get; private set; }
+
+    public static bool UseFlatView(Query query)
+    {
+        var useView = false;
+
+        if (query.HasFilter)
+        {
+            var visitor = new FlatMessageViewTest();
+
+            query.Filter?.Traverse(visitor);
+
+            useView = visitor.RequiresView;
+        }
+
+        if (query.Order.Any(t => FlatMessageViewTest.ColumnRequiresFlatView(t.Item1)))
+        {
+            useView = true;
+        }
+
+        return useView;
+    }
+
+    public void BeginFunction(string name)
     {
     }
 
-    [Column(Name = "Id", IsPrimaryKey = true, IsIdentity = true)]
-    public long? Id { get; set; }
+    public void EndFunction()
+    {
+    }
 
-    long IAttachment.Id => Id!.Value;
-
-    [Column(Name = "MessageId")]
-    public long MessageId { get; set; }
-
-    [Association(ThisKey = "MessageId", OtherKey = "Id")]
-    public MessageRelation Message { get; set; }
-    
-    IMessage IAttachment.Message => Message;
-
-    [Column(Name = "Filename")]
-    public string Filename { get; set; }
-
-    string IAttachment.Filename => Filename;
-
-    [Column(Name = "Oid")]
-    public uint Oid { get; set; }
-#pragma warning restore CS8618
+    public void Visit(object? value)
+    {
+        if (value is IColumn column)
+        {
+            if (ColumnRequiresFlatView(column.Name))
+            {
+                RequiresView = true;
+            }
+        }
+    }
 }

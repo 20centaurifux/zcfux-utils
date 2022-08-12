@@ -19,23 +19,16 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Mail;
+namespace zcfux.Mail.Store;
 
-public sealed class Attachment
+public sealed class DirectoryEntryNotFoundException : Exception
 {
-    readonly IDb _db;
-    readonly object _handle;
-    readonly IAttachment _attachment;
+    public DirectoryEntryNotFoundException()
+    {
+    }
 
-    internal Attachment(IDb db, object handle, IAttachment attachment)
-        => (_db, _handle, _attachment) = (db, handle, attachment);
-
-    public long Id
-        => _attachment.Id;
-
-    public string Filename
-        => _attachment.Filename;
-
-    public Stream OpenRead()
-        => _db.Messages.ReadAttachment(_handle, Id);
+    public DirectoryEntryNotFoundException(string message)
+        : base(message)
+    {
+    }
 }

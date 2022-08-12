@@ -19,23 +19,13 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Mail;
+namespace zcfux.Mail.Store;
 
-public sealed class Attachment
+public interface IDirectory
 {
-    readonly IDb _db;
-    readonly object _handle;
-    readonly IAttachment _attachment;
+    int Id { get; }
 
-    internal Attachment(IDb db, object handle, IAttachment attachment)
-        => (_db, _handle, _attachment) = (db, handle, attachment);
+    string Name { get; }
 
-    public long Id
-        => _attachment.Id;
-
-    public string Filename
-        => _attachment.Filename;
-
-    public Stream OpenRead()
-        => _db.Messages.ReadAttachment(_handle, Id);
+    int? ParentId { get;  }
 }

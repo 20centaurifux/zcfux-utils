@@ -19,23 +19,45 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Mail;
+using LinqToDB.Mapping;
 
-public sealed class Attachment
+namespace zcfux.Mail.LinqToPg.Store;
+
+[Table(Schema = "mail", Name = "StoredMessages")]
+internal class StoredMessageView
 {
-    readonly IDb _db;
-    readonly object _handle;
-    readonly IAttachment _attachment;
+#pragma warning disable CS8618
+    [Column(Name = "Id", IsPrimaryKey = true, IsIdentity = true)]
+    public long Id { get; set; }
 
-    internal Attachment(IDb db, object handle, IAttachment attachment)
-        => (_db, _handle, _attachment) = (db, handle, attachment);
+    [Column(Name = "DirectoryId")]
+    public int DirectoryId { get; set; }
 
-    public long Id
-        => _attachment.Id;
+    [Column(Name = "Directory")]
+    public string Directory { get; set; }
 
-    public string Filename
-        => _attachment.Filename;
+    [Column(Name = "ParentId")]
+    public int? ParentId { get; set; }
 
-    public Stream OpenRead()
-        => _db.Messages.ReadAttachment(_handle, Id);
+    [Column(Name = "Sender", CanBeNull = false)]
+    public string From { get; set; }
+
+    [Column(Name = "To", CanBeNull = false)]
+    public string[] To { get; set; }
+
+    [Column(Name = "Cc")]
+    public string[] Cc { get; set; }
+
+    [Column(Name = "Bcc")]
+    public string[] Bcc { get; set; }
+
+    [Column(Name = "Subject", CanBeNull = false)]
+    public string Subject { get; set; }
+
+    [Column(Name = "TextBody")]
+    public string? TextBody { get; set; }
+
+    [Column(Name = "HtmlBody")]
+    public string? HtmlBody { get; set; }
+#pragma warning restore CS8618
 }

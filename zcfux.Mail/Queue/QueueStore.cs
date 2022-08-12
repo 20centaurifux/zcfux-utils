@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,23 +19,45 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Mail;
+using zcfux.Filter;
 
-public sealed class Attachment
+namespace zcfux.Mail.Queue;
+
+public sealed class QueueStore
 {
     readonly IDb _db;
     readonly object _handle;
-    readonly IAttachment _attachment;
 
-    internal Attachment(IDb db, object handle, IAttachment attachment)
-        => (_db, _handle, _attachment) = (db, handle, attachment);
+    public QueueStore(IDb db, object handle)
+        => (_db, _handle) = (db, handle);
 
-    public long Id
-        => _attachment.Id;
+    public Queue NewQueue(string name)
+    {
+        var queue = _db.Queues.NewQueue(_handle, name);
 
-    public string Filename
-        => _attachment.Filename;
+        return new Queue(_db, _handle, queue);
+    }
 
-    public Stream OpenRead()
-        => _db.Messages.ReadAttachment(_handle, Id);
+    public Queue GetQueue(int id)
+    {
+        try
+        {
+            var queue = _db.Queues.GetQueue(_handle, id);
+
+            return new Queue(_db, _handle, queue);
+        }
+        catch(Data.NotFoundException)
+        {
+            throw new QueueNotFoundException();
+        }
+    } 
+
+    public IEnumerable<Queue> GetQueues()
+        => _db.Queues.GetQueues(_handle)
+            .OrderBy(queue => queue.Name.ToLower())
+            .Select(queue => new Queue(_db, _handle, queue));
+
+    public IEnumerable<QueuedMessage> Query(Query query)
+        => _db.Queues.Query(_handle, query)
+            .Select(queueItem => new QueuedMessage(_db, _handle, queueItem));
 }

@@ -21,35 +21,49 @@
  ***************************************************************************/
 using LinqToDB.Mapping;
 
-namespace zcfux.Mail.LinqToPg;
+namespace zcfux.Mail.LinqToPg.Store;
 
-[Table(Schema = "mail", Name = "Attachment")]
-internal sealed class AttachmentRelation : IAttachment
-#pragma warning disable CS8618
+[Table(Schema = "mail", Name = "FlatStoredMessages")]
+internal class FlatStoredMessageView
 {
-    public AttachmentRelation()
-    {
-    }
-
+#pragma warning disable CS8618
     [Column(Name = "Id", IsPrimaryKey = true, IsIdentity = true)]
-    public long? Id { get; set; }
+    public long Id { get; set; }
 
-    long IAttachment.Id => Id!.Value;
+    [Column(Name = "DirectoryId")]
+    public int DirectoryId { get; set; }
 
-    [Column(Name = "MessageId")]
-    public long MessageId { get; set; }
-
-    [Association(ThisKey = "MessageId", OtherKey = "Id")]
-    public MessageRelation Message { get; set; }
+    [Column(Name = "Directory")]
+    public string Directory  { get; set; }
     
-    IMessage IAttachment.Message => Message;
+    [Column(Name = "ParentId")]
+    public int? ParentId  { get; set; }
 
-    [Column(Name = "Filename")]
-    public string Filename { get; set; }
+    [Column(Name = "Sender", CanBeNull = false)]
+    public string From { get; set; }
 
-    string IAttachment.Filename => Filename;
+    [Column(Name = "To", CanBeNull = false)]
+    public string? To { get; set; }
 
-    [Column(Name = "Oid")]
-    public uint Oid { get; set; }
+    [Column(Name = "Cc")]
+    public string? Cc { get; set; }
+
+    [Column(Name = "Bcc")]
+    public string? Bcc { get; set; }
+
+    [Column(Name = "Subject", CanBeNull = false)]
+    public string Subject { get; set; }
+
+    [Column(Name = "TextBody")]
+    public string? TextBody { get; set; }
+
+    [Column(Name = "HtmlBody")]
+    public string? HtmlBody { get; set; }
+    
+    [Column(Name = "AttachmentId")]
+    public long? AttachmentId { get; set; }
+
+    [Column(Name = "Attachment")]
+    public string? Attachment { get; set; }
 #pragma warning restore CS8618
 }

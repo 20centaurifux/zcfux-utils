@@ -21,35 +21,52 @@
  ***************************************************************************/
 using LinqToDB.Mapping;
 
-namespace zcfux.Mail.LinqToPg;
+namespace zcfux.Mail.LinqToPg.Queue;
 
-[Table(Schema = "mail", Name = "Attachment")]
-internal sealed class AttachmentRelation : IAttachment
-#pragma warning disable CS8618
+[Table(Schema = "mail", Name = "QueuedMessages")]
+internal class QueuedMessageView
 {
-    public AttachmentRelation()
-    {
-    }
-
+#pragma warning disable CS8618
     [Column(Name = "Id", IsPrimaryKey = true, IsIdentity = true)]
-    public long? Id { get; set; }
+    public long Id { get; set; }
 
-    long IAttachment.Id => Id!.Value;
+    [Column(Name = "QueueId")]
+    public int QueueId { get; set; }
 
-    [Column(Name = "MessageId")]
-    public long MessageId { get; set; }
+    [Column(Name = "Queue")]
+    public string Queue { get; set; }
 
-    [Association(ThisKey = "MessageId", OtherKey = "Id")]
-    public MessageRelation Message { get; set; }
-    
-    IMessage IAttachment.Message => Message;
+    [Column(Name = "Sender", CanBeNull = false)]
+    public string From { get; set; }
 
-    [Column(Name = "Filename")]
-    public string Filename { get; set; }
+    [Column(Name = "To", CanBeNull = false)]
+    public string[] To { get; set; }
 
-    string IAttachment.Filename => Filename;
+    [Column(Name = "Cc")]
+    public string[] Cc { get; set; }
 
-    [Column(Name = "Oid")]
-    public uint Oid { get; set; }
+    [Column(Name = "Bcc")]
+    public string[] Bcc { get; set; }
+
+    [Column(Name = "Subject", CanBeNull = false)]
+    public string Subject { get; set; }
+
+    [Column(Name = "TextBody")]
+    public string? TextBody { get; set; }
+
+    [Column(Name = "HtmlBody")]
+    public string? HtmlBody { get; set; }
+
+    [Column(Name = "Created")]
+    public DateTime Created { get; set; }
+
+    [Column(Name = "EndOfLife")]
+    public DateTime EndOfLife { get; set; }
+
+    [Column(Name = "NextDue")]
+    public DateTime? NextDue { get; set; }
+
+    [Column(Name = "Errors")]
+    public int Errors { get; set; }
 #pragma warning restore CS8618
 }

@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,23 +19,27 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Mail;
+using zcfux.Mail.LinqToPg.Queue;
+using zcfux.Mail.LinqToPg.Store;
+using zcfux.Mail.Queue;
+using zcfux.Mail.Store;
 
-public sealed class Attachment
+namespace zcfux.Mail.LinqToPg;
+
+public sealed class Db : IDb
 {
-    readonly IDb _db;
-    readonly object _handle;
-    readonly IAttachment _attachment;
+    static readonly Lazy<IMessageDb> LazyMessageDb
+        = new(Data.Proxy.Factory.ConvertHandle<IMessageDb, MessageDb>);
 
-    internal Attachment(IDb db, object handle, IAttachment attachment)
-        => (_db, _handle, _attachment) = (db, handle, attachment);
+    static readonly Lazy<IStoreDb> LazyStoreDb
+        = new(Data.Proxy.Factory.ConvertHandle<IStoreDb, StoreDb>);
 
-    public long Id
-        => _attachment.Id;
+    static readonly Lazy<IQueueDb> LazyQueueDb
+        = new(Data.Proxy.Factory.ConvertHandle<IQueueDb, QueueDb>);
 
-    public string Filename
-        => _attachment.Filename;
+    public IMessageDb Messages => LazyMessageDb.Value;
 
-    public Stream OpenRead()
-        => _db.Messages.ReadAttachment(_handle, Id);
+    public IStoreDb Store => LazyStoreDb.Value;
+
+    public IQueueDb Queues => LazyQueueDb.Value;
 }

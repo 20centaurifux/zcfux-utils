@@ -23,11 +23,11 @@ using System.Collections.Immutable;
 
 namespace zcfux.Mail;
 
-public sealed class MessageBuilder
+internal sealed class MessageBuilder
 {
-    readonly IMailDb _db;
+    readonly IDb _db;
     readonly object _handle;
-    IDirectory? _directory;
+
     Address? _from;
     ImmutableHashSet<Address> _to = ImmutableHashSet.Create<Address>();
     ImmutableHashSet<Address> _cc = ImmutableHashSet.Create<Address>();
@@ -37,14 +37,13 @@ public sealed class MessageBuilder
     string? _htmlBody;
     ImmutableHashSet<string> _attachments = ImmutableHashSet.Create<string>();
 
-    public MessageBuilder(IMailDb db, object handle)
+    public MessageBuilder(IDb db, object handle)
         => (_db, _handle) = (db, handle);
 
     MessageBuilder Clone()
     {
         var builder = new MessageBuilder(_db, _handle)
         {
-            _directory = _directory,
             _from = _from,
             _to = _to,
             _cc = _cc,
@@ -53,15 +52,6 @@ public sealed class MessageBuilder
             _textBody = _textBody,
             _htmlBody = _htmlBody
         };
-
-        return builder;
-    }
-
-    public MessageBuilder WithDirectory(IDirectory directory)
-    {
-        var builder = Clone();
-
-        builder._directory = directory;
 
         return builder;
     }
@@ -75,8 +65,8 @@ public sealed class MessageBuilder
         return builder;
     }
 
-    public MessageBuilder WithFrom(string displayName, string mailAddress)
-        => WithFrom(new Address(displayName, mailAddress));
+    public MessageBuilder WithFrom(string displayName, string address)
+        => WithFrom(new Address(displayName, address));
 
     public MessageBuilder WithTo(Address address)
     {
@@ -87,8 +77,8 @@ public sealed class MessageBuilder
         return builder;
     }
 
-    public MessageBuilder WithTo(string displayName, string mailAddress)
-        => WithTo(new Address(displayName, mailAddress));
+    public MessageBuilder WithTo(string displayName, string address)
+        => WithTo(new Address(displayName, address));
 
     public MessageBuilder WithCc(Address address)
     {
@@ -99,8 +89,8 @@ public sealed class MessageBuilder
         return builder;
     }
 
-    public MessageBuilder WithCc(string displayName, string mailAddress)
-        => WithCc(new Address(displayName, mailAddress));
+    public MessageBuilder WithCc(string displayName, string address)
+        => WithCc(new Address(displayName, address));
 
     public MessageBuilder WithBcc(Address address)
     {
@@ -111,8 +101,8 @@ public sealed class MessageBuilder
         return builder;
     }
 
-    public MessageBuilder WithBcc(string displayName, string mailAddress)
-        => WithBcc(new Address(displayName, mailAddress));
+    public MessageBuilder WithBcc(string displayName, string address)
+        => WithBcc(new Address(displayName, address));
 
     public MessageBuilder WithSubject(string subject)
     {
@@ -150,18 +140,12 @@ public sealed class MessageBuilder
         return builder;
     }
 
-    public Message Store()
+    public IMessage Store()
     {
-        if (_directory == null)
-        {
-            throw new MessageBuilderException("Directory is undefined.");
-        }
-
         ThrowIfIncomplete();
 
         var message = _db.Messages.NewMessage(
             _handle,
-            _directory!,
             _from!,
             _to,
             _cc,
@@ -172,7 +156,7 @@ public sealed class MessageBuilder
 
         StoreAttachments(message);
 
-        return new Message(_db, _handle, message);
+        return message;
     }
 
     void StoreAttachments(IMessage message)
@@ -183,7 +167,7 @@ public sealed class MessageBuilder
 
             using (var stream = File.OpenRead(absoluteFilename))
             {
-                _db.Attachments.NewAttachment(_handle, message, filename, stream);
+                _db.Messages.NewAttachment(_handle, message, filename, stream);
             }
         }
     }
@@ -192,22 +176,22 @@ public sealed class MessageBuilder
     {
         if (_from == null)
         {
-            throw new MessageBuilderException("Sender is undefined.");
+            throw new BuilderException("Sender is undefined.");
         }
 
         if (!_to.Any())
         {
-            throw new MessageBuilderException("Receiver is undefined.");
+            throw new BuilderException("Receiver is undefined.");
         }
 
         if (string.IsNullOrEmpty(_subject))
         {
-            throw new MessageBuilderException("Subject is undefined.");
+            throw new BuilderException("Subject is undefined.");
         }
 
         if (string.IsNullOrEmpty(_textBody) && string.IsNullOrEmpty(_htmlBody))
         {
-            throw new MessageBuilderException("Body is undefined.");
+            throw new BuilderException("Body is undefined.");
         }
     }
 }

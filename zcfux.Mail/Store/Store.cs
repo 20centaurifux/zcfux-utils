@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,23 +19,38 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Mail;
+using zcfux.Filter;
 
-public sealed class Attachment
+namespace zcfux.Mail.Store;
+
+public sealed class Store
 {
     readonly IDb _db;
     readonly object _handle;
-    readonly IAttachment _attachment;
 
-    internal Attachment(IDb db, object handle, IAttachment attachment)
-        => (_db, _handle, _attachment) = (db, handle, attachment);
+    public  Store(IDb db, object handle)
+        => (_db, _handle) = (db, handle);
 
-    public long Id
-        => _attachment.Id;
+    public Directory NewDirectory(string name)
+    {
+        var directories = GetDirectories();
 
-    public string Filename
-        => _attachment.Filename;
+        if (directories.Any(child => child.Name == name))
+        {
+            throw new DirectoryAlreadyExistsException();
+        }
 
-    public Stream OpenRead()
-        => _db.Messages.ReadAttachment(_handle, Id);
+        var directory = _db.Store.NewDirectory(_handle, name);
+
+        return new Directory(_db, _handle, directory);
+    }
+
+    public IEnumerable<Directory> GetDirectories()
+        => _db.Store.GetDirectories(_handle)
+            .OrderBy(dir => dir.Name.ToLower())
+            .Select(dir => new Directory(_db, _handle, dir));
+
+    public IEnumerable<StoredMessage> Query(Query query)
+        => _db.Store.QueryMessages(_handle, query)
+            .Select(directoryEntry => new StoredMessage(_db, _handle, directoryEntry));
 }

@@ -23,9 +23,9 @@ namespace zcfux.Mail;
 
 public interface IAttachment
 {
-    public long Id { get; }
+    long Id { get; }
 
-    public IMessage Message { get; }
+    IMessage Message { get; }
 
-    public string Filename { get; }
+    string Filename { get; }
 }

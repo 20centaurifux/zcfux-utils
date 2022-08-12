@@ -19,23 +19,20 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Mail;
+using zcfux.Data;
+using zcfux.Mail.LinqToPg;
 
-public sealed class Attachment
+namespace zcfux.Mail.Tests;
+
+public sealed class LinqToPgStoreTests : AStoreTests
 {
-    readonly IDb _db;
-    readonly object _handle;
-    readonly IAttachment _attachment;
+    protected override IEngine CreateAndSetupEngine()
+        => LinqToPgFactory.CreateAndSetupEngine();
 
-    internal Attachment(IDb db, object handle, IAttachment attachment)
-        => (_db, _handle, _attachment) = (db, handle, attachment);
+    protected override IDb CreateDb()
+    {
+        var db = new Db();
 
-    public long Id
-        => _attachment.Id;
-
-    public string Filename
-        => _attachment.Filename;
-
-    public Stream OpenRead()
-        => _db.Messages.ReadAttachment(_handle, Id);
+        return db;
+    }
 }

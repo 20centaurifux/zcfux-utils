@@ -19,23 +19,23 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Mail;
+using zcfux.Mail.Queue;
 
-public sealed class Attachment
+namespace zcfux.Mail.LinqToPg.Queue;
+
+internal sealed class QueueItem : IQueueItem
 {
-    readonly IDb _db;
-    readonly object _handle;
-    readonly IAttachment _attachment;
+#pragma warning disable CS8618
+    public IQueue Queue { get; set; }
 
-    internal Attachment(IDb db, object handle, IAttachment attachment)
-        => (_db, _handle, _attachment) = (db, handle, attachment);
+    public IMessage Message { get; set; }
 
-    public long Id
-        => _attachment.Id;
+    public DateTime Created { get; set; }
 
-    public string Filename
-        => _attachment.Filename;
+    public DateTime EndOfLife { get; set; }
 
-    public Stream OpenRead()
-        => _db.Messages.ReadAttachment(_handle, Id);
+    public DateTime? NextDue { get; set; }
+
+    public int Errors { get; set; }
+#pragma warning restore CS8618
 }

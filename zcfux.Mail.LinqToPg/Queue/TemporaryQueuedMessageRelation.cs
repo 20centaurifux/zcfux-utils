@@ -19,23 +19,13 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Mail;
 
-public sealed class Attachment
+using LinqToDB.Mapping;
+
+namespace zcfux.Mail.LinqToPg.Queue;
+
+internal class TemporaryQueuedMessageRelation : QueuedMessageView
 {
-    readonly IDb _db;
-    readonly object _handle;
-    readonly IAttachment _attachment;
-
-    internal Attachment(IDb db, object handle, IAttachment attachment)
-        => (_db, _handle, _attachment) = (db, handle, attachment);
-
-    public long Id
-        => _attachment.Id;
-
-    public string Filename
-        => _attachment.Filename;
-
-    public Stream OpenRead()
-        => _db.Messages.ReadAttachment(_handle, Id);
+    [Column(Name = "Offset")]
+    public long Offset { get; set; }
 }

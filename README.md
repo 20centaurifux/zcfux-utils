@@ -65,6 +65,9 @@ This is a collection of various utilities and abstractions I use in .NET project
 ## Pool
 * Generic and customizable resource pool.
 
+## PubSub
+* Publish & subsribe building block.
+
 ## Replication
 * Replication abstractions.
 

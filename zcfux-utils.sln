@@ -83,6 +83,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Mail.LinqToPg", "zcfu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Mail.Tests", "zcfux.Mail.Tests\zcfux.Mail.Tests.csproj", "{B29E4A9E-32E7-47B7-A052-8F2AFD503B93}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.PubSub", "zcfux.PubSub\zcfux.PubSub.csproj", "{C8A614F6-DEAC-41FE-9715-59AE43C3660F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.PubSub.Test", "zcfux.PubSub.Test\zcfux.PubSub.Test.csproj", "{4C4D1C1F-F716-439A-8903-60F1A13D10EF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -253,5 +257,13 @@ Global
 		{B29E4A9E-32E7-47B7-A052-8F2AFD503B93}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B29E4A9E-32E7-47B7-A052-8F2AFD503B93}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B29E4A9E-32E7-47B7-A052-8F2AFD503B93}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8A614F6-DEAC-41FE-9715-59AE43C3660F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8A614F6-DEAC-41FE-9715-59AE43C3660F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8A614F6-DEAC-41FE-9715-59AE43C3660F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8A614F6-DEAC-41FE-9715-59AE43C3660F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C4D1C1F-F716-439A-8903-60F1A13D10EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C4D1C1F-F716-439A-8903-60F1A13D10EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C4D1C1F-F716-439A-8903-60F1A13D10EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C4D1C1F-F716-439A-8903-60F1A13D10EF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

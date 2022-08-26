@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.PubSub;
 
-public interface ISubsribable<TMessage>
+public interface ISubscribable<TMessage>
 {
     void Subscribe(Subscriber subscriber, Action<TMessage> callback);
 

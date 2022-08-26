@@ -24,7 +24,7 @@ using System.Collections.Concurrent;
 namespace zcfux.PubSub;
 
 public sealed class Channel<TMessage>
-    : ISubsribable<TMessage>, IDisposable
+    : ISubscribable<TMessage>, IDisposable
 {
     public event EventHandler<SubscriptionEventArgs>? Subscribed;
     public event EventHandler<SubscriptionEventArgs>? Unsubscribed;

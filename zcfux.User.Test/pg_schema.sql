@@ -6,7 +6,7 @@ ALTER
 CREATE TABLE "user"."Site"
 (
     "Guid" uuid                  NOT NULL,
-    "Name" character varying(64) NOT NULL
+    "Name" character varying(30) NOT NULL
 );
 
 ALTER TABLE "user"."Site"
@@ -20,7 +20,7 @@ CREATE UNIQUE INDEX "Site_Name_Uidx" ON "user"."Site" ("Name");
 CREATE TABLE "user"."Application"
 (
     "Id"   int                   NOT NULL,
-    "Name" character varying(64) NOT NULL
+    "Name" character varying(30) NOT NULL
 );
 
 ALTER TABLE "user"."Application"
@@ -34,7 +34,7 @@ CREATE UNIQUE INDEX "Application_Name_Uidx" ON "user"."Application" ("Name");
 CREATE TABLE "user"."Origin"
 (
     "Id"       int                   NOT NULL,
-    "Name"     character varying(64) NOT NULL,
+    "Name"     character varying(30) NOT NULL,
     "Writable" boolean default 't'   NOT NULL
 );
 
@@ -49,11 +49,11 @@ CREATE UNIQUE INDEX "Origin_Name_Uidx" ON "user"."Origin" ("Name");
 CREATE TABLE "user"."User"
 (
     "Guid"      uuid                  NOT NULL,
-    "Name"      character varying(64) NOT NULL,
+    "Name"      character varying(30) NOT NULL,
     "OriginId"  int                   NOT NULL,
     "Status"    int DEFAULT 0         NOT NULL,
-    "Firstname" character varying(64),
-    "Lastname"  character varying(64)
+    "Firstname" character varying(50),
+    "Lastname"  character varying(50)
 );
 
 ALTER TABLE "user"."User"
@@ -62,7 +62,6 @@ ALTER TABLE "user"."User"
 ALTER TABLE ONLY "user"."User"
     ADD CONSTRAINT "User_pkey" PRIMARY KEY ("Guid");
 
-CREATE INDEX "User_Guid_Idx" ON "user"."User" ("Guid");
 CREATE UNIQUE INDEX "User_Uidx" ON "user"."User" ("OriginId", "Name");
 
 ALTER TABLE ONLY "user"."User"
@@ -96,7 +95,7 @@ ALTER TABLE ONLY "user"."Password"
 CREATE TABLE "user"."Group"
 (
     "Guid" uuid                  NOT NULL,
-    "Name" character varying(64) NOT NULL
+    "Name" character varying(30) NOT NULL
 );
 
 ALTER TABLE "user"."Group"
@@ -144,7 +143,7 @@ ALTER TABLE ONLY "user"."AssignedUser"
 CREATE TABLE "user"."PermissionCategory"
 (
     "Id"            int                   NOT NULL,
-    "Name"          character varying(64) NOT NULL,
+    "Name"          character varying(30) NOT NULL,
     "ApplicationId" int                   NOT NULL
 );
 
@@ -167,7 +166,7 @@ CREATE TABLE "user"."Permission"
 (
     "Id"         int                   NOT NULL,
     "CategoryId" int,
-    "Name"       character varying(64) NOT NULL
+    "Name"       character varying(30) NOT NULL
 );
 
 ALTER TABLE "user"."Permission"

@@ -1,15 +1,16 @@
 CREATE SCHEMA audit;
 
-ALTER SCHEMA audit OWNER to postgres;
+ALTER
+    SCHEMA audit OWNER to test;
 
 CREATE TABLE audit."TopicKind"
 (
     "Id"   int                   NOT NULL,
-    "Name" character varying(64) NOT NULL
+    "Name" character varying(30) NOT NULL
 );
 
 ALTER TABLE audit."TopicKind"
-    OWNER to postgres;
+    OWNER to test;
 
 ALTER TABLE ONLY audit."TopicKind"
     ADD CONSTRAINT "TopicKind_pkey" PRIMARY KEY ("Id");
@@ -21,20 +22,19 @@ CREATE SEQUENCE audit.topic_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+    NO MAXVALUE CACHE 1;
 
-ALTER SEQUENCE audit.topic_id_seq OWNER to postgres;
+ALTER SEQUENCE audit.topic_id_seq OWNER to test;
 
 CREATE TABLE audit."Topic"
 (
     "Id"          bigint DEFAULT nextval('audit.topic_id_seq'::regclass) NOT NULL,
     "KindId"      int                                                    NOT NULL,
-    "DisplayName" character varying(64)                                  NOT NULL
+    "DisplayName" character varying(50)                                  NOT NULL
 );
 
 ALTER TABLE audit."Topic"
-    OWNER to postgres;
+    OWNER to test;
 
 ALTER TABLE ONLY audit."Topic"
     ADD CONSTRAINT "Topic_pkey" PRIMARY KEY ("Id");
@@ -56,16 +56,16 @@ FROM audit."Topic" t
          JOIN audit."TopicKind" k ON k."Id" = t."KindId";
 
 ALTER TABLE audit."TopicView"
-    OWNER to postgres;
+    OWNER to test;
 
 CREATE TABLE audit."Association"
 (
     "Id"   integer               NOT NULL,
-    "Name" character varying(32) NOT NULL
+    "Name" character varying(30) NOT NULL
 );
 
 ALTER TABLE audit."Association"
-    OWNER to postgres;
+    OWNER to test;
 
 ALTER TABLE ONLY audit."Association"
     ADD CONSTRAINT "Association_pkey" PRIMARY KEY ("Id");
@@ -74,10 +74,9 @@ CREATE SEQUENCE audit.topic_association_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+    NO MAXVALUE CACHE 1;
 
-ALTER SEQUENCE audit."topic_association_id_seq" OWNER to postgres;
+ALTER SEQUENCE audit."topic_association_id_seq" OWNER to test;
 
 CREATE TABLE audit."TopicAssociation"
 (
@@ -90,7 +89,7 @@ CREATE TABLE audit."TopicAssociation"
 ) PARTITION BY LIST ("Archived");
 
 ALTER TABLE audit."TopicAssociation"
-    OWNER to postgres;
+    OWNER to test;
 
 CREATE INDEX "TopicAssociation_Topic1_Idx" ON audit."TopicAssociation" ("Topic1");
 CREATE INDEX "TopicAssociation_AssociationId_Idx" ON audit."TopicAssociation" ("AssociationId");
@@ -111,34 +110,39 @@ ALTER TABLE audit."TopicAssociation"
         FOREIGN KEY ("Topic2")
             REFERENCES audit."Topic" ("Id");
 
-CREATE TABLE audit."RecentTopicAssociation" PARTITION OF audit."TopicAssociation" FOR VALUES IN ('F');
+CREATE TABLE audit."RecentTopicAssociation" PARTITION OF audit."TopicAssociation" FOR VALUES IN
+    (
+    'F'
+    );
 
 ALTER TABLE audit."RecentTopicAssociation"
-    OWNER to postgres;
+    OWNER to test;
 
-CREATE TABLE audit."ArchivedTopicAssociation" PARTITION OF audit."TopicAssociation" FOR VALUES IN ('T');
+CREATE TABLE audit."ArchivedTopicAssociation" PARTITION OF audit."TopicAssociation" FOR VALUES IN
+    (
+    'T'
+    );
 
 ALTER TABLE audit."ArchivedTopicAssociation"
-    OWNER to postgres;
+    OWNER to test;
 
 CREATE TABLE "audit"."EventKind"
 (
     "Id"   int                   NOT NULL,
-    "Name" character varying(32) NOT NULL,
+    "Name" character varying(30) NOT NULL,
     PRIMARY KEY ("Id")
 );
 
 ALTER TABLE audit."EventKind"
-    OWNER to postgres;
+    OWNER to test;
 
 CREATE SEQUENCE audit.event_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+    NO MAXVALUE CACHE 1;
 
-ALTER SEQUENCE audit.event_id_seq OWNER to postgres;
+ALTER SEQUENCE audit.event_id_seq OWNER to test;
 
 CREATE TABLE audit."Event"
 (
@@ -152,7 +156,7 @@ CREATE TABLE audit."Event"
 ) PARTITION BY LIST ("Archived");
 
 ALTER TABLE audit."Event"
-    OWNER to postgres;
+    OWNER to test;
 
 CREATE INDEX "Event_KindId_Idx" ON audit."Event" ("KindId");
 CREATE INDEX "Event_TopicId_Idx" ON audit."Event" ("TopicId");
@@ -169,15 +173,21 @@ ALTER TABLE audit."Event"
         FOREIGN KEY ("TopicId")
             REFERENCES audit."Topic" ("Id");
 
-CREATE TABLE audit."RecentEvent" PARTITION OF audit."Event" FOR VALUES IN ('F');
+CREATE TABLE audit."RecentEvent" PARTITION OF audit."Event" FOR VALUES IN
+    (
+    'F'
+    );
 
 ALTER TABLE audit."RecentEvent"
-    OWNER to postgres;
+    OWNER to test;
 
-CREATE TABLE audit."ArchivedEvent" PARTITION OF audit."Event" FOR VALUES IN ('T');
+CREATE TABLE audit."ArchivedEvent" PARTITION OF audit."Event" FOR VALUES IN
+    (
+    'T'
+    );
 
 ALTER TABLE audit."ArchivedEvent"
-    OWNER to postgres;
+    OWNER to test;
 
 CREATE OR REPLACE VIEW audit."RecentEventView"
 AS
@@ -193,7 +203,7 @@ FROM audit."RecentEvent" e
          LEFT JOIN audit."Topic" t ON t."Id" = e."TopicId";
 
 ALTER TABLE audit."RecentEventView"
-    OWNER to postgres;
+    OWNER to test;
 
 CREATE MATERIALIZED VIEW audit."ArchivedEdgeView"
 AS
@@ -212,50 +222,48 @@ WITH RECURSIVE edge
                     "RightTopicKind"
                        )
                    AS
-                   (
-                       SELECT e."Id",
-                              a."Topic1",
-                              t."DisplayName",
-                              t."KindId",
-                              k_1."Name",
-                              a."AssociationId",
-                              assoc."Name",
-                              a."Topic2",
-                              t_1."DisplayName",
-                              t_1."KindId",
-                              k_2."Name"
-                       FROM audit."ArchivedEvent" e
-                                INNER JOIN audit."ArchivedTopicAssociation" a ON a."Topic1" = e."TopicId"
-                                INNER JOIN audit."Topic" t ON a."Topic1" = t."Id"
-                                INNER JOIN audit."TopicKind" k_1 ON t."KindId" = k_1."Id"
-                                INNER JOIN audit."Association" assoc ON a."AssociationId" = assoc."Id"
-                                INNER JOIN audit."Topic" t_1 ON a."Topic2" = t_1."Id"
-                                INNER JOIN audit."TopicKind" k_2 ON t_1."KindId" = k_2."Id"
-                       UNION ALL
-                       SELECT e_1."EventId",
-                              e_1."RightTopicId",
-                              e_1."RightTopic",
-                              e_1."RightTopicKindId",
-                              e_1."RightTopicKind",
-                              ta."AssociationId",
-                              assoc_1."Name",
-                              ta."Topic2",
-                              t_2."DisplayName",
-                              t_2."KindId",
-                              k_3."Name"
-                       FROM audit."ArchivedTopicAssociation" ta
-                                INNER JOIN audit."Association" assoc_1 ON ta."AssociationId" = assoc_1."Id"
-                                INNER JOIN audit."Topic" t_2 ON ta."Topic2" = t_2."Id"
-                                INNER JOIN audit."TopicKind" k_3 ON t_2."KindId" = k_3."Id"
-                                INNER JOIN edge e_1 ON e_1."RightTopicId" = ta."Topic1"
-                   )
+                   (SELECT e."Id",
+                           a."Topic1",
+                           t."DisplayName",
+                           t."KindId",
+                           k_1."Name",
+                           a."AssociationId",
+                           assoc."Name",
+                           a."Topic2",
+                           t_1."DisplayName",
+                           t_1."KindId",
+                           k_2."Name"
+                    FROM audit."ArchivedEvent" e
+                             INNER JOIN audit."ArchivedTopicAssociation" a ON a."Topic1" = e."TopicId"
+                             INNER JOIN audit."Topic" t ON a."Topic1" = t."Id"
+                             INNER JOIN audit."TopicKind" k_1 ON t."KindId" = k_1."Id"
+                             INNER JOIN audit."Association" assoc ON a."AssociationId" = assoc."Id"
+                             INNER JOIN audit."Topic" t_1 ON a."Topic2" = t_1."Id"
+                             INNER JOIN audit."TopicKind" k_2 ON t_1."KindId" = k_2."Id"
+                    UNION ALL
+                    SELECT e_1."EventId",
+                           e_1."RightTopicId",
+                           e_1."RightTopic",
+                           e_1."RightTopicKindId",
+                           e_1."RightTopicKind",
+                           ta."AssociationId",
+                           assoc_1."Name",
+                           ta."Topic2",
+                           t_2."DisplayName",
+                           t_2."KindId",
+                           k_3."Name"
+                    FROM audit."ArchivedTopicAssociation" ta
+                             INNER JOIN audit."Association" assoc_1 ON ta."AssociationId" = assoc_1."Id"
+                             INNER JOIN audit."Topic" t_2 ON ta."Topic2" = t_2."Id"
+                             INNER JOIN audit."TopicKind" k_3 ON t_2."KindId" = k_3."Id"
+                             INNER JOIN edge e_1 ON e_1."RightTopicId" = ta."Topic1")
 select *
 from edge;
 
 CREATE INDEX "ArchivedEdgeView_EventId_Idx" ON audit."ArchivedEdgeView" ("EventId");
 
 ALTER TABLE audit."ArchivedEdgeView"
-    OWNER to postgres;
+    OWNER to test;
 
 CREATE MATERIALIZED VIEW audit."ArchivedEventView"
 AS
@@ -276,4 +284,4 @@ CREATE INDEX "ArchivedEventView_Severity_Idx" ON audit."ArchivedEventView" ("Sev
 CREATE INDEX "ArchivedEventView_CreatedAt_Idx" ON audit."ArchivedEventView" ("CreatedAt" DESC);
 
 ALTER TABLE audit."ArchivedEventView"
-    OWNER to postgres;
+    OWNER to test;

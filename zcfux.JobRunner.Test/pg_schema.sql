@@ -1,6 +1,7 @@
 ﻿CREATE SCHEMA scheduler;
 
-ALTER SCHEMA scheduler OWNER to test;
+ALTER
+    SCHEMA scheduler OWNER to test;
 
 CREATE SEQUENCE scheduler.job_kind_id_seq
     START WITH 1
@@ -13,8 +14,8 @@ ALTER SEQUENCE scheduler.job_kind_id_seq OWNER to test;
 CREATE TABLE scheduler."JobKind"
 (
     "Id"       int DEFAULT nextval('scheduler.job_kind_id_seq'::regclass) NOT NULL,
-    "Assembly" character varying(256)                                     NOT NULL,
-    "FullName" character varying(256)                                     NOT NULL
+    "Assembly" character varying(255)                                     NOT NULL,
+    "FullName" character varying(255)                                     NOT NULL
 );
 
 ALTER TABLE scheduler."JobKind"

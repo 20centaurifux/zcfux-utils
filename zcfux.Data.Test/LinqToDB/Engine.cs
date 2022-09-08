@@ -37,6 +37,7 @@ public class Engine : zcfux.Data.LinqToDB.Engine
         var builder = mappingSchema.GetFluentMappingBuilder();
 
         builder.Entity<Model>()
+            .HasSchemaName("test")
             .HasTableName("Model")
             .HasPrimaryKey(m => m.ID)
             .Property(m => m.Value);

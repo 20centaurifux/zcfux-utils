@@ -17,19 +17,17 @@ ALTER SEQUENCE mail.message_id_seq OWNER to test;
 CREATE TABLE mail."Message"
 (
     "Id"       int DEFAULT nextval('mail.message_id_seq'::regclass) NOT NULL,
-    "Sender"   character varying(64)                                NOT NULL,
+    "Sender"   character varying(50)                                NOT NULL,
     "To"       character varying[]                                  NOT NULL,
     "Cc"       character varying[],
     "Bcc"      character varying[],
-    "Subject"  character varying(64)                                NOT NULL,
+    "Subject"  character varying(100)                               NOT NULL,
     "TextBody" text,
     "HtmlBody" text
 );
 
 ALTER TABLE mail."Message"
     OWNER to test;
-
-CREATE INDEX "Message_Id_Idx" ON mail."Message" ("Id");
 
 ALTER TABLE ONLY mail."Message"
     ADD CONSTRAINT "Message_pk" PRIMARY KEY ("Id");
@@ -46,14 +44,13 @@ CREATE TABLE mail."Attachment"
 (
     "Id"        int DEFAULT nextval('mail.attachment_id_seq'::regclass) NOT NULL,
     "MessageId" int                                                     NOT NULL,
-    "Filename"  character varying(64)                                   NOT NULL,
+    "Filename"  character varying(50)                                   NOT NULL,
     "Oid"       lo                                                      NOT NULL
 );
 
 ALTER TABLE mail."Attachment"
     OWNER to test;
 
-CREATE INDEX "Attachment_Id_Idx" ON mail."Attachment" ("Id");
 CREATE INDEX "Attachment_MessageId_Idx" ON mail."Attachment" ("MessageId");
 
 ALTER TABLE ONLY mail."Attachment"
@@ -84,14 +81,13 @@ ALTER SEQUENCE mail.directory_id_seq OWNER to test;
 CREATE TABLE mail."Directory"
 (
     "Id"       int DEFAULT nextval('mail.directory_id_seq'::regclass) NOT NULL,
-    "Name"     character varying(64)                                  NOT NULL,
+    "Name"     character varying(50)                                  NOT NULL,
     "ParentId" int
 );
 
 ALTER TABLE mail."Directory"
     OWNER to test;
 
-CREATE INDEX "Directory_Id_Idx" ON mail."Directory" ("Id");
 CREATE INDEX "Directory_ParentId_Idx" ON mail."Directory" ("ParentId");
 CREATE UNIQUE INDEX "Directory_ParentId_UniqueIdx" ON mail."Directory" ("ParentId", "Name");
 
@@ -113,8 +109,6 @@ CREATE TABLE mail."DirectoryEntry"
 
 ALTER TABLE mail."DirectoryEntry"
     OWNER to test;
-
-CREATE INDEX "DirectoryEntry_Pk_Idx" ON mail."DirectoryEntry" ("DirectoryId", "MessageId");
 
 ALTER TABLE ONLY mail."DirectoryEntry"
     ADD CONSTRAINT "DirectoryEntry_pkey" PRIMARY KEY ("DirectoryId", "MessageId");
@@ -144,13 +138,11 @@ ALTER SEQUENCE mail.queue_id_seq OWNER to test;
 CREATE TABLE mail."Queue"
 (
     "Id"   int DEFAULT nextval('mail.queue_id_seq'::regclass) NOT NULL,
-    "Name" character varying(64)                              NOT NULL
+    "Name" character varying(50)                              NOT NULL
 );
 
 ALTER TABLE mail."Queue"
     OWNER to test;
-
-CREATE INDEX "Queue_Id_Idx" ON mail."Queue" ("Id");
 
 ALTER TABLE ONLY mail."Queue"
     ADD CONSTRAINT "Queue_pkey" PRIMARY KEY ("Id");
@@ -168,7 +160,6 @@ CREATE TABLE mail."QueueItem"
 ALTER TABLE mail."QueueItem"
     OWNER to test;
 
-CREATE INDEX "QueueItem_Pk_Idx" ON mail."QueueItem" ("QueueId", "MessageId");
 CREATE INDEX "QueueItem_NextDue_Idx" ON mail."QueueItem" ("NextDue");
 
 ALTER TABLE ONLY mail."QueueItem"

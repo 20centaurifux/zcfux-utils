@@ -87,3 +87,6 @@ This is a collection of various utilities and abstractions I use in .NET project
 
 ## Tracking
 * Track state changes to objects.
+
+## User
+* User, group & permission management.

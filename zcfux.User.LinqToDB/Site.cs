@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,16 +19,8 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Data;
+using zcfux.Application;
 
-public class NotFoundException : Exception
-{
-    public NotFoundException()
-    {
-    }
+namespace zcfux.User.LinqToDB;
 
-    public NotFoundException(string message)
-        : base(message)
-    {
-    }
-}
+internal sealed record Site(Guid Guid, string Name) : ISite;

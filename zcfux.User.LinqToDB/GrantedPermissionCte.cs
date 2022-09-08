@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,16 +19,17 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Data;
+using LinqToDB.Mapping;
 
-public class NotFoundException : Exception
+namespace zcfux.User.LinqToDB;
+
+internal class GrantedPermissionCte
 {
-    public NotFoundException()
-    {
-    }
+#pragma warning disable CS8618
+    [Column(Name = "PermissionId")]
+    public int PermissionId { get; set; }
 
-    public NotFoundException(string message)
-        : base(message)
-    {
-    }
+    [Column(Name = "Granted")]
+    public bool Granted { get; set; }
+#pragma warning restore CS8618
 }

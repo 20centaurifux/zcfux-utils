@@ -90,3 +90,6 @@ This is a collection of various utilities and abstractions I use in .NET project
 
 ## User
 * User, group & permission management.
+
+## User.LinqToDB
+* Data.LinqToDB User provider.

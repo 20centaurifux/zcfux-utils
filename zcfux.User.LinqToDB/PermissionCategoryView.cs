@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,16 +19,33 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Data;
+using LinqToDB.Mapping;
+using zcfux.Application;
 
-public class NotFoundException : Exception
+namespace zcfux.User.LinqToDB;
+
+[Table(Schema = "user", Name = "PermissionCategories")]
+internal class PermissionCategoryView
 {
-    public NotFoundException()
-    {
-    }
+#pragma warning disable CS8618
+    [Column(Name = "Id"), PrimaryKey]
+    public int Id { get; set; }
 
-    public NotFoundException(string message)
-        : base(message)
-    {
-    }
+    [Column(Name = "Name"), NotNull]
+    public string Name { get; set; }
+
+    [Column(Name = "ApplicationId"), NotNull]
+    public int ApplicationId { get; set; }
+
+    [Column(Name = "Application"), NotNull]
+    public string Application { get; set; }
+
+    public IPermissionCategory ToPermissionCategory()
+        => new PermissionCategory(
+            Id,
+            Name,
+            new Application(
+                ApplicationId,
+                Application));
+#pragma warning restore CS8618
 }

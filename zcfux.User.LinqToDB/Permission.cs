@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,16 +19,24 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Data;
+namespace zcfux.User.LinqToDB;
 
-public class NotFoundException : Exception
+internal sealed class Permission : IPermission
 {
-    public NotFoundException()
-    {
-    }
+    private readonly List<IPermission> _preconditions = new();
 
-    public NotFoundException(string message)
-        : base(message)
-    {
-    }
+    public Permission(int id, string name, IPermissionCategory category)
+        => (Id, Name, Category) = (id, name, category);
+
+    public int Id { get; }
+
+    public string Name { get; }
+
+    public IPermissionCategory Category { get; }
+
+    public IEnumerable<IPermission> Preconditions
+        => _preconditions;
+
+    internal void AddPrecondition(IPermission precondition)
+        => _preconditions.Add(precondition);
 }

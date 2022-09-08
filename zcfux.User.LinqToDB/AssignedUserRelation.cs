@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,16 +19,21 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Data;
+using LinqToDB.Mapping;
 
-public class NotFoundException : Exception
+namespace zcfux.User.LinqToDB;
+
+[Table(Schema = "user", Name = "AssignedUser")]
+internal class AssignedUserRelation
 {
-    public NotFoundException()
-    {
-    }
+#pragma warning disable CS8618
+    [Column(Name = "Site"), PrimaryKey]
+    public Guid Site { get; set; }
 
-    public NotFoundException(string message)
-        : base(message)
-    {
-    }
+    [Column(Name = "Group"), PrimaryKey]
+    public Guid Group { get; set; }
+
+    [Column(Name = "User"), PrimaryKey]
+    public Guid User { get; set; }
+#pragma warning restore CS8618
 }

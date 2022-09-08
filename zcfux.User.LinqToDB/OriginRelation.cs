@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,16 +19,28 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Data;
+using LinqToDB.Mapping;
 
-public class NotFoundException : Exception
+namespace zcfux.User.LinqToDB;
+
+[Table(Schema = "user", Name = "Origin")]
+internal class OriginRelation : IOrigin
 {
-    public NotFoundException()
+#pragma warning disable CS8618
+    public OriginRelation()
     {
     }
 
-    public NotFoundException(string message)
-        : base(message)
-    {
-    }
+    public OriginRelation(IOrigin other)
+        => (Id, Name, Writable) = (other.Id, other.Name, other.Writable);
+
+    [Column(Name = "Id"), PrimaryKey]
+    public int Id { get; set; }
+
+    [Column(Name = "Name"), NotNull]
+    public string Name { get; set; }
+
+    [Column(Name = "Writable"), NotNull]
+    public bool Writable { get; set; }
+#pragma warning restore CS8618
 }

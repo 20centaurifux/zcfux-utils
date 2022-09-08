@@ -95,6 +95,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.User", "zcfux.User\zc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.User.LinqToDB", "zcfux.User.LinqToDB\zcfux.User.LinqToDB.csproj", "{AA59487E-6D7C-420B-B7B0-80AA479DD737}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.User.Test", "zcfux.User.Test\zcfux.User.Test.csproj", "{A86730B4-5B91-425A-A561-F64912118DA5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -285,6 +287,10 @@ Global
 		{AA59487E-6D7C-420B-B7B0-80AA479DD737}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AA59487E-6D7C-420B-B7B0-80AA479DD737}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AA59487E-6D7C-420B-B7B0-80AA479DD737}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A86730B4-5B91-425A-A561-F64912118DA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A86730B4-5B91-425A-A561-F64912118DA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A86730B4-5B91-425A-A561-F64912118DA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A86730B4-5B91-425A-A561-F64912118DA5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

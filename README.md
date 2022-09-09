@@ -57,13 +57,13 @@ This is a collection of various utilities and abstractions I use in .NET project
 * NLog provider for zcfux.Logging.
 
 ## Mail
-* Mail storage abstractions.
+* Mail storage & transfer abstractions.
 
 ## Mail.LinqToPg
 * Data.LinqToDB Mail provider for Postgres.
 
 ## Mail.MailKit
-* SMTP transfer agent.
+* SMTP transfer agent using MailKit.
 
 ## Pool
 * Generic and customizable resource pool.

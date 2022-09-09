@@ -97,6 +97,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zcfux.User.LinqToDB", "zcfu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zcfux.User.Test", "zcfux.User.Test\zcfux.User.Test.csproj", "{A86730B4-5B91-425A-A561-F64912118DA5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Mail.MailKit", "zcfux.Mail.MailKit\zcfux.Mail.MailKit.csproj", "{670CEC53-D179-451A-BE9C-AEF3B35097F8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -291,6 +293,10 @@ Global
 		{A86730B4-5B91-425A-A561-F64912118DA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A86730B4-5B91-425A-A561-F64912118DA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A86730B4-5B91-425A-A561-F64912118DA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{670CEC53-D179-451A-BE9C-AEF3B35097F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{670CEC53-D179-451A-BE9C-AEF3B35097F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{670CEC53-D179-451A-BE9C-AEF3B35097F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{670CEC53-D179-451A-BE9C-AEF3B35097F8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

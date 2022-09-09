@@ -62,6 +62,9 @@ This is a collection of various utilities and abstractions I use in .NET project
 ## Mail.LinqToPg
 * Data.LinqToDB Mail provider for Postgres.
 
+## Mail.MailKit
+* SMTP transfer agent.
+
 ## Pool
 * Generic and customizable resource pool.
 

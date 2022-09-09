@@ -19,11 +19,9 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using zcfux.Filter;
-
 namespace zcfux.Mail.Queue;
 
-public sealed class QueuedMessage
+public sealed class QueuedMessage : IEmail
 {
     sealed class QueueItem : IQueueItem
     {
@@ -137,7 +135,7 @@ public sealed class QueuedMessage
         }
     }
 
-    public void MoveToStore(zcfux.Mail.Store.Directory directory)
+    public void MoveToStore(Store.Directory directory)
     {
         _db.Store.LinkMessage(_handle, _queueItem.Message, directory);
 

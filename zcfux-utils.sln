@@ -87,15 +87,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zcfux.PubSub", "zcfux.PubSu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zcfux.PubSub.Test", "zcfux.PubSub.Test\zcfux.PubSub.Test.csproj", "{4C4D1C1F-F716-439A-8903-60F1A13D10EF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Mail.Test", "zcfux.Mail.Test\zcfux.Mail.Test.csproj", "{20F76D07-AB8A-4747-8F1C-956201DF430A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zcfux.Mail.Test", "zcfux.Mail.Test\zcfux.Mail.Test.csproj", "{20F76D07-AB8A-4747-8F1C-956201DF430A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Application", "zcfux.Application\zcfux.Application.csproj", "{0DF5A38B-99C9-48FB-B90F-903E1C8D8E37}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zcfux.Application", "zcfux.Application\zcfux.Application.csproj", "{0DF5A38B-99C9-48FB-B90F-903E1C8D8E37}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.User", "zcfux.User\zcfux.User.csproj", "{FEF57915-E0BA-4FC5-9FE5-87C52C172633}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zcfux.User", "zcfux.User\zcfux.User.csproj", "{FEF57915-E0BA-4FC5-9FE5-87C52C172633}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.User.LinqToDB", "zcfux.User.LinqToDB\zcfux.User.LinqToDB.csproj", "{AA59487E-6D7C-420B-B7B0-80AA479DD737}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zcfux.User.LinqToDB", "zcfux.User.LinqToDB\zcfux.User.LinqToDB.csproj", "{AA59487E-6D7C-420B-B7B0-80AA479DD737}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.User.Test", "zcfux.User.Test\zcfux.User.Test.csproj", "{A86730B4-5B91-425A-A561-F64912118DA5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zcfux.User.Test", "zcfux.User.Test\zcfux.User.Test.csproj", "{A86730B4-5B91-425A-A561-F64912118DA5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

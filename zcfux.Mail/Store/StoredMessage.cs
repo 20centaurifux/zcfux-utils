@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Mail.Store;
 
-public sealed class StoredMessage
+public sealed class StoredMessage : IEmail
 {
     readonly IDb _db;
     readonly object _handle;
@@ -63,7 +63,7 @@ public sealed class StoredMessage
     }
 
     public Directory Directory
-        => new Directory(_db, _handle, _directoryEntry.Directory);
+        => new(_db, _handle, _directoryEntry.Directory);
 
     public void Move(Directory directory)
     {

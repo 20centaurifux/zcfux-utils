@@ -70,7 +70,7 @@ internal sealed class BlobFileReader : Stream
         if (!_disposed && disposing)
         {
             _stream.Dispose();
-            
+
             FileLock.ExitReadLock(_stream.Name);
         }
 

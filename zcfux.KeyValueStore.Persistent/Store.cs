@@ -43,7 +43,7 @@ public sealed class Store : IStore
 
     public IEnumerable<string> GetKeys()
         => _storage!.GetKeys();
-    
+
     public void Put(string key, Stream stream)
     {
         if (stream.CanSeek && stream.Length < _options.SwapThreshold)

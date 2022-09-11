@@ -24,7 +24,7 @@ namespace zcfux.KeyValueStore.Persistent;
 public sealed class FsckEventArgs
 {
     public string Hash { get; }
- 
+
     public ELocation Location { get; }
 
     public FsckEventArgs(string hash, ELocation location)

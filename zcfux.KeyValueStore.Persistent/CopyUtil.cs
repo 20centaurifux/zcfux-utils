@@ -44,7 +44,7 @@ public sealed class CopyUtil
             to.Write(buffer, 0, read);
 
             _length += read;
-            
+
             read = from.Read(buffer, 0, buffer.Length);
         }
 
@@ -52,6 +52,6 @@ public sealed class CopyUtil
     }
 
     public byte[]? Hash => _hash;
-    
+
     public long Length => _length;
 }

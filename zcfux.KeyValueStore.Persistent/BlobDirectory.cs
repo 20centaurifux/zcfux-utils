@@ -28,7 +28,7 @@ internal sealed class BlobDirectory
 {
     static readonly Regex HashRegex = new("[0-9A-F]{64}$");
     readonly string _path;
-    
+
     public BlobDirectory(string path)
         => _path = path;
 

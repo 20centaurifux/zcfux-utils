@@ -31,9 +31,9 @@ public sealed class BucketLimiterTests
         var limiter = new RateLimit.BucketLimiter<string>(capacity: 2, leakRate: TimeSpan.FromMilliseconds(500));
 
         Assert.IsFalse(limiter.Throttle("a"));
-        
+
         Thread.Sleep(100);
-        
+
         Assert.IsFalse(limiter.Throttle("a"));
         Assert.IsFalse(limiter.Throttle("b"));
         Assert.IsTrue(limiter.Throttle("a"));

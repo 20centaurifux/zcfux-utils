@@ -60,7 +60,7 @@ internal static class FileLock
             lockSlim.EnterWriteLock();
         }
     }
-    
+
     public static bool TryEnterWriteLock(string path, TimeSpan timeout)
     {
         lock (Lock)

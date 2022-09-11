@@ -35,7 +35,7 @@ internal static class PathBuilder
         {
             l.Add(hash.Substring(offset, 4));
         }
-        
+
         l.Add(hash[32..]);
 
         var fullPath = Path.Combine(l.ToArray());

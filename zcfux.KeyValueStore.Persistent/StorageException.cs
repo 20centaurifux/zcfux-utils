@@ -27,7 +27,7 @@ public sealed class StorageException : Exception
         : base(message)
     {
     }
-    
+
     public StorageException(string message, Exception innerException)
         : base(message, innerException)
     {

@@ -28,10 +28,8 @@ sealed class AssociationRelation
 {
 #pragma warning disable CS8618
 
-    [Column(Name = "Key")]
-    public string Key { get; set; }
+    [Column(Name = "Key")] public string Key { get; set; }
 
-    [Column(Name = "Hash")]
-    public string Hash { get; set; }
+    [Column(Name = "Hash")] public string Hash { get; set; }
 #pragma warning restore CS8618
 }

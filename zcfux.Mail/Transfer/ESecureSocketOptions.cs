@@ -23,7 +23,7 @@ namespace zcfux.Mail.Transfer;
 
 public enum ESecureSocketOptions
 {
-    Plain,
-    Tls,
+    None,
+    ImplicitTls,
     StartTls
 }

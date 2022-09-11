@@ -29,11 +29,12 @@ public sealed class SmtpOptionsBuilder
 {
     string _host = "localhost";
     int _port = 497;
-    ESecureSocketOptions _secureSocketOptions = ESecureSocketOptions.Tls;
+    ESecureSocketOptions _secureSocketOptions = ESecureSocketOptions.ImplicitTls;
     string? _username;
     string? _password;
     ImmutableList<X509Certificate> _clientCertificates = ImmutableList.Create<X509Certificate>();
     RemoteCertificateValidationCallback? _serverCertificateValidationCallback;
+    bool _keepOpen;
 
     sealed record SmtpOptions(
         string Host,
@@ -42,7 +43,8 @@ public sealed class SmtpOptionsBuilder
         string? Username,
         string? Password,
         X509Certificate[] ClientCertificates,
-        RemoteCertificateValidationCallback? ServerCertificateValidationCallback
+        RemoteCertificateValidationCallback? ServerCertificateValidationCallback,
+        bool KeepOpen
     ) : ISmtpOptions;
 
     SmtpOptionsBuilder Clone()
@@ -54,7 +56,8 @@ public sealed class SmtpOptionsBuilder
             _username = _username,
             _password = _password,
             _clientCertificates = _clientCertificates,
-            _serverCertificateValidationCallback = _serverCertificateValidationCallback
+            _serverCertificateValidationCallback = _serverCertificateValidationCallback,
+            _keepOpen = _keepOpen
         };
 
     public SmtpOptionsBuilder WithHost(string host)
@@ -121,6 +124,27 @@ public sealed class SmtpOptionsBuilder
         return builder;
     }
 
+    public SmtpOptionsBuilder WithDisabledServerCertificateValidation()
+        => WithServerCertificateValidationCallback((_, _, _, _) => true);
+
+    public SmtpOptionsBuilder WithKeepOpen()
+    {
+        var builder = Clone();
+
+        builder._keepOpen = true;
+
+        return builder;
+    }
+
+    public SmtpOptionsBuilder WithoutKeepOpen()
+    {
+        var builder = Clone();
+
+        builder._keepOpen = false;
+
+        return builder;
+    }
+    
     public ISmtpOptions Build()
         => new SmtpOptions(
             _host,
@@ -129,5 +153,6 @@ public sealed class SmtpOptionsBuilder
             _username,
             _password,
             _clientCertificates.ToArray(),
-            _serverCertificateValidationCallback);
+            _serverCertificateValidationCallback,
+            _keepOpen);
 }

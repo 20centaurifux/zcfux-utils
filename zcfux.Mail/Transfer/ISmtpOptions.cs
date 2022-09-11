@@ -39,4 +39,6 @@ public interface ISmtpOptions
     X509Certificate[] ClientCertificates { get; }
 
     RemoteCertificateValidationCallback? ServerCertificateValidationCallback { get; }
+
+    bool KeepOpen { get; }
 }

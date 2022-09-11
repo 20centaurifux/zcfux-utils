@@ -85,14 +85,14 @@ public sealed class SmtpAgent : ASmtpAgent
 
         if (!string.IsNullOrEmpty(options.Username))
         {
-            _client.Authenticate(options.Username, options.Password ?? String.Empty);
+            _client.Authenticate(options.Username, options.Password ?? string.Empty);
         }
     }
 
     static Security.SecureSocketOptions MapSecureSocketOptions(ESecureSocketOptions options)
         => options switch
         {
-            ESecureSocketOptions.Tls => Security.SecureSocketOptions.SslOnConnect,
+            ESecureSocketOptions.ImplicitTls => Security.SecureSocketOptions.SslOnConnect,
             ESecureSocketOptions.StartTls => Security.SecureSocketOptions.StartTls,
             _ => Security.SecureSocketOptions.None
         };
@@ -103,6 +103,9 @@ public sealed class SmtpAgent : ASmtpAgent
 
         _client.Send(message);
     }
+
+    protected override void Disconnect()
+        => _client?.Disconnect(quit: true);
 
     static MimeMessage ConvertMessage(IEmail email)
     {
@@ -143,7 +146,7 @@ public sealed class SmtpAgent : ASmtpAgent
             builder.HtmlBody = email.HtmlBody;
         }
 
-        foreach (var attachment in email.GetAttachments())
+        foreach (var attachment in email.GetAttachments().ToArray())
         {
             using (var stream = attachment.OpenRead())
             {

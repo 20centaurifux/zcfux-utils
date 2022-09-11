@@ -31,7 +31,20 @@ public abstract class ASmtpAgent : IAgent
     public void Transfer(IEmail message)
     {
         ConnectIfNecessary();
+
         Send(message);
+
+        if (!_options.KeepOpen)
+        {
+            try
+            {
+                Disconnect();
+            }
+            catch
+            {
+                // =^_^=
+            }
+        }
     }
 
     void ConnectIfNecessary()
@@ -56,4 +69,6 @@ public abstract class ASmtpAgent : IAgent
     protected abstract void Connect(ISmtpOptions options);
 
     protected abstract void Send(IEmail email);
+
+    protected abstract void Disconnect();
 }

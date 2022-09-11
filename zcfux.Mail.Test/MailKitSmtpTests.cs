@@ -21,10 +21,12 @@
  ***************************************************************************/
 using zcfux.Data;
 using zcfux.Mail.LinqToPg;
+using zcfux.Mail.MailKit;
+using zcfux.Mail.Transfer;
 
 namespace zcfux.Mail.Test;
 
-public sealed class LinqToPgStoreTests : AStoreTests
+public sealed class MailKitSmtpTests : ASmtpTests
 {
     protected override IEngine CreateAndSetupEngine()
         => LinqToPgFactory.CreateAndSetupEngine();
@@ -35,4 +37,7 @@ public sealed class LinqToPgStoreTests : AStoreTests
 
         return db;
     }
+
+    protected override ASmtpAgent CreateSmtpAgent(ISmtpOptions options)
+        => new SmtpAgent(options);
 }

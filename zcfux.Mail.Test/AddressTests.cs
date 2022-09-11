@@ -21,7 +21,7 @@
  ***************************************************************************/
 using NUnit.Framework;
 
-namespace zcfux.Mail.Tests;
+namespace zcfux.Mail.Test;
 
 public class AddressTests
 {

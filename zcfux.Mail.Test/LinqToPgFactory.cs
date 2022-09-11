@@ -23,7 +23,7 @@ using LinqToDB.Configuration;
 using zcfux.Data;
 using zcfux.Data.LinqToDB;
 
-namespace zcfux.Mail.Tests;
+namespace zcfux.Mail.Test;
 
 static class LinqToPgFactory
 {

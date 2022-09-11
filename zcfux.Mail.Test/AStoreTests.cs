@@ -24,7 +24,7 @@ using zcfux.Data;
 using zcfux.Filter;
 using zcfux.Mail.Store;
 
-namespace zcfux.Mail.Tests;
+namespace zcfux.Mail.Test;
 
 public abstract class AStoreTests
 {

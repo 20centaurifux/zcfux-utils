@@ -19,6 +19,7 @@
       <ProjectReference Include="..\zcfux.Byte\zcfux.Byte.csproj" />
       <ProjectReference Include="..\zcfux.Data.LinqToDB\zcfux.Data.LinqToDB.csproj" />
       <ProjectReference Include="..\zcfux.Mail.LinqToPg\zcfux.Mail.LinqToPg.csproj" />
+      <ProjectReference Include="..\zcfux.Mail.MailKit\zcfux.Mail.MailKit.csproj" />
       <ProjectReference Include="..\zcfux.Mail\zcfux.Mail.csproj" />
     </ItemGroup>
 

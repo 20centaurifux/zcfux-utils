@@ -22,7 +22,7 @@
 using zcfux.Data;
 using zcfux.Mail.LinqToPg;
 
-namespace zcfux.Mail.Tests;
+namespace zcfux.Mail.Test;
 
 public sealed class LinqToPgQueueTests : AQueueTests
 {

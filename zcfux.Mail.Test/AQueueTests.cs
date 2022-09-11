@@ -24,7 +24,7 @@ using zcfux.Data;
 using zcfux.Filter;
 using zcfux.Mail.Queue;
 
-namespace zcfux.Mail.Tests;
+namespace zcfux.Mail.Test;
 
 public abstract class AQueueTests
 {
@@ -198,8 +198,7 @@ public abstract class AQueueTests
 
             var received = queueStore
                 .GetQueues()
-                .Where(q => q.Id == queue.Id)
-                .Single();
+                .Single(q => q.Id == queue.Id);
 
             Assert.AreEqual(queue.Name, received.Name);
         }

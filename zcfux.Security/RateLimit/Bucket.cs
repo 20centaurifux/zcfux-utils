@@ -25,16 +25,16 @@ namespace zcfux.Security.RateLimit;
 
 internal sealed class Bucket
 {
-    readonly Queue<long> _bucket;
+    readonly Queue<Stopwatch> _bucket;
 
     readonly int _capacity;
-    readonly long _leakRate;
+    readonly TimeSpan _leakRate;
 
     public Bucket(int capacity, TimeSpan leakRate)
     {
-        _bucket = new Queue<long>(capacity);
+        _bucket = new Queue<Stopwatch>(capacity);
         _capacity = capacity;
-        _leakRate = leakRate.Ticks;
+        _leakRate = leakRate;
     }
 
     public bool Fill()
@@ -43,7 +43,7 @@ internal sealed class Bucket
 
         if (_bucket.Count < _capacity)
         {
-            _bucket.Enqueue(Stopwatch.GetTimestamp());
+            _bucket.Enqueue(Stopwatch.StartNew());
 
             return true;
         }
@@ -53,13 +53,10 @@ internal sealed class Bucket
 
     void Leak()
     {
-        while (_bucket.TryPeek(out var ticks)
-               && IsExpired(ticks))
+        while (_bucket.TryPeek(out var stopwatch)
+               && stopwatch.Elapsed > _leakRate)
         {
             _bucket.Dequeue();
         }
     }
-
-    bool IsExpired(long ticks)
-        => (Stopwatch.GetTimestamp() - ticks) >= _leakRate;
 }

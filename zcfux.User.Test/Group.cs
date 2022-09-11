@@ -23,7 +23,7 @@ using NUnit.Framework;
 
 namespace zcfux.User.Test;
 
-internal record Group(Guid Guid, string Name)
+internal sealed record Group(Guid Guid, string Name)
     : IGroup
 {
     public static Group Random()

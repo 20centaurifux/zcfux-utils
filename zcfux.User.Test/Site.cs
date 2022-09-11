@@ -23,4 +23,4 @@ using zcfux.Application;
 
 namespace zcfux.User.Test;
 
-internal record Site(Guid Guid, string Name) : ISite;
+internal sealed record Site(Guid Guid, string Name) : ISite;

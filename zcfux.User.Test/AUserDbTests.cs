@@ -19,6 +19,7 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using System.Globalization;
 using NUnit.Framework;
 using zcfux.Data;
 using zcfux.Filter;
@@ -27,6 +28,8 @@ namespace zcfux.User.Test;
 
 public abstract class AUserDbTests
 {
+    static readonly CultureInfo Culture = CultureInfo.GetCultureInfo("en-US");
+    
     IEngine _engine = null!;
     IUserDb _db = null!;
 
@@ -202,7 +205,11 @@ public abstract class AUserDbTests
             var received = _db.QueryOrigins(t.Handle, qb.Build()).ToArray();
 
             Assert.AreEqual(2, received.Length);
-            Assert.Less(received[0].Name.CompareTo(received[1].Name), 0);
+            Assert.Less(string.Compare(
+                received[0].Name,
+                received[1].Name,
+                Culture,
+                CompareOptions.IgnoreSymbols | CompareOptions.IgnoreCase), 0);
         }
     }
 
@@ -584,7 +591,11 @@ public abstract class AUserDbTests
             var received = _db.QueryUsers(t.Handle, qb.Build()).ToArray();
 
             Assert.AreEqual(2, received.Length);
-            Assert.Less(received[0].Name.CompareTo(received[1].Name), 0);
+            Assert.Less(string.Compare(
+                received[0].Name,
+                received[1].Name,
+                Culture,
+                CompareOptions.IgnoreSymbols | CompareOptions.IgnoreCase), 0);
         }
     }
 
@@ -690,7 +701,11 @@ public abstract class AUserDbTests
             var received = _db.QueryUsers(t.Handle, qb.Build()).ToArray();
 
             Assert.AreEqual(2, received.Length);
-            Assert.Less(received[0].Origin.Name.CompareTo(received[1].Origin.Name), 0);
+            Assert.Less(string.Compare(
+                received[0].Origin.Name,
+                received[1].Origin.Name,
+                Culture,
+                CompareOptions.IgnoreSymbols | CompareOptions.IgnoreCase), 0);
         }
     }
 
@@ -878,7 +893,11 @@ public abstract class AUserDbTests
             var received = _db.QueryUsers(t.Handle, qb.Build()).ToArray();
 
             Assert.AreEqual(2, received.Length);
-            Assert.Less(received[0].Firstname!.CompareTo(received[1].Firstname), 0);
+            Assert.Less(string.Compare(
+                received[0].Firstname!,
+                received[1].Firstname,
+                Culture,
+                CompareOptions.IgnoreSymbols | CompareOptions.IgnoreCase), 0);
         }
     }
 
@@ -923,7 +942,11 @@ public abstract class AUserDbTests
             var received = _db.QueryUsers(t.Handle, qb.Build()).ToArray();
 
             Assert.AreEqual(2, received.Length);
-            Assert.Less(received[0].Lastname!.CompareTo(received[1].Lastname), 0);
+            Assert.Less(string.Compare(
+                received[0].Lastname!,
+                received[1].Lastname,
+                Culture,
+                CompareOptions.IgnoreSymbols | CompareOptions.IgnoreCase), 0);
         }
     }
 

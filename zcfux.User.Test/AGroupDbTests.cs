@@ -19,6 +19,7 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using System.Globalization;
 using NUnit.Framework;
 using zcfux.Application;
 using zcfux.Data;
@@ -28,6 +29,8 @@ namespace zcfux.User.Test;
 
 public abstract class AGroupDbTests
 {
+    static readonly CultureInfo Culture = CultureInfo.GetCultureInfo("en-US");
+        
     IEngine _engine = null!;
     IGroupDb _groupDb = null!;
     IUserDb _userDb = null!;
@@ -195,7 +198,11 @@ public abstract class AGroupDbTests
             var received = _groupDb.QueryGroups(t.Handle, qb.Build()).ToArray();
 
             Assert.AreEqual(2, received.Length);
-            Assert.Less(received[0].Name.CompareTo(received[1].Name), 0);
+            Assert.Less(string.Compare(
+                received[0].Name,
+                received[1].Name,
+                Culture,
+                CompareOptions.IgnoreSymbols | CompareOptions.IgnoreCase), 0);
         }
     }
 
@@ -410,7 +417,11 @@ public abstract class AGroupDbTests
             var received = _groupDb.QueryAssignedUsers(t.Handle, qb.Build()).ToArray();
 
             Assert.AreEqual(2, received.Length);
-            Assert.Less(received[0].Site.Name.CompareTo(received[1].Site.Name), 0);
+            Assert.Less(string.Compare(
+                received[0].Site.Name,
+                received[1].Site.Name,
+                Culture,
+                CompareOptions.IgnoreSymbols | CompareOptions.IgnoreCase), 0);
         }
     }
 
@@ -504,7 +515,11 @@ public abstract class AGroupDbTests
             var received = _groupDb.QueryAssignedUsers(t.Handle, qb.Build()).ToArray();
 
             Assert.AreEqual(2, received.Length);
-            Assert.Less(received[0].Group.Name.CompareTo(received[1].Group.Name), 0);
+            Assert.Less(string.Compare(
+                received[0].Group.Name,
+                received[1].Group.Name,
+                Culture,
+                CompareOptions.IgnoreSymbols | CompareOptions.IgnoreCase), 0);
         }
     }
 
@@ -598,7 +613,11 @@ public abstract class AGroupDbTests
             var received = _groupDb.QueryAssignedUsers(t.Handle, qb.Build()).ToArray();
 
             Assert.AreEqual(2, received.Length);
-            Assert.Less(received[0].User.Origin.Name.CompareTo(received[1].User.Origin.Name), 0);
+            Assert.Less(string.Compare(
+                received[0].User.Origin.Name,
+                received[1].User.Origin.Name,
+                Culture,
+                CompareOptions.IgnoreSymbols | CompareOptions.IgnoreCase), 0);
         }
     }
 
@@ -775,7 +794,11 @@ public abstract class AGroupDbTests
             var received = _groupDb.QueryAssignedUsers(t.Handle, qb.Build()).ToArray();
 
             Assert.AreEqual(2, received.Length);
-            Assert.Less(received[0].User.Name.CompareTo(received[1].User.Name), 0);
+            Assert.Less(string.Compare(
+                received[0].User.Name,
+                received[1].User.Name,
+                Culture,
+                CompareOptions.IgnoreSymbols | CompareOptions.IgnoreCase), 0);
         }
     }
 
@@ -822,7 +845,11 @@ public abstract class AGroupDbTests
             var received = _groupDb.QueryAssignedUsers(t.Handle, qb.Build()).ToArray();
 
             Assert.AreEqual(2, received.Length);
-            Assert.Less(received[0].User.Firstname!.CompareTo(received[1].User.Firstname), 0);
+            Assert.Less(string.Compare(
+                received[0].User.Firstname!,
+                received[1].User.Firstname,
+                Culture,
+                CompareOptions.IgnoreSymbols | CompareOptions.IgnoreCase), 0);
         }
     }
 
@@ -869,7 +896,11 @@ public abstract class AGroupDbTests
             var received = _groupDb.QueryAssignedUsers(t.Handle, qb.Build()).ToArray();
 
             Assert.AreEqual(2, received.Length);
-            Assert.Less(received[0].User.Lastname!.CompareTo(received[1].User.Lastname), 0);
+            Assert.Less(string.Compare(
+                received[0].User.Lastname!,
+                received[1].User.Lastname,
+                Culture,
+                CompareOptions.IgnoreSymbols | CompareOptions.IgnoreCase), 0);
         }
     }
 

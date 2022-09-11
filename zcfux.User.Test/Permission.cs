@@ -23,7 +23,7 @@ using NUnit.Framework;
 
 namespace zcfux.User.Test;
 
-internal record Permission(
+internal sealed record Permission(
         int Id,
         string Name,
         IPermissionCategory Category,

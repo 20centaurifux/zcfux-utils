@@ -19,6 +19,7 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using System.Globalization;
 using NUnit.Framework;
 using zcfux.Application;
 using zcfux.Data;
@@ -28,6 +29,8 @@ namespace zcfux.User.Test;
 
 public abstract class APermissionDbTests
 {
+    static readonly CultureInfo Culture = CultureInfo.GetCultureInfo("en-US");
+    
     IEngine _engine = null!;
     IPermissionDb _permissionDb = null!;
     IGroupDb _groupDb = null!;
@@ -228,7 +231,11 @@ public abstract class APermissionDbTests
             var received = _permissionDb.QueryPermissionCategories(t.Handle, qb.Build()).ToArray();
 
             Assert.AreEqual(2, received.Length);
-            Assert.Less(received[0].Name.CompareTo(received[1].Name), 0);
+            Assert.Less(string.Compare(
+                received[0].Name,
+                received[1].Name,
+                Culture,
+                CompareOptions.IgnoreSymbols | CompareOptions.IgnoreCase), 0);
         }
     }
 
@@ -300,7 +307,11 @@ public abstract class APermissionDbTests
             var received = _permissionDb.QueryPermissionCategories(t.Handle, qb.Build()).ToArray();
 
             Assert.AreEqual(2, received.Length);
-            Assert.Less(received[0].Application.Name.CompareTo(received[1].Application.Name), 0);
+            Assert.Less(string.Compare(
+                received[0].Application.Name,
+                received[1].Application.Name,
+                Culture,
+                CompareOptions.IgnoreSymbols | CompareOptions.IgnoreCase), 0);
         }
     }
 
@@ -529,7 +540,11 @@ public abstract class APermissionDbTests
             var received = _permissionDb.QueryPermissions(t.Handle, qb.Build()).ToArray();
 
             Assert.AreEqual(2, received.Length);
-            Assert.Less(received[0].Name.CompareTo(received[1].Name), 0);
+            Assert.Less(string.Compare(
+                received[0].Name,
+                received[1].Name,
+                Culture,
+                CompareOptions.IgnoreSymbols | CompareOptions.IgnoreCase), 0);
         }
     }
 
@@ -601,7 +616,11 @@ public abstract class APermissionDbTests
             var received = _permissionDb.QueryPermissions(t.Handle, qb.Build()).ToArray();
 
             Assert.AreEqual(2, received.Length);
-            Assert.Less(received[0].Category.Name.CompareTo(received[1].Category.Name), 0);
+            Assert.Less(string.Compare(
+                received[0].Category.Name,
+                received[1].Category.Name,
+                Culture,
+                CompareOptions.IgnoreSymbols | CompareOptions.IgnoreCase), 0);
         }
     }
 
@@ -677,7 +696,11 @@ public abstract class APermissionDbTests
             var received = _permissionDb.QueryPermissions(t.Handle, qb.Build()).ToArray();
 
             Assert.AreEqual(2, received.Length);
-            Assert.Less(received[0].Category.Application.Name.CompareTo(received[1].Category.Application.Name), 0);
+            Assert.Less(string.Compare(
+                received[0].Category.Application.Name,
+                received[1].Category.Application.Name,
+                Culture,
+                CompareOptions.IgnoreSymbols | CompareOptions.IgnoreCase), 0);
         }
     }
 
@@ -753,12 +776,12 @@ public abstract class APermissionDbTests
 
             Assert.AreEqual(2, grantedPermissions.Length);
 
-            var receivedParent = grantedPermissions.Where(p => p.Permission.Id == parent.Id).Single();
+            var receivedParent = grantedPermissions.Single(p => p.Permission.Id == parent.Id);
 
             AssertGroup(group, receivedParent.Group);
             AssertPermission(parent, receivedParent.Permission);
 
-            var receivedChild = grantedPermissions.Where(p => p.Permission.Id == child.Id).Single();
+            var receivedChild = grantedPermissions.Single(p => p.Permission.Id == child.Id);
 
             AssertGroup(group, receivedChild.Group);
             AssertPermission(child, receivedChild.Permission);
@@ -911,9 +934,11 @@ public abstract class APermissionDbTests
             Assert.AreEqual(2, grantedPermissions.Length);
 
             Assert.Less(
-                grantedPermissions[0].Permission.Category.Name.CompareTo(
-                    grantedPermissions[1].Permission.Category.Name),
-                0);
+                string.Compare(
+                    grantedPermissions[0].Permission.Category.Name,
+                    grantedPermissions[1].Permission.Category.Name,
+                    Culture,
+                    CompareOptions.IgnoreSymbols | CompareOptions.IgnoreCase), 0);
         }
     }
 
@@ -1009,9 +1034,11 @@ public abstract class APermissionDbTests
             Assert.AreEqual(2, grantedPermissions.Length);
 
             Assert.Less(
-                grantedPermissions[0].Group.Name.CompareTo(
-                    grantedPermissions[1].Group.Name),
-                0);
+                string.Compare(
+                    grantedPermissions[0].Group.Name,
+                    grantedPermissions[1].Group.Name,
+                    Culture,
+                    CompareOptions.IgnoreSymbols | CompareOptions.IgnoreCase), 0);
         }
     }
 
@@ -1105,9 +1132,11 @@ public abstract class APermissionDbTests
             Assert.AreEqual(2, grantedPermissions.Length);
 
             Assert.Less(
-                grantedPermissions[0].Permission.Name.CompareTo(
-                    grantedPermissions[1].Permission.Name),
-                0);
+                string.Compare(
+                    grantedPermissions[0].Permission.Name,
+                    grantedPermissions[1].Permission.Name,
+                    Culture,
+                    CompareOptions.IgnoreSymbols | CompareOptions.IgnoreCase), 0);
         }
     }
 
@@ -1217,9 +1246,11 @@ public abstract class APermissionDbTests
             Assert.AreEqual(2, grantedPermissions.Length);
 
             Assert.Less(
-                grantedPermissions[0].Permission.Category.Application.Name.CompareTo
-                    (grantedPermissions[1].Permission.Category.Application.Name),
-                0);
+                string.Compare(
+                    grantedPermissions[0].Permission.Category.Application.Name,
+                    grantedPermissions[1].Permission.Category.Application.Name,
+                    Culture,
+                    CompareOptions.IgnoreSymbols | CompareOptions.IgnoreCase), 0);
         }
     }
 
@@ -1256,7 +1287,11 @@ public abstract class APermissionDbTests
         return permission;
     }
 
-    IEnumerable<IPermission> CreatePreconditions(object handle, IPermissionCategory category, int level, int maxLevel)
+    IEnumerable<IPermission> CreatePreconditions(
+        object handle,
+        IPermissionCategory category,
+        int level,
+        int maxLevel)
     {
         if (level < maxLevel)
         {

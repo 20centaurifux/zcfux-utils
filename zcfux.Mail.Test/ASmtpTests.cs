@@ -94,7 +94,7 @@ public abstract class ASmtpTests
         var options = CreateSmtpOptionsBuilder(secureSocketOptions)
             .Build();
 
-        if (StartSmtpServer())
+        if (SmtpServerEnabled())
         {
             _server.Start(options.SecureSocketOptions, options.Port);
         }
@@ -112,7 +112,7 @@ public abstract class ASmtpTests
 
         var options = builder.Build();
 
-        if (StartSmtpServer())
+        if (SmtpServerEnabled())
         {
             _server.Start(options.SecureSocketOptions, options.Port);
         }
@@ -122,7 +122,7 @@ public abstract class ASmtpTests
         SendMessage(agent);
     }
 
-    static bool StartSmtpServer()
+    static bool SmtpServerEnabled()
     {
         var disabled = Environment.GetEnvironmentVariable("SMTP4DEV_DISABLED") ?? "0";
 
@@ -194,7 +194,10 @@ public abstract class ASmtpTests
 
             agent.Transfer(message);
 
-            _server.WaitUntilProcessed();
+            if (SmtpServerEnabled())
+            {
+                _server.WaitUntilProcessed();
+            }
         }
     }
 }

@@ -20,17 +20,23 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using zcfux.Mail.Transfer;
 
 namespace zcfux.Mail.Test;
 
 internal sealed class SmtpServer
 {
+    [DllImport("libc", SetLastError = true)]
+    static extern int kill(int pid, int sig);
+
     static readonly string TempDir = Path.Combine(
         Path.GetTempPath(),
         typeof(ASmtpTests).FullName!);
 
     Process? _process;
+    readonly AutoResetEvent _started = new(initialState: false);
+    readonly AutoResetEvent _received = new(initialState: false);
 
     public void Start(ESecureSocketOptions secureSocketOptions, int port)
     {
@@ -40,26 +46,39 @@ internal sealed class SmtpServer
     }
 
     static void CreateTempDir()
-        => Directory.CreateDirectory(TempDir);
+    {
+        if (Directory.Exists(TempDir))
+        {
+            Directory.Delete(TempDir, recursive: true);
+        }
+
+        Directory.CreateDirectory(TempDir);
+    }
 
     void StartProcess(ESecureSocketOptions secureSocketOptions, int port)
     {
-        _process = new Process();
+        _process = new Process()
+        {
+            EnableRaisingEvents = true
+        };
 
         var executable = Environment.GetEnvironmentVariable("SMTP4DEV_EXE")
                          ?? "smtp4dev";
 
-        _process.StartInfo.FileName = executable;
-
         var args = BuildArgs(secureSocketOptions, port);
-
+        
+        _process.StartInfo.FileName = executable;
+        _process.StartInfo.WorkingDirectory = TempDir;
+        _process.StartInfo.RedirectStandardOutput = true;
+        _process.StartInfo.UseShellExecute = false;
         _process.StartInfo.Arguments = string.Join(" ", args);
 
-        _process.StartInfo.RedirectStandardOutput = true;
-        
+        ReceiveStdout();
+
         _process.Start();
+        _process.BeginOutputReadLine();
     }
-    
+
     static string[] BuildArgs(ESecureSocketOptions secureSocketOptions, int port)
     {
         var url = Environment.GetEnvironmentVariable("SMTP4DEV_URL")
@@ -76,46 +95,73 @@ internal sealed class SmtpServer
         };
 
         args.Add("--tlsmode");
-        
+
         args.Add(secureSocketOptions switch
         {
             ESecureSocketOptions.ImplicitTls => "ImplicitTls",
             ESecureSocketOptions.StartTls => "StartTls",
             _ => "None"
         });
-        
+
+        var imapPort = Environment.GetEnvironmentVariable("SMTP4DEV_IMAP_PORT");
+
+        if (imapPort != null)
+        {
+            args.Add("--imapport");
+            args.Add(imapPort);
+        }
+
         return args.ToArray();
+    }
+
+    void ReceiveStdout()
+    {
+        _process!.OutputDataReceived += (_, e) =>
+        {
+            if (e.Data is { } line)
+            {
+                if (line.StartsWith("Now listening on"))
+                {
+                    _started.Set();
+                }
+
+                if (line.StartsWith("Processing received message DONE"))
+                {
+                    _received.Set();
+                }
+            }
+        };
     }
 
     void WaitUntilInitialized()
     {
-        var initialized = false;
-
-        while (!initialized)
+        if (!_started.WaitOne(TimeSpan.FromSeconds(15)))
         {
-            var line = _process?.StandardOutput.ReadLine();
-            
-            initialized = line?.StartsWith("Application started") ?? false;
+            throw new TimeoutException();
         }
     }
 
     public void WaitUntilProcessed()
     {
-        var processed = false;
-
-        while (!processed)
+        if (!_received.WaitOne(TimeSpan.FromSeconds(5)))
         {
-            var line = _process?.StandardOutput.ReadLine();
-            
-            processed = line?.StartsWith("Processing received message DONE") ?? false;
-        }  
+            throw new TimeoutException();
+        }
     }
 
     public void Stop()
     {
         if (_process != null)
         {
-            _process.Kill();
+            if (Environment.OSVersion.Platform == PlatformID.Unix)
+            {
+                kill(_process.Id, 15);
+            }
+            else
+            {
+                _process.Kill();
+            }
+
             _process.WaitForExit();
         }
     }

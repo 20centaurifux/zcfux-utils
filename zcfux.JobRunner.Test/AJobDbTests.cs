@@ -35,8 +35,6 @@ public abstract class AJobDbTests
     {
         _engine = CreateAndSetupEngine();
 
-        _engine.Setup();
-
         DeleteJobs();
     }
 

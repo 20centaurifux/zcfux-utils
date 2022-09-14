@@ -28,7 +28,6 @@ public sealed class MessageAuthenticator
 {
     public static readonly string DefaultAlgorithm = "HMAC-SHA-256";
 
-    readonly Factory _factory = new();
     readonly string _algorithm = DefaultAlgorithm;
     readonly byte[] _secret;
 
@@ -49,7 +48,7 @@ public sealed class MessageAuthenticator
     }
 
     KeyedHashAlgorithm NewAlgorithm()
-        => _factory.CreateKeyedHashAlgorithm(_algorithm, _secret);
+        => Factory.CreateKeyedHashAlgorithm(_algorithm, _secret);
 
     public bool Verify(byte[] message, byte[] checksum)
         => checksum.SequenceEqual(ComputeHash(message).Digest);

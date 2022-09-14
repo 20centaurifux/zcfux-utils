@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
@@ -10,7 +10,12 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="CommandLineParser" Version="2.9.1" />
+    </ItemGroup>
+
+    <ItemGroup>
       <ProjectReference Include="..\zcfux.Byte\zcfux.Byte.csproj" />
+      <ProjectReference Include="..\zcfux.Filter\zcfux.Filter.csproj" />
     </ItemGroup>
 
 </Project>

@@ -19,41 +19,32 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Security.Cryptography;
+using LinqToDB.Configuration;
+using zcfux.Data;
+using zcfux.Data.LinqToDB;
 
-namespace zcfux.Security;
+namespace zcfux.Security.Test;
 
-public static class Factory
+internal static class LinqToDBFactory
 {
-    public static HashAlgorithm CreateHashAlgorithm(string name)
-    {
-        return name switch
-        {
-            "SHA-256" => SHA256.Create(),
-            "SHA-384" => SHA384.Create(),
-            "SHA-512" => SHA512.Create(),
-            _ => throw new UnsupportedAlgorithmException()
-        };
-    }
+    const string DefaultConnectionString
+        = "User ID=test;Host=localhost;Port=5432;Database=test;";
 
-    public static KeyedHashAlgorithm CreateKeyedHashAlgorithm(string name, byte[] secret)
+    public static IEngine CreateAndSetupEngine()
     {
-        return name switch
-        {
-            "HMAC-SHA-256" => new HMACSHA256(secret),
-            "HMAC-SHA-384" => new HMACSHA384(secret),
-            "HMAC-SHA-512" => new HMACSHA512(secret),
-            _ => throw new UnsupportedAlgorithmException()
-        };
-    }
+        var connectionString = Environment.GetEnvironmentVariable("PG_TEST_CONNECTIONSTRING")
+                               ?? DefaultConnectionString;
 
-    public static IPasswordHashAlgorithm CreatePasswordAlgorithm(string name, string[] args)
-    {
-        if (name == "PBKDF2")
-        {
-            return new Pbkdf2(args);
-        }
+        var builder = new LinqToDBConnectionOptionsBuilder();
 
-        throw new UnsupportedAlgorithmException();
+        builder.UsePostgreSQL(connectionString);
+
+        var opts = builder.Build();
+
+        var engine = new Engine(opts);
+
+        engine.Setup();
+
+        return engine;
     }
 }

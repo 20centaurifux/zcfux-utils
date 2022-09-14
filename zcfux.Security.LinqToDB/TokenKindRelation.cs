@@ -19,41 +19,29 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Security.Cryptography;
+using LinqToDB.Mapping;
+using zcfux.Security.Token;
 
-namespace zcfux.Security;
+namespace zcfux.Security.LinqToDB;
 
-public static class Factory
+[Table(Schema = "security", Name = "TokenKind")]
+internal class TokenKindRelation : IKind
 {
-    public static HashAlgorithm CreateHashAlgorithm(string name)
+#pragma warning disable CS8618
+    public TokenKindRelation()
     {
-        return name switch
-        {
-            "SHA-256" => SHA256.Create(),
-            "SHA-384" => SHA384.Create(),
-            "SHA-512" => SHA512.Create(),
-            _ => throw new UnsupportedAlgorithmException()
-        };
     }
 
-    public static KeyedHashAlgorithm CreateKeyedHashAlgorithm(string name, byte[] secret)
+    public TokenKindRelation(IKind other)
     {
-        return name switch
-        {
-            "HMAC-SHA-256" => new HMACSHA256(secret),
-            "HMAC-SHA-384" => new HMACSHA384(secret),
-            "HMAC-SHA-512" => new HMACSHA512(secret),
-            _ => throw new UnsupportedAlgorithmException()
-        };
+        Id = other.Id;
+        Name = other.Name;
     }
 
-    public static IPasswordHashAlgorithm CreatePasswordAlgorithm(string name, string[] args)
-    {
-        if (name == "PBKDF2")
-        {
-            return new Pbkdf2(args);
-        }
+    [Column(Name = "Id"), PrimaryKey]
+    public int Id { get; set; }
 
-        throw new UnsupportedAlgorithmException();
-    }
+    [Column(Name = "Name"), NotNull]
+    public string Name { get; set; }
+#pragma warning restore CS8618
 }

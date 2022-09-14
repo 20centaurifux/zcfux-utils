@@ -19,41 +19,43 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Security.Cryptography;
+using LinqToDB.Mapping;
+using zcfux.Security.Token;
 
-namespace zcfux.Security;
+namespace zcfux.Security.LinqToDB;
 
-public static class Factory
+[Table(Schema = "security", Name = "Token")]
+internal class TokenRelation : IToken
 {
-    public static HashAlgorithm CreateHashAlgorithm(string name)
+#pragma warning disable CS8618
+    public TokenRelation()
     {
-        return name switch
-        {
-            "SHA-256" => SHA256.Create(),
-            "SHA-384" => SHA384.Create(),
-            "SHA-512" => SHA512.Create(),
-            _ => throw new UnsupportedAlgorithmException()
-        };
     }
 
-    public static KeyedHashAlgorithm CreateKeyedHashAlgorithm(string name, byte[] secret)
+    public TokenRelation(IToken other)
     {
-        return name switch
-        {
-            "HMAC-SHA-256" => new HMACSHA256(secret),
-            "HMAC-SHA-384" => new HMACSHA384(secret),
-            "HMAC-SHA-512" => new HMACSHA512(secret),
-            _ => throw new UnsupportedAlgorithmException()
-        };
+        Value = other.Value;
+        KindId = other.Kind.Id;
+        Kind = new TokenKindRelation(other.Kind);
+        Counter = other.Counter;
+        EndOfLife = other.EndOfLife;
     }
 
-    public static IPasswordHashAlgorithm CreatePasswordAlgorithm(string name, string[] args)
-    {
-        if (name == "PBKDF2")
-        {
-            return new Pbkdf2(args);
-        }
+    [Column(Name = "Value"), PrimaryKey]
+    public string Value { get; set; }
 
-        throw new UnsupportedAlgorithmException();
-    }
+    [Column(Name = "KindId"), PrimaryKey]
+    public int KindId { get; set; }
+
+    [Association(ThisKey = "KindId", OtherKey = "Id")]
+    public TokenKindRelation Kind { get; set; }
+
+    IKind IToken.Kind => Kind;
+
+    [Column(Name = "Counter"), NotNull]
+    public int Counter { get; set; }
+
+    [Column(Name = "EndOfLife")]
+    public DateTime? EndOfLife { get; set; }
+#pragma warning restore CS8618
 }

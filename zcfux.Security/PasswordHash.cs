@@ -21,4 +21,4 @@
  ***************************************************************************/
 namespace zcfux.Security;
 
-public sealed record PasswordHash(string Algorithm, byte[] Digest, byte[] Salt);
+public sealed record PasswordHash(string Algorithm, byte[] Digest, byte[] Salt, string[] Arguments);

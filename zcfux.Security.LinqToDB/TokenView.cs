@@ -19,41 +19,41 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Security.Cryptography;
+using LinqToDB.Mapping;
+using zcfux.Security.Token;
 
-namespace zcfux.Security;
+namespace zcfux.Security.LinqToDB;
 
-public static class Factory
+[Table(Schema = "security", Name = "Tokens")]
+internal class TokenView
 {
-    public static HashAlgorithm CreateHashAlgorithm(string name)
-    {
-        return name switch
+#pragma warning disable CS8618
+    [Column(Name = "KindId")]
+    public int KindId { get; set; }
+
+    [Column(Name = "Kind")]
+    public string Kind { get; set; }
+
+    [Column(Name = "Value")]
+    public string Value { get; set; }
+
+    [Column(Name = "Counter")]
+    public int Counter { get; set; }
+
+    [Column(Name = "EndOfLife")]
+    public DateTime? EndOfLife { get; set; }
+
+    public IToken ToToken()
+        => new TokenRelation
         {
-            "SHA-256" => SHA256.Create(),
-            "SHA-384" => SHA384.Create(),
-            "SHA-512" => SHA512.Create(),
-            _ => throw new UnsupportedAlgorithmException()
+            Value = Value,
+            Kind = new TokenKindRelation
+            {
+                Id = KindId,
+                Name = Kind
+            },
+            Counter = Counter,
+            EndOfLife = EndOfLife
         };
-    }
-
-    public static KeyedHashAlgorithm CreateKeyedHashAlgorithm(string name, byte[] secret)
-    {
-        return name switch
-        {
-            "HMAC-SHA-256" => new HMACSHA256(secret),
-            "HMAC-SHA-384" => new HMACSHA384(secret),
-            "HMAC-SHA-512" => new HMACSHA512(secret),
-            _ => throw new UnsupportedAlgorithmException()
-        };
-    }
-
-    public static IPasswordHashAlgorithm CreatePasswordAlgorithm(string name, string[] args)
-    {
-        if (name == "PBKDF2")
-        {
-            return new Pbkdf2(args);
-        }
-
-        throw new UnsupportedAlgorithmException();
-    }
+#pragma warning restore CS8618
 }

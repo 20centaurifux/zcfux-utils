@@ -30,14 +30,14 @@ public sealed class PasswordTests
     {
         var plain = TestContext.CurrentContext.Random.GetString();
 
-        var (algorithm, hash1, salt1) = Password.ComputedHash(plain);
+        var (algorithm, hash1, salt1, args1) = Password.ComputeHash(plain);
 
-        var (_, hash2, salt2) = Password.ComputedHash(algorithm, plain);
+        var (_, hash2, salt2, args2) = Password.ComputeHash(plain, SecureRandom.GetBytes(8));
 
         Assert.AreNotEqual(hash1, hash2);
         Assert.AreNotEqual(salt1, salt2);
 
-        var (_, hash3, _) = Password.ComputedHash(algorithm, plain, salt1);
+        var (_, hash3, _, _) = Password.ComputeHash(algorithm, plain, salt1, args1);
 
         Assert.AreEqual(hash1, hash3);
     }

@@ -19,41 +19,15 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Security.Cryptography;
+namespace zcfux.Security.Token;
 
-namespace zcfux.Security;
-
-public static class Factory
+public interface IToken
 {
-    public static HashAlgorithm CreateHashAlgorithm(string name)
-    {
-        return name switch
-        {
-            "SHA-256" => SHA256.Create(),
-            "SHA-384" => SHA384.Create(),
-            "SHA-512" => SHA512.Create(),
-            _ => throw new UnsupportedAlgorithmException()
-        };
-    }
+    IKind Kind { get; }
 
-    public static KeyedHashAlgorithm CreateKeyedHashAlgorithm(string name, byte[] secret)
-    {
-        return name switch
-        {
-            "HMAC-SHA-256" => new HMACSHA256(secret),
-            "HMAC-SHA-384" => new HMACSHA384(secret),
-            "HMAC-SHA-512" => new HMACSHA512(secret),
-            _ => throw new UnsupportedAlgorithmException()
-        };
-    }
+    string Value { get; }
 
-    public static IPasswordHashAlgorithm CreatePasswordAlgorithm(string name, string[] args)
-    {
-        if (name == "PBKDF2")
-        {
-            return new Pbkdf2(args);
-        }
+    int Counter { get; }
 
-        throw new UnsupportedAlgorithmException();
-    }
+    DateTime? EndOfLife { get; }
 }

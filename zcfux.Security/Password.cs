@@ -25,27 +25,20 @@ public static class Password
 {
     public static readonly string DefaultAlgorithm = "PBKDF2";
 
-    const int SaltSize = 8;
-
-    static readonly Factory Factory = new();
-
-    public static PasswordHash ComputedHash(string secret)
+    public static readonly string[] DefaultArgs = new string[]
     {
-        var salt = SecureRandom.GetBytes(SaltSize);
+        "--iterations", "32767",
+        "--hash-size", "20"
+    };
 
-        return ComputedHash(DefaultAlgorithm, secret, salt);
-    }
-    
-    public static PasswordHash ComputedHash(string algorithm, string secret)
-    {
-        var salt = SecureRandom.GetBytes(SaltSize);
+    public const int DefaultSaltSize = 8;
 
-        return ComputedHash(algorithm, secret, salt);
-    }
+    public static PasswordHash ComputeHash(string secret)
+    => ComputeHash(DefaultAlgorithm, secret, SecureRandom.GetBytes(DefaultSaltSize), DefaultArgs);
 
-    public static PasswordHash ComputedHash(string secret, byte[] salt)
-        => ComputedHash(DefaultAlgorithm, secret, salt);
+    public static PasswordHash ComputeHash(string secret, byte[] salt)
+        => ComputeHash(DefaultAlgorithm, secret, salt, DefaultArgs);
 
-    public static PasswordHash ComputedHash(string algorithm, string secret, byte[] salt)
-        => Factory.CreatePasswordAlgorithm(algorithm).ComputeHash(secret, salt);
+    public static PasswordHash ComputeHash(string algorithm, string secret, byte[] salt, string[] args)
+        => Factory.CreatePasswordAlgorithm(algorithm, args).ComputeHash(secret, salt);
 }

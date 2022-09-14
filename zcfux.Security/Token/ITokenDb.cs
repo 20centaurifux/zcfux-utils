@@ -19,41 +19,23 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Security.Cryptography;
+using zcfux.Filter;
 
-namespace zcfux.Security;
+namespace zcfux.Security.Token;
 
-public static class Factory
+public interface ITokenDb
 {
-    public static HashAlgorithm CreateHashAlgorithm(string name)
-    {
-        return name switch
-        {
-            "SHA-256" => SHA256.Create(),
-            "SHA-384" => SHA384.Create(),
-            "SHA-512" => SHA512.Create(),
-            _ => throw new UnsupportedAlgorithmException()
-        };
-    }
+    void WriteKind(object handle, IKind kind);
 
-    public static KeyedHashAlgorithm CreateKeyedHashAlgorithm(string name, byte[] secret)
-    {
-        return name switch
-        {
-            "HMAC-SHA-256" => new HMACSHA256(secret),
-            "HMAC-SHA-384" => new HMACSHA384(secret),
-            "HMAC-SHA-512" => new HMACSHA512(secret),
-            _ => throw new UnsupportedAlgorithmException()
-        };
-    }
+    void DeleteKind(object handle, int id);
 
-    public static IPasswordHashAlgorithm CreatePasswordAlgorithm(string name, string[] args)
-    {
-        if (name == "PBKDF2")
-        {
-            return new Pbkdf2(args);
-        }
+    IEnumerable<IKind> QueryKinds(object handle, Query query);
 
-        throw new UnsupportedAlgorithmException();
-    }
+    void WriteToken(object handle, IToken token);
+
+    void DeleteToken(object handle, int kindId, string value);
+
+    int DeleteTokens(object handle, INode filter);
+
+    IEnumerable<IToken> QueryTokens(object handle, Query query);
 }

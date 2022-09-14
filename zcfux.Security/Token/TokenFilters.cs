@@ -19,41 +19,19 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Security.Cryptography;
+using zcfux.Filter;
 
-namespace zcfux.Security;
+namespace zcfux.Security.Token;
 
-public static class Factory
+public static class TokenFilters
 {
-    public static HashAlgorithm CreateHashAlgorithm(string name)
-    {
-        return name switch
-        {
-            "SHA-256" => SHA256.Create(),
-            "SHA-384" => SHA384.Create(),
-            "SHA-512" => SHA512.Create(),
-            _ => throw new UnsupportedAlgorithmException()
-        };
-    }
+    public static Column<int> KindId { get; } = Column<int>.FromMember();
 
-    public static KeyedHashAlgorithm CreateKeyedHashAlgorithm(string name, byte[] secret)
-    {
-        return name switch
-        {
-            "HMAC-SHA-256" => new HMACSHA256(secret),
-            "HMAC-SHA-384" => new HMACSHA384(secret),
-            "HMAC-SHA-512" => new HMACSHA512(secret),
-            _ => throw new UnsupportedAlgorithmException()
-        };
-    }
+    public static Column<string> Kind { get; } = Column<string>.FromMember();
 
-    public static IPasswordHashAlgorithm CreatePasswordAlgorithm(string name, string[] args)
-    {
-        if (name == "PBKDF2")
-        {
-            return new Pbkdf2(args);
-        }
+    public static Column<string> Value { get; } = Column<string>.FromMember();
 
-        throw new UnsupportedAlgorithmException();
-    }
+    public static Column<int> Counter { get; } = Column<int>.FromMember();
+
+    public static Column<DateTime> EndOfLife { get; } = Column<DateTime>.FromMember();
 }

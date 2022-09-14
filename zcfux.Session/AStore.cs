@@ -23,10 +23,10 @@ namespace zcfux.Session;
 
 public abstract class AStore
 {
-    public SessionKey? SessionKey { get; private set; }
+    public SessionId? SessionId { get; private set; }
 
-    public virtual void Init(SessionKey sessionKey)
-        => SessionKey = sessionKey;
+    public virtual void Init(SessionId sessionId)
+        => SessionId = sessionId;
 
     public abstract object this[string key] { get; set; }
 

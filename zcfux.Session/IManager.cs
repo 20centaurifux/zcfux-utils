@@ -33,7 +33,7 @@ public interface IManager
 
     SessionState New();
 
-    SessionState Get(SessionKey key);
+    SessionState Get(SessionId key);
 
-    void Remove(SessionKey key);
+    void Remove(SessionId key);
 }

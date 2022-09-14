@@ -40,7 +40,7 @@ public sealed class Manager<TStore> : IManager where TStore : AStore, new()
     Task? _task;
     CancellationTokenSource? _source;
 
-    readonly ConcurrentDictionary<SessionKey, SessionState> _m = new();
+    readonly ConcurrentDictionary<SessionId, SessionState> _m = new();
 
     public Manager(TimeSpan sessionTimeout)
         => _ttlMillis = Convert.ToInt32(sessionTimeout.TotalMilliseconds);
@@ -112,7 +112,7 @@ public sealed class Manager<TStore> : IManager where TStore : AStore, new()
 
     public SessionState New()
     {
-        var key = SessionKey.Random();
+        var key = SessionId.Random();
 
         var store = new TStore();
 
@@ -127,12 +127,12 @@ public sealed class Manager<TStore> : IManager where TStore : AStore, new()
         return state;
     }
 
-    void ActivateSession(SessionKey key)
+    void ActivateSession(SessionId key)
     {
         Get(key);
     }
 
-    public SessionState Get(SessionKey key)
+    public SessionState Get(SessionId key)
     {
         if (!_m.TryGetValue(key, out var state))
         {
@@ -147,7 +147,7 @@ public sealed class Manager<TStore> : IManager where TStore : AStore, new()
         return state;
     }
 
-    public void Remove(SessionKey key)
+    public void Remove(SessionId key)
     {
         if (_m.TryRemove(key, out var removedState))
         {

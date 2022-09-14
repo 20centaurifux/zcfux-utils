@@ -37,13 +37,13 @@ public sealed class ConcurrentStore : AStore, IDisposable
         }
     }
 
-    public override void Init(SessionKey sessionKey)
+    public override void Init(SessionId sessionId)
     {
-        base.Init(sessionKey);
+        base.Init(sessionId);
 
         lock (_lock)
         {
-            _store.Init(sessionKey);
+            _store.Init(sessionId);
         }
     }
 

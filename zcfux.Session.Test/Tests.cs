@@ -45,16 +45,16 @@ public sealed class Tests
         var state = _manager.New();
 
         Assert.IsInstanceOf<SessionState>(state);
-        Assert.IsInstanceOf<SessionKey>(state.SessionKey);
+        Assert.IsInstanceOf<SessionId>(state.SessionId);
     }
 
     [Test]
-    public void NewSessionKeysDiffer()
+    public void NewSessionIdsDiffer()
     {
         var a = _manager.New();
         var b = _manager.New();
 
-        Assert.AreNotEqual(a.SessionKey, b.SessionKey);
+        Assert.AreNotEqual(a.SessionId, b.SessionId);
     }
 
     [Test]
@@ -62,7 +62,7 @@ public sealed class Tests
     {
         var a = _manager.New();
 
-        var b = _manager.Get(a.SessionKey);
+        var b = _manager.Get(a.SessionId);
 
         Assert.AreSame(a, b);
     }
@@ -70,9 +70,9 @@ public sealed class Tests
     [Test]
     public void GetNonExistingSession()
     {
-        var key = SessionKey.Random();
+        var id = SessionId.Random();
 
-        Assert.Throws<SessionNotFoundException>(() => { _manager.Get(key); });
+        Assert.Throws<SessionNotFoundException>(() => { _manager.Get(id); });
     }
 
     [Test]
@@ -82,7 +82,7 @@ public sealed class Tests
 
         Thread.Sleep(1000);
 
-        Assert.Throws<SessionNotFoundException>(() => { _manager.Get(state.SessionKey); });
+        Assert.Throws<SessionNotFoundException>(() => { _manager.Get(state.SessionId); });
     }
 
     [Test]
@@ -90,17 +90,17 @@ public sealed class Tests
     {
         var state = _manager.New();
 
-        _manager.Remove(state.SessionKey);
+        _manager.Remove(state.SessionId);
 
-        Assert.Throws<SessionNotFoundException>(() => { _manager.Get(state.SessionKey); });
+        Assert.Throws<SessionNotFoundException>(() => { _manager.Get(state.SessionId); });
     }
 
     [Test]
     public void RemoveNonExistingSession()
     {
-        var key = SessionKey.Random();
+        var id = SessionId.Random();
 
-        _manager.Remove(key);
+        _manager.Remove(id);
     }
 
     [Test]
@@ -110,7 +110,7 @@ public sealed class Tests
 
         Thread.Sleep(1000);
 
-        _manager.Remove(state.SessionKey);
+        _manager.Remove(state.SessionId);
     }
 
     [Test]
@@ -127,25 +127,25 @@ public sealed class Tests
 
         Thread.Sleep(1000);
 
-        Assert.Throws<SessionNotFoundException>(() => { _manager.Get(state.SessionKey); });
+        Assert.Throws<SessionNotFoundException>(() => { _manager.Get(state.SessionId); });
     }
 
     [Test]
     public void Events()
     {
-        var created = new HashSet<SessionKey>();
-        var expired = new HashSet<SessionKey>();
-        var removed = new HashSet<SessionKey>();
+        var created = new HashSet<SessionId>();
+        var expired = new HashSet<SessionId>();
+        var removed = new HashSet<SessionId>();
 
-        _manager.Created += (s, e) => { created.Add(e.SessionKey); };
+        _manager.Created += (s, e) => { created.Add(e.SessionId); };
 
-        _manager.Expired += (s, e) => { expired.Add(e.State.SessionKey); };
+        _manager.Expired += (s, e) => { expired.Add(e.State.SessionId); };
 
-        _manager.Removed += (s, e) => { removed.Add(e.SessionKey); };
+        _manager.Removed += (s, e) => { removed.Add(e.SessionId); };
 
         var first = _manager.New();
 
-        _manager.Remove(first.SessionKey);
+        _manager.Remove(first.SessionId);
 
         var second = _manager.New();
 
@@ -153,17 +153,17 @@ public sealed class Tests
 
         Assert.AreEqual(2, created.Count);
 
-        Assert.IsTrue(created.Contains(first.SessionKey));
-        Assert.IsTrue(created.Contains(second.SessionKey));
+        Assert.IsTrue(created.Contains(first.SessionId));
+        Assert.IsTrue(created.Contains(second.SessionId));
 
         Assert.AreEqual(1, expired.Count);
 
-        Assert.IsTrue(created.Contains(second.SessionKey));
+        Assert.IsTrue(created.Contains(second.SessionId));
 
         Assert.AreEqual(2, removed.Count);
 
-        Assert.IsTrue(created.Contains(first.SessionKey));
-        Assert.IsTrue(created.Contains(second.SessionKey));
+        Assert.IsTrue(created.Contains(first.SessionId));
+        Assert.IsTrue(created.Contains(second.SessionId));
     }
 
     [Test]
@@ -174,7 +174,7 @@ public sealed class Tests
         a["id"] = TestContext.CurrentContext.Random.GetString();
         a["value"] = TestContext.CurrentContext.Random.Next();
 
-        var b = _manager.Get(a.SessionKey);
+        var b = _manager.Get(a.SessionId);
 
         Assert.IsTrue(a.Has("id"));
         Assert.IsTrue(a.Has("value"));
@@ -189,7 +189,7 @@ public sealed class Tests
 
         b["value"] = TestContext.CurrentContext.Random.Next();
 
-        var c = _manager.Get(b.SessionKey);
+        var c = _manager.Get(b.SessionId);
 
         Assert.IsFalse(a.Has("id"));
         Assert.IsFalse(b.Has("id"));

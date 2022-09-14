@@ -19,15 +19,43 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using zcfux.Byte;
+
 namespace zcfux.Session;
 
-internal sealed class Activator
+public sealed class SessionId
 {
-    readonly Action<SessionId> _fn;
+    readonly byte[] _id;
 
-    public Activator(Action<SessionId> fn)
-        => _fn = fn;
+    public static SessionId Random()
+        => Guid.NewGuid().ToByteArray();
 
-    public void Activate(SessionId sessionId)
-        => _fn(sessionId);
+    SessionId(byte[] id)
+        => _id = id;
+
+    public static implicit operator SessionId(byte[] id)
+        => new(id);
+
+    public static implicit operator SessionId(string idAsHex)
+        => new(idAsHex.FromHex());
+
+    public override bool Equals(object? other)
+    {
+        var equals = false;
+
+        if (other is SessionId otherId)
+        {
+            equals = ReferenceEquals(this, other) || _id.SequenceEqual(otherId._id);
+        }
+
+        return equals;
+    }
+
+    public override int GetHashCode()
+    {
+        return _id.GetHashCode();
+    }
+
+    public override string ToString()
+        => _id.ToHex();
 }

@@ -23,11 +23,11 @@ namespace zcfux.Session;
 
 public sealed class SessionEventArgs : EventArgs
 {
-    public SessionKey SessionKey { get; }
+    public SessionId SessionId { get; }
 
-    public SessionEventArgs(SessionKey sessionKey)
-        => SessionKey = sessionKey;
+    public SessionEventArgs(SessionId sessionId)
+        => SessionId = sessionId;
 
-    public static implicit operator SessionEventArgs(SessionKey sessionKey)
-        => new(sessionKey);
+    public static implicit operator SessionEventArgs(SessionId sessionId)
+        => new(sessionId);
 }

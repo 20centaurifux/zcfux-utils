@@ -28,8 +28,8 @@ public sealed class ExpiredSessionState
     public ExpiredSessionState(AStore store)
         => _store = store;
 
-    public SessionKey SessionKey
-        => _store.SessionKey!;
+    public SessionId SessionId
+        => _store.SessionId!;
 
     public bool Has(string key)
         => _store.Has(key);

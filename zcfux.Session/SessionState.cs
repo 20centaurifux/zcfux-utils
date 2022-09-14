@@ -55,9 +55,9 @@ public sealed class SessionState : IDisposable
     public ExpiredSessionState ToExpiredSessionState()
         => new(_store);
 
-    public SessionKey SessionKey
+    public SessionId SessionId
     {
-        get => _store.SessionKey ?? throw new InvalidOperationException();
+        get => _store.SessionId ?? throw new InvalidOperationException();
     }
 
     public object this[string key]
@@ -93,7 +93,7 @@ public sealed class SessionState : IDisposable
 
     public void KeepAlive()
     {
-        _activator.Activate(_store.SessionKey!);
+        _activator.Activate(_store.SessionId!);
 
         lock (_lock)
         {

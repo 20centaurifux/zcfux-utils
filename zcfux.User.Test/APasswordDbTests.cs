@@ -21,6 +21,7 @@
  ***************************************************************************/
 using NUnit.Framework;
 using zcfux.Data;
+using zcfux.Security;
 using zcfux.User.Password;
 
 namespace zcfux.User.Test;
@@ -167,10 +168,8 @@ public abstract class APasswordDbTests
         {
             var user = CreateUser(t.Handle);
 
-            var factory = new Security.Factory();
-
             var format = TestContext.CurrentContext.Random.Next();
-            var hasher = new PasswordHasher(format, factory.CreateHashAlgorithm("SHA-256"));
+            var hasher = new PasswordHasher(format, Factory.CreateHashAlgorithm("SHA-256"));
 
             var password = TestContext.CurrentContext.Random.GetString();
 
@@ -200,10 +199,8 @@ public abstract class APasswordDbTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var factory = new Security.Factory();
-
             var format = TestContext.CurrentContext.Random.Next();
-            var hasher = new PasswordHasher(format, factory.CreateHashAlgorithm("SHA-256"));
+            var hasher = new PasswordHasher(format, Factory.CreateHashAlgorithm("SHA-256"));
 
             var user = CreateUser(t.Handle);
             var password = TestContext.CurrentContext.Random.GetString();
@@ -230,8 +227,6 @@ public abstract class APasswordDbTests
     [Test]
     public void MultipleHashAlgorithms()
     {
-        var factory = new Security.Factory();
-
         using (var t = _engine.NewTransaction())
         {
             var origin = Origin.Random();
@@ -240,7 +235,7 @@ public abstract class APasswordDbTests
 
             // first password format & user:
             var firstFormat = TestContext.CurrentContext.Random.Next();
-            var firstHasher = new PasswordHasher(firstFormat, factory.CreateHashAlgorithm("SHA-256"));
+            var firstHasher = new PasswordHasher(firstFormat, Factory.CreateHashAlgorithm("SHA-256"));
 
             var firstUser = User.Random(origin);
 
@@ -258,7 +253,7 @@ public abstract class APasswordDbTests
 
             // second password format & user:
             var secondFormat = TestContext.CurrentContext.Random.Next();
-            var secondHasher = new PasswordHasher(secondFormat, factory.CreateHashAlgorithm("SHA-512"));
+            var secondHasher = new PasswordHasher(secondFormat, Factory.CreateHashAlgorithm("SHA-512"));
 
             var secondUser = User.Random(origin);
 
@@ -290,15 +285,13 @@ public abstract class APasswordDbTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var factory = new Security.Factory();
-
             // first check, hasher & user:
             var firstOrigin = Origin.Random();
 
             _userDb.WriteOrigin(t.Handle, firstOrigin);
 
             var firstFormat = TestContext.CurrentContext.Random.Next();
-            var firstHasher = new PasswordHasher(firstFormat, factory.CreateHashAlgorithm("SHA-256"));
+            var firstHasher = new PasswordHasher(firstFormat, Factory.CreateHashAlgorithm("SHA-256"));
 
             var firstUser = User.Random(firstOrigin);
 
@@ -325,7 +318,7 @@ public abstract class APasswordDbTests
             _userDb.WriteOrigin(t.Handle, secondOrigin);
 
             var secondFormat = TestContext.CurrentContext.Random.Next();
-            var secondHasher = new PasswordHasher(secondFormat, factory.CreateHashAlgorithm("SHA-512"));
+            var secondHasher = new PasswordHasher(secondFormat, Factory.CreateHashAlgorithm("SHA-512"));
 
             var secondUser = User.Random(secondOrigin);
 
@@ -359,14 +352,12 @@ public abstract class APasswordDbTests
     {
         using (var t = _engine.NewTransaction())
         {
-            var factory = new Security.Factory();
-
             var origin = Origin.Random();
 
             _userDb.WriteOrigin(t.Handle, origin);
 
             var format = TestContext.CurrentContext.Random.Next();
-            var hasher = new PasswordHasher(format, factory.CreateHashAlgorithm("SHA-256"));
+            var hasher = new PasswordHasher(format, Factory.CreateHashAlgorithm("SHA-256"));
 
             var user = User.Random(origin);
 

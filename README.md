@@ -15,6 +15,9 @@ This is a collection of various utilities and abstractions I use in .NET project
 ## CircularBuffer
 * Generic circular buffer.
 
+## CredentialStore
+* Credential store abstractions and in-memory implementation.
+
 ## Data
 * Database abstractions.
 

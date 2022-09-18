@@ -28,8 +28,12 @@ public abstract class AReaderWriterTests
     IStore _store = null!;
 
     [SetUp]
-    public void Setup()
+    public virtual void Setup()
         => _store = CreateAndSetupStore();
+
+    protected virtual void Prepare()
+    {
+    }
 
     [Test]
     public void IsReadable()
@@ -98,7 +102,7 @@ public abstract class AReaderWriterTests
     public void WriteAndReadExpiringSecret()
     {
         var writer = _store.CreateWriter();
-
+        
         var secret = new SecretBuilder()
             .WithData("password", TestContext.CurrentContext.Random.GetString())
             .WithExpiryDate(DateTime.UtcNow.Add(TimeSpan.FromSeconds(1)))
@@ -110,7 +114,12 @@ public abstract class AReaderWriterTests
 
         var received = reader.Read("/user");
 
-        Assert.AreEqual(secret, received);
+        Assert.AreEqual(secret.Data.Count, received.Data.Count);
+        Assert.IsEmpty(secret.Data.Except(received.Data));
+
+        var diff = secret.ExpiryDate!.Value - received.ExpiryDate!.Value;
+        
+        Assert.Less(diff.TotalSeconds, 1.0);
 
         Thread.Sleep(TimeSpan.FromSeconds(1));
 

@@ -19,41 +19,33 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Collections.ObjectModel;
+namespace zcfux.CredentialStore.Vault;
 
-namespace zcfux.CredentialStore;
-
-public sealed class Secret
+public sealed class Reader : IReader
 {
-    readonly Dictionary<string, string> _data;
-    private readonly DateTime? _expiryDate;
+    readonly Client _client;
 
-    public Secret(IReadOnlyDictionary<string, string> data, DateTime? expiryDate)
-        => (_data, _expiryDate) = (new Dictionary<string, string>(data), expiryDate);
+    public Reader(Options options, HttpClient? client = null)
+        => _client = new Client(options, client);
 
-    public DateTime? ExpiryDate
-        => _expiryDate;
-
-    public IReadOnlyDictionary<string, string> Data
-        => _data;
-
-    public bool IsExpired()
-        => IsExpired(DateTime.UtcNow);
-
-    public bool IsExpired(DateTime date)
-        => _expiryDate.HasValue
-           && (_expiryDate.Value < date);
-
-    public override bool Equals(object? obj)
+    public Secret Read(string path)
     {
-        var equals = (obj is Secret other
-                      && _expiryDate.Equals(other._expiryDate)
-                      && _data.Count.Equals(other._data.Count)
-                      && !_data.Except(other._data).Any());
+        Secret? secret = null;
 
-        return equals;
+        var version = _client.GetSecret(path);
+
+        if (version is { Data.Meta.Destroyed: false }
+            && (!version.Data.Meta.ExpiryDate.HasValue
+                || version.Data.Meta.ExpiryDate > DateTime.UtcNow))
+        {
+            secret = new Secret(
+                version.Data.Data.ToDictionary(
+                    kv => kv.Key,
+                    kv => kv.Value.ToString() ?? string.Empty),
+                version.Data.Meta.ExpiryDate);
+        }
+
+        return secret
+               ?? throw new SecretNotFoundException($"Secret (path=`{path}') not found.");
     }
-
-    public override int GetHashCode()
-        => _data.GetHashCode();
 }

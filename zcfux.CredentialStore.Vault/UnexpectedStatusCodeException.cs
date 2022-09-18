@@ -19,41 +19,15 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Collections.ObjectModel;
+using System.Net;
 
-namespace zcfux.CredentialStore;
+namespace zcfux.CredentialStore.Vault;
 
-public sealed class Secret
+public sealed class UnexpectedStatusCodeException : Exception
 {
-    readonly Dictionary<string, string> _data;
-    private readonly DateTime? _expiryDate;
-
-    public Secret(IReadOnlyDictionary<string, string> data, DateTime? expiryDate)
-        => (_data, _expiryDate) = (new Dictionary<string, string>(data), expiryDate);
-
-    public DateTime? ExpiryDate
-        => _expiryDate;
-
-    public IReadOnlyDictionary<string, string> Data
-        => _data;
-
-    public bool IsExpired()
-        => IsExpired(DateTime.UtcNow);
-
-    public bool IsExpired(DateTime date)
-        => _expiryDate.HasValue
-           && (_expiryDate.Value < date);
-
-    public override bool Equals(object? obj)
-    {
-        var equals = (obj is Secret other
-                      && _expiryDate.Equals(other._expiryDate)
-                      && _data.Count.Equals(other._data.Count)
-                      && !_data.Except(other._data).Any());
-
-        return equals;
-    }
-
-    public override int GetHashCode()
-        => _data.GetHashCode();
+    public HttpStatusCode StatusCode { get; }
+    
+    public UnexpectedStatusCodeException(HttpStatusCode statusCode)
+        : base("Unexpected status code.")
+        => StatusCode = statusCode;
 }

@@ -18,6 +18,9 @@ This is a collection of various utilities and abstractions I use in .NET project
 ## CredentialStore
 * Credential store abstractions and in-memory implementation.
 
+## CredentialStore.Vault
+* HashiCorp Vault credential store implementation.
+
 ## Data
 * Database abstractions.
 

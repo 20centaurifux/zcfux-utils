@@ -19,41 +19,22 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Collections.ObjectModel;
+using Newtonsoft.Json;
 
-namespace zcfux.CredentialStore;
+namespace zcfux.CredentialStore.Vault.Model;
 
-public sealed class Secret
+internal sealed class MetaData
 {
-    readonly Dictionary<string, string> _data;
-    private readonly DateTime? _expiryDate;
+    [JsonProperty("created_time")]
+    public DateTime CreatedTime { get; set; }
 
-    public Secret(IReadOnlyDictionary<string, string> data, DateTime? expiryDate)
-        => (_data, _expiryDate) = (new Dictionary<string, string>(data), expiryDate);
-
-    public DateTime? ExpiryDate
-        => _expiryDate;
-
-    public IReadOnlyDictionary<string, string> Data
-        => _data;
-
-    public bool IsExpired()
-        => IsExpired(DateTime.UtcNow);
-
-    public bool IsExpired(DateTime date)
-        => _expiryDate.HasValue
-           && (_expiryDate.Value < date);
-
-    public override bool Equals(object? obj)
-    {
-        var equals = (obj is Secret other
-                      && _expiryDate.Equals(other._expiryDate)
-                      && _data.Count.Equals(other._data.Count)
-                      && !_data.Except(other._data).Any());
-
-        return equals;
-    }
-
-    public override int GetHashCode()
-        => _data.GetHashCode();
+    [JsonProperty("deletion_time")]
+    public DateTime? ExpiryDate { get; set; }
+    
+    [JsonProperty("custom_metadata")]
+    public Dictionary<string, object>? Custom { get; set; }
+    
+    public bool Destroyed { get; set; }
+    
+    public int Version { get; set; }
 }

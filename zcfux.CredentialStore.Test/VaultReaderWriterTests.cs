@@ -19,41 +19,51 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Collections.ObjectModel;
+using NUnit.Framework;
 
-namespace zcfux.CredentialStore;
+namespace zcfux.CredentialStore.Test;
 
-public sealed class Secret
+public sealed class VaultReaderWriterTests : AReaderWriterTests
 {
-    readonly Dictionary<string, string> _data;
-    private readonly DateTime? _expiryDate;
-
-    public Secret(IReadOnlyDictionary<string, string> data, DateTime? expiryDate)
-        => (_data, _expiryDate) = (new Dictionary<string, string>(data), expiryDate);
-
-    public DateTime? ExpiryDate
-        => _expiryDate;
-
-    public IReadOnlyDictionary<string, string> Data
-        => _data;
-
-    public bool IsExpired()
-        => IsExpired(DateTime.UtcNow);
-
-    public bool IsExpired(DateTime date)
-        => _expiryDate.HasValue
-           && (_expiryDate.Value < date);
-
-    public override bool Equals(object? obj)
+    VaultServer? _server;
+    
+    [SetUp]
+    public override void Setup()
     {
-        var equals = (obj is Secret other
-                      && _expiryDate.Equals(other._expiryDate)
-                      && _data.Count.Equals(other._data.Count)
-                      && !_data.Except(other._data).Any());
+        base.Setup();
+        
+        _server = new VaultServer();
 
-        return equals;
+        _server.Start();
     }
 
-    public override int GetHashCode()
-        => _data.GetHashCode();
+    [TearDown]
+    public void Teardown()
+        => _server?.Stop();
+    
+    protected override IStore CreateAndSetupStore()
+    {
+        var options = BuildOptions();
+
+        var client = new HttpClient();
+
+        var store = new Builder()
+            .WithReader(new Vault.Reader(options, client))
+            .WithWriter(new Vault.Writer(options, client))
+            .Build();
+
+        store.Setup();
+
+        return store;
+    }
+    
+    static Vault.Options BuildOptions()
+    {
+        var url = Environment.GetEnvironmentVariable("VAULT_TEST_URL")
+                  ?? "http://127.0.0.1:8200";
+
+        var options = new Vault.Options(url, "root");
+
+        return options;
+    }
 }

@@ -48,6 +48,19 @@ public sealed class Builder
         public IWriter CreateWriter()
             => _writer
                 ?? throw new NotImplementedException();
+
+        public void Dispose()
+        {
+            if (_reader is IDisposable disposableReader)
+            {
+                disposableReader.Dispose();
+            }
+
+            if (_writer is IDisposable disposableWriter)
+            {
+                disposableWriter.Dispose();
+            }
+        }
     }
 
     IReader? _reader;

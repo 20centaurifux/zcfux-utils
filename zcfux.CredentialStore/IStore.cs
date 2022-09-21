@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.CredentialStore;
 
-public interface IStore
+public interface IStore : IDisposable
 {
     void Setup();
 

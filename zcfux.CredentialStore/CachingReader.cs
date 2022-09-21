@@ -23,7 +23,7 @@ using System.Diagnostics;
 
 namespace zcfux.CredentialStore;
 
-public sealed class CachingReader : IReader, ICollectGarbage
+public sealed class CachingReader : IReader
 {
     public sealed record Options(TimeSpan MaxLifetime, TimeSpan ExpiryDateOffset);
 

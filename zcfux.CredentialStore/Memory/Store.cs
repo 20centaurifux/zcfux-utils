@@ -41,4 +41,8 @@ public sealed class Store : IStore
 
     public void CollectGarbage()
         => _storage.CollectGarbage();
+
+    public void Dispose()
+    {
+    }
 }

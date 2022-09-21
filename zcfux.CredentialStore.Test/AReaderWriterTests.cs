@@ -31,9 +31,9 @@ public abstract class AReaderWriterTests
     public virtual void Setup()
         => _store = CreateAndSetupStore();
 
-    protected virtual void Prepare()
-    {
-    }
+    [TearDown]
+    public virtual void Teardown()
+        => _store?.Dispose();
 
     [Test]
     public void IsReadable()
@@ -61,7 +61,8 @@ public abstract class AReaderWriterTests
         var writer = _store.CreateWriter();
 
         var secret = new SecretBuilder()
-            .WithData("password", TestContext.CurrentContext.Random.GetString())
+            .WithData("foo", TestContext.CurrentContext.Random.GetString())
+            .WithData("bar", TestContext.CurrentContext.Random.GetString())
             .Build();
 
         writer.Write("/user", secret);
@@ -102,7 +103,7 @@ public abstract class AReaderWriterTests
     public void WriteAndReadExpiringSecret()
     {
         var writer = _store.CreateWriter();
-        
+
         var secret = new SecretBuilder()
             .WithData("password", TestContext.CurrentContext.Random.GetString())
             .WithExpiryDate(DateTime.UtcNow.Add(TimeSpan.FromSeconds(1)))
@@ -118,7 +119,7 @@ public abstract class AReaderWriterTests
         Assert.IsEmpty(secret.Data.Except(received.Data));
 
         var diff = secret.ExpiryDate!.Value - received.ExpiryDate!.Value;
-        
+
         Assert.Less(diff.TotalSeconds, 1.0);
 
         Thread.Sleep(TimeSpan.FromSeconds(1));
@@ -150,36 +151,6 @@ public abstract class AReaderWriterTests
 
         Assert.Throws<SecretNotFoundException>(() => reader.Read("/user"));
     }
-
-    [Test]
-    public void ValidAfterGarbageCollection()
-    {
-        if (_store is ICollectGarbage gc)
-        {
-            var secret = new SecretBuilder()
-                .WithData("password", TestContext.CurrentContext.Random.GetString())
-                .WithExpiryDate(DateTime.UtcNow.Add(TimeSpan.FromSeconds(1)))
-                .Build();
-
-            var writer = _store.CreateWriter();
-
-            writer.Write("/user", secret);
-
-            var reader = _store.CreateReader();
-
-            gc.CollectGarbage();
-
-            var received = reader.Read("/user");
-
-            Assert.AreEqual(received, secret);
-
-            Thread.Sleep(TimeSpan.FromSeconds(1));
-
-            gc.CollectGarbage();
-
-            Assert.Throws<SecretNotFoundException>(() => reader.Read("/user"));
-        }
-    }
-
+    
     protected abstract IStore CreateAndSetupStore();
 }

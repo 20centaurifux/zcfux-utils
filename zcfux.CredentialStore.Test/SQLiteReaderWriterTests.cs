@@ -23,49 +23,43 @@ using NUnit.Framework;
 
 namespace zcfux.CredentialStore.Test;
 
-public sealed class VaultReaderWriterTests : AReaderWriterTests
+public sealed class SQLiteReaderWriterTests : AReaderWriterTests
 {
-    VaultServer? _server;
-
-    public override void Setup()
-    {
-        base.Setup();
-
-        _server = new VaultServer();
-
-        _server.Start();
-    }
+    string? _filename = null;
+    string? _password = null;
 
     public override void Teardown()
     {
         base.Teardown();
 
-        _server?.Stop();
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+
+        if (_filename != null)
+        {
+            File.Delete(_filename);
+        }
     }
 
     protected override IStore CreateAndSetupStore()
     {
-        var options = BuildOptions();
+        _filename = Path.GetTempFileName();
+        _password = TestContext.CurrentContext.Random.GetString();
 
-        var client = new HttpClient();
-
-        var store = new Builder()
-            .WithReader(new Vault.Reader(options, client))
-            .WithWriter(new Vault.Writer(options, client))
-            .Build();
+        var store = new SQLite.Store(_filename, _password);
 
         store.Setup();
 
         return store;
     }
 
-    static Vault.Options BuildOptions()
+    [Test]
+    public void InvalidPassword()
     {
-        var url = Environment.GetEnvironmentVariable("VAULT_TEST_URL")
-                  ?? "http://127.0.0.1:8200";
+        var password = TestContext.CurrentContext.Random.GetString();
 
-        var options = new Vault.Options(url, "root");
-
-        return options;
+        using (var store = new SQLite.Store(_filename!, password))
+        {
+            Assert.Throws<SQLite.InvalidPasswordException>(() => store.Setup());
+        }
     }
 }

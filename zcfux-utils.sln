@@ -105,7 +105,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zcfux.CredentialStore", "zc
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zcfux.CredentialStore.Test", "zcfux.CredentialStore.Test\zcfux.CredentialStore.Test.csproj", "{CE646D8C-4F37-424A-B1DC-70086E513F0E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.CredentialStore.Vault", "zcfux.CredentialStore.Vault\zcfux.CredentialStore.Vault.csproj", "{FD958FE8-61C4-4F21-9108-CC9EEAF89322}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zcfux.CredentialStore.Vault", "zcfux.CredentialStore.Vault\zcfux.CredentialStore.Vault.csproj", "{FD958FE8-61C4-4F21-9108-CC9EEAF89322}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.CredentialStore.SQLite", "zcfux.CredentialStore.SQLite\zcfux.CredentialStore.SQLite.csproj", "{99030086-001E-455E-8B3F-241BF8E8F77C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -321,6 +323,10 @@ Global
 		{FD958FE8-61C4-4F21-9108-CC9EEAF89322}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FD958FE8-61C4-4F21-9108-CC9EEAF89322}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FD958FE8-61C4-4F21-9108-CC9EEAF89322}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99030086-001E-455E-8B3F-241BF8E8F77C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99030086-001E-455E-8B3F-241BF8E8F77C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99030086-001E-455E-8B3F-241BF8E8F77C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99030086-001E-455E-8B3F-241BF8E8F77C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

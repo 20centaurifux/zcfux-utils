@@ -21,7 +21,6 @@
  ***************************************************************************/
 using LinqToDB;
 using LinqToDB.Configuration;
-using LinqToDB.Data;
 using Microsoft.Data.Sqlite;
 
 namespace zcfux.KeyValueStore.Persistent;
@@ -126,12 +125,6 @@ internal sealed class Db : IDisposable
     {
         using (var cmd = _writerConnection.CreateCommand())
         {
-            cmd.CommandText = "CREATE TABLE Revision (Version INT NOT NULL)";
-            cmd.ExecuteNonQuery();
-
-            cmd.CommandText = "INSERT INTO Revision (Version) VALUES (1)";
-            cmd.ExecuteNonQuery();
-
             cmd.CommandText = @"CREATE TABLE Association (
                                   Key VARCHAR(512) NOT NULL,
                                   Hash CHAR(64) NOT NULL,
@@ -141,10 +134,16 @@ internal sealed class Db : IDisposable
 
             cmd.CommandText = @"CREATE TABLE Blob (
                                   Hash CHAR(64) NOT NULL,
-                                  Length INT NOT NULL,
+                                  Length INTEGER NOT NULL,
                                   Contents BLOB,
                                   PRIMARY KEY (Hash))";
 
+            cmd.ExecuteNonQuery();
+
+            cmd.CommandText = "CREATE TABLE Revision (Version INTEGER PRIMARY KEY)";
+            cmd.ExecuteNonQuery();
+
+            cmd.CommandText = "INSERT INTO Revision (Version) VALUES (1)";
             cmd.ExecuteNonQuery();
         }
     }

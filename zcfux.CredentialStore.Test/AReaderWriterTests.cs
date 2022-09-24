@@ -151,6 +151,6 @@ public abstract class AReaderWriterTests
 
         Assert.Throws<SecretNotFoundException>(() => reader.Read("/user"));
     }
-    
+
     protected abstract IStore CreateAndSetupStore();
 }

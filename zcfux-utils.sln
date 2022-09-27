@@ -107,7 +107,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zcfux.CredentialStore.Test"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zcfux.CredentialStore.Vault", "zcfux.CredentialStore.Vault\zcfux.CredentialStore.Vault.csproj", "{FD958FE8-61C4-4F21-9108-CC9EEAF89322}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.CredentialStore.SQLite", "zcfux.CredentialStore.SQLite\zcfux.CredentialStore.SQLite.csproj", "{99030086-001E-455E-8B3F-241BF8E8F77C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zcfux.CredentialStore.SQLite", "zcfux.CredentialStore.SQLite\zcfux.CredentialStore.SQLite.csproj", "{99030086-001E-455E-8B3F-241BF8E8F77C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zcfux.Telemetry", "zcfux.Telemetry\zcfux.Telemetry.csproj", "{8795302F-5F76-4C82-B183-408367D356F4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Telemetry.MQTT", "zcfux.Telemetry.MQTT\zcfux.Telemetry.MQTT.csproj", "{5192CECA-5D88-4430-9D61-E26FF162956D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -327,6 +331,14 @@ Global
 		{99030086-001E-455E-8B3F-241BF8E8F77C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{99030086-001E-455E-8B3F-241BF8E8F77C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{99030086-001E-455E-8B3F-241BF8E8F77C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8795302F-5F76-4C82-B183-408367D356F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8795302F-5F76-4C82-B183-408367D356F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8795302F-5F76-4C82-B183-408367D356F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8795302F-5F76-4C82-B183-408367D356F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5192CECA-5D88-4430-9D61-E26FF162956D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5192CECA-5D88-4430-9D61-E26FF162956D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5192CECA-5D88-4430-9D61-E26FF162956D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5192CECA-5D88-4430-9D61-E26FF162956D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

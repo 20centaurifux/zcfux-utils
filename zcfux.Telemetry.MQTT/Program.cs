@@ -1,10 +1,9 @@
 ﻿using zcfux.Logging;
 using zcfux.Telemetry.Device;
-using zcfux.Telemetry.MQTT.Device;
 
 namespace zcfux.Telemetry.MQTT
 {
-    internal partial class Program
+    public class Program
     {
         static class Domains
         {
@@ -29,8 +28,9 @@ namespace zcfux.Telemetry.MQTT
         public interface IBulb
         {
             IPowerApi Power { get; }
-        }
 
+            void Test();
+        }
 
         sealed class PowerImpl : IPowerApi, IConnected
         {
@@ -70,22 +70,28 @@ namespace zcfux.Telemetry.MQTT
 
         static void Main(string[] args)
         {
-            var connectionOptions = new Device.OptionsBuilder()
-                .WithDomain(Domains.Device)
-                .WithKind(Kinds.Bulb)
-                .WithId(23)
+            var connectionOptions = new ConnectionOptionsBuilder()
                 .WithClientOptions(new ClientOptionsBuilder()
-                    .WithoutTls()
+                    .WithLastWill(new LastWillOptionsBuilder()
+                        .WithDomain(Domains.Device)
+                        .WithKind(Kinds.Bulb)
+                        .WithId(23)
+                        .WithMessageOptions(new MessageOptions(Retain: true, TimeToLive: TimeSpan.Zero))
+                        .Build())
                     .Build())
-                .WithMessageQueue(new MemoryMessageQueue(1))
+                .WithMessageQueue(new MemoryMessageQueue(50))
                 .WithLogger(Factory.FromAssembly("zcfux.Logging", "zcfux.Logging.Console.Writer"))
+                .WithCleanupRetainedMessages()
                 .Build();
 
             using (var connection = new Connection(connectionOptions))
             {
                 connection.ConnectAsync().Wait();
 
-                var deviceOptions = new Telemetry.Device.OptionsBuilder()
+                var deviceOptions = new OptionsBuilder()
+                    .WithDomain(Domains.Device)
+                    .WithKind(Kinds.Bulb)
+                    .WithId(23)
                     .WithConnection(connection)
                     .WithSerializer(new Serializer())
                     .WithLogger(Factory.FromAssembly("zcfux.Logging", "zcfux.Logging.Console.Writer"))
@@ -93,20 +99,6 @@ namespace zcfux.Telemetry.MQTT
 
                 using (var bulb = new Bulb(deviceOptions))
                 {
-                    Console.WriteLine("Disconnecting");
-
-                    connection.DisconnectAsync().Wait();
-
-                    Console.WriteLine("Test");
-
-                    bulb.Test();
-
-                    Console.ReadLine();
-
-                    Console.WriteLine("Connecting");
-
-                    connection.ConnectAsync().Wait();
-
                     Console.ReadLine();
                 }
 

@@ -19,16 +19,12 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Telemetry.Device;
 
-public sealed class ApiMessageEventArgs : EventArgs
+namespace zcfux.Telemetry;
+
+public enum EDeviceStatus
 {
-    public string Api { get; }
-
-    public string Topic { get; }
-
-    public byte[]? Payload { get; }
-
-    public ApiMessageEventArgs(string api, string topic, byte[]? payload)
-        => (Api, Topic, Payload) = (api, topic, payload);
+    Offline,
+    Connecting,
+    Online
 }

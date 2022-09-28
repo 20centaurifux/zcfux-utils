@@ -21,9 +21,12 @@
  ***************************************************************************/
 namespace zcfux.Telemetry;
 
-public sealed record ApiMessage(
-    DeviceDetails Device,
-    string Api,
-    string Topic,
-    MessageOptions Options,
-    object Payload);
+public sealed class DeviceStatusEventArgs : EventArgs
+{
+    public DeviceDetails Device { get; }
+
+    public EDeviceStatus Status { get; }
+
+    public DeviceStatusEventArgs(DeviceDetails device, EDeviceStatus status)
+        => (Device, Status) = (device, status);
+}

@@ -19,35 +19,29 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using zcfux.Logging;
+namespace zcfux.Telemetry.MQTT;
 
-namespace zcfux.Telemetry.MQTT.Device;
-
-public sealed class OptionsBuilder
+public sealed class LastWillOptionsBuilder
 {
     string? _domain;
     string? _kind;
     int? _id;
-    ClientOptions? _clientOptions;
-    IMessageQueue? _messageQueue;
-    ILogger? _logger;
+    MessageOptions? _messageOptions;
 
-    OptionsBuilder Clone()
+    LastWillOptionsBuilder Clone()
     {
-        var builder = new OptionsBuilder
+        var builder = new LastWillOptionsBuilder
         {
             _domain = _domain,
             _kind = _kind,
             _id = _id,
-            _clientOptions = _clientOptions,
-            _messageQueue = _messageQueue,
-            _logger = _logger
+            _messageOptions = _messageOptions
         };
 
         return builder;
     }
 
-    public OptionsBuilder WithDomain(string domain)
+    public LastWillOptionsBuilder WithDomain(string domain)
     {
         var builder = Clone();
 
@@ -56,7 +50,7 @@ public sealed class OptionsBuilder
         return builder;
     }
 
-    public OptionsBuilder WithKind(string kind)
+    public LastWillOptionsBuilder WithKind(string kind)
     {
         var builder = Clone();
 
@@ -65,7 +59,7 @@ public sealed class OptionsBuilder
         return builder;
     }
 
-    public OptionsBuilder WithId(int id)
+    public LastWillOptionsBuilder WithId(int id)
     {
         var builder = Clone();
 
@@ -74,44 +68,33 @@ public sealed class OptionsBuilder
         return builder;
     }
 
-    public OptionsBuilder WithClientOptions(ClientOptions clientOptions)
+    public LastWillOptionsBuilder WithDevice(DeviceDetails device)
     {
         var builder = Clone();
 
-        builder._clientOptions = clientOptions;
+        builder._domain = device.Domain;
+        builder._kind = device.Kind;
+        builder._id = device.Id;
 
         return builder;
     }
 
-    public OptionsBuilder WithMessageQueue(IMessageQueue messageQueue)
+    public LastWillOptionsBuilder WithMessageOptions(MessageOptions messageOptions)
     {
         var builder = Clone();
 
-        builder._messageQueue = messageQueue;
+        builder._messageOptions = messageOptions;
 
         return builder;
     }
 
-    public OptionsBuilder WithLogger(ILogger? logger)
-    {
-        var builder = Clone();
-
-        builder._logger = logger;
-
-        return builder;
-    }
-
-    public Options Build()
+    public LastWillOptions Build()
     {
         ThrowIfIncomplete();
 
-        return new Options(
-            _domain!,
-            _kind!,
-            _id!.Value,
-            _clientOptions!,
-            _messageQueue!,
-            _logger);
+        return new LastWillOptions(
+            new DeviceDetails(_domain!, _kind!, _id!.Value),
+            _messageOptions!);
     }
 
     void ThrowIfIncomplete()
@@ -131,14 +114,9 @@ public sealed class OptionsBuilder
             throw new ArgumentException("Id cannot be null.");
         }
 
-        if (_clientOptions == null)
+        if (_messageOptions == null)
         {
-            throw new ArgumentException("ClientOptions cannot be null.");
-        }
-
-        if (_messageQueue == null)
-        {
-            throw new ArgumentException("MessageQueue cannot be null.");
+            throw new ArgumentException("MessageOptions cannot be null.");
         }
     }
 }

@@ -24,6 +24,7 @@ using zcfux.Logging;
 namespace zcfux.Telemetry.Device;
 
 public sealed record Options(
+    DeviceDetails Device,
     IConnection Connection,
     ISerializer Serializer,
     ILogger? Logger);

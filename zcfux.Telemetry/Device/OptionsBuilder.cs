@@ -25,6 +25,9 @@ namespace zcfux.Telemetry.Device
 {
     public sealed class OptionsBuilder
     {
+        string? _domain;
+        string? _kind;
+        int? _id;
         IConnection? _connection;
         ISerializer? _serializer;
         ILogger? _logger;
@@ -33,6 +36,9 @@ namespace zcfux.Telemetry.Device
         {
             var builder = new OptionsBuilder
             {
+                _domain = _domain,
+                _kind = _kind,
+                _id = _id,
                 _connection = _connection,
                 _serializer = _serializer,
                 _logger = _logger
@@ -41,11 +47,40 @@ namespace zcfux.Telemetry.Device
             return builder;
         }
 
-        public OptionsBuilder WithSerializer(ISerializer serializer)
+        public OptionsBuilder WithDomain(string domain)
         {
             var builder = Clone();
 
-            builder._serializer = serializer;
+            builder._domain = domain;
+
+            return builder;
+        }
+
+        public OptionsBuilder WithKind(string kind)
+        {
+            var builder = Clone();
+
+            builder._kind = kind;
+
+            return builder;
+        }
+
+        public OptionsBuilder WithId(int id)
+        {
+            var builder = Clone();
+
+            builder._id = id;
+
+            return builder;
+        }
+
+        public OptionsBuilder WithDevice(DeviceDetails device)
+        {
+            var builder = Clone();
+
+            builder._domain = device.Domain;
+            builder._kind = device.Kind;
+            builder._id = device.Id;
 
             return builder;
         }
@@ -55,6 +90,15 @@ namespace zcfux.Telemetry.Device
             var builder = Clone();
 
             builder._connection = connection;
+
+            return builder;
+        }
+
+        public OptionsBuilder WithSerializer(ISerializer serializer)
+        {
+            var builder = Clone();
+
+            builder._serializer = serializer;
 
             return builder;
         }
@@ -73,6 +117,7 @@ namespace zcfux.Telemetry.Device
             ThrowIfIncomplete();
 
             return new Options(
+                new DeviceDetails(_domain!, _kind!, _id!.Value),
                 _connection!,
                 _serializer!,
                 _logger);
@@ -80,6 +125,21 @@ namespace zcfux.Telemetry.Device
 
         void ThrowIfIncomplete()
         {
+            if (_domain == null)
+            {
+                throw new ArgumentException("Domain cannot be null.");
+            }
+
+            if (_kind == null)
+            {
+                throw new ArgumentException("Kind cannot be null.");
+            }
+
+            if (_id == null)
+            {
+                throw new ArgumentException("Id cannot be null.");
+            }
+
             if (_connection == null)
             {
                 throw new ArgumentException("Connection cannot be null.");

@@ -19,27 +19,12 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Telemetry.Device;
+using zcfux.Logging;
 
-public interface IConnection : IDisposable
-{
-    event EventHandler? Connected;
-    event EventHandler? Disconnected;
-    event EventHandler<ApiMessageEventArgs>? MessageReceived;
+namespace zcfux.Telemetry.MQTT;
 
-    string Domain { get; }
-
-    string Kind { get; }
-
-    int Id { get; }
-
-    bool IsConnected { get; }
-
-    Task ConnectAsync();
-
-    Task DisconnectAsync();
-
-    Task SendStatusAsync(EStatus status, CancellationToken cancellationToken);
-
-    Task SendApiMessageAsync(ApiMessage message, CancellationToken cancellationToken);
-}
+public sealed record ConnectionOptions(
+    ClientOptions ClientOptions,
+    IMessageQueue MessageQueue,
+    ILogger? Logger,
+    bool CleanupRetainedMessages);

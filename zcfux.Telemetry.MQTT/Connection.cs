@@ -22,18 +22,18 @@
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Protocol;
+using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using zcfux.Logging;
-using zcfux.Telemetry.Device;
 
-namespace zcfux.Telemetry.MQTT.Device;
+namespace zcfux.Telemetry.MQTT;
 
 public class Connection : IConnection
 {
     static readonly MqttFactory Factory = new();
 
     static readonly Regex ApiTopicRegex = new Regex(
-        "^[a-z0-9]+/[a-z0-9]+/[0-9]+/a/([a-z0-9]+)/i/([a-z0-9]+)",
+        "^[a-z0-9]+/[a-z0-9]+/[0-9]+/a/([a-z0-9]+)/</([a-z0-9]+)",
         RegexOptions.IgnoreCase);
 
     static readonly ISerializer Serializer = new Serializer();
@@ -48,27 +48,30 @@ public class Connection : IConnection
 
     readonly IMessageQueue _messageQueue;
 
-    readonly object _taskLock = new();
-    Task? _task;
+    readonly bool _cleanupRetainedMessages;
+
+    readonly object sendTaskLock = new();
+    Task? _sendTask;
 
     long _connected = Offline;
-    readonly AutoResetEvent _connectionEvent = new AutoResetEvent(false);
+    readonly AutoResetEvent _connectionEvent = new(false);
+
+    readonly ConcurrentBag<MqttApplicationMessage> _retainedMessages = new();
 
     public event EventHandler? Connected;
     public event EventHandler? Disconnected;
-    public event EventHandler<ApiMessageEventArgs>? MessageReceived;
+    public event EventHandler<ApiMessageEventArgs>? ApiMessageReceived;
+    public event EventHandler<DeviceStatusEventArgs>? DeviceStatusReceived;
 
     public bool IsConnected => Interlocked.Read(ref _connected) == Online;
 
-    public string Domain { get; }
+    public string ClientId => _clientOptions.ClientId;
 
-    public string Kind { get; }
-
-    public int Id { get; }
-
-    public Connection(Options options)
+    public Connection(ConnectionOptions options)
     {
-        (Domain, Kind, Id, _logger) = (options.Domain, options.Kind, options.Id, options.Logger);
+        _logger = options.Logger;
+        _messageQueue = options.MessageQueue;
+        _cleanupRetainedMessages = options.CleanupRetainedMessages;
 
         _clientOptions = BuildMqttClientOptions(options.ClientOptions);
 
@@ -77,20 +80,15 @@ public class Connection : IConnection
         _client.ConnectedAsync += ClientConnected;
         _client.DisconnectedAsync += ClientDisconnected;
         _client.ApplicationMessageReceivedAsync += ApplicationMessageReceivedAsync;
-
-        _messageQueue = options.MessageQueue;
     }
 
-    MqttClientOptions BuildMqttClientOptions(ClientOptions options)
+    static MqttClientOptions BuildMqttClientOptions(ClientOptions options)
     {
         var builder = Factory.CreateClientOptionsBuilder()
             .WithTcpServer(options.Address, options.Port)
             .WithTimeout(options.Timeout)
             .WithProtocolVersion(MQTTnet.Formatter.MqttProtocolVersion.V500)
-            .WithWillTopic($"{Domain}/{Kind}/{Id}/status")
-            .WithWillPayload(Convert.ToInt32(EStatus.Offline).ToString())
-            .WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
-            .WithWillRetain()
+            .WithSessionExpiryInterval(0)
             .WithCleanSession();
 
         if (options.Tls)
@@ -101,49 +99,65 @@ public class Connection : IConnection
             });
         }
 
+        if (options.LastWill is { } lwt)
+        {
+            builder = builder
+                .WithWillTopic($"{lwt.Device.Domain}/{lwt.Device.Kind}/{lwt.Device.Id}/status")
+                .WithWillPayload(Convert.ToInt32(EDeviceStatus.Offline).ToString())
+                .WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
+                .WithWillRetain(lwt.MessageOptions.Retain);
+        }
+
         return builder.Build();
     }
 
     public Task ConnectAsync()
         => _client.ConnectAsync(_clientOptions);
 
-    public Task DisconnectAsync()
+    public async Task DisconnectAsync()
     {
+        await DeleteRetainedMessagesAsync();
+
         var opts = Factory.CreateClientDisconnectOptionsBuilder()
             .WithReason(MqttClientDisconnectReason.DisconnectWithWillMessage)
             .Build();
 
-        return _client.DisconnectAsync(opts);
+        await _client.DisconnectAsync(opts);
     }
 
-    async Task ClientConnected(MqttClientConnectedEventArgs e)
+    public async Task DeleteRetainedMessagesAsync()
     {
-        await _client.SubscribeAsync($"{Domain}/{Kind}/{Id}/a/+/i/+");
+        var tasks = _retainedMessages
+            .Select(msg => _client.PublishAsync(msg, _cancellationTokenSource.Token))
+            .ToArray();
 
+        await Task.WhenAll(tasks);
+    }
+
+    Task ClientConnected(MqttClientConnectedEventArgs e)
+    {
         Interlocked.Exchange(ref _connected, Online);
 
         _connectionEvent.Set();
 
         Connected?.Invoke(this, EventArgs.Empty);
 
-        StartTask();
+        StartSendTask();
+
+        return Task.CompletedTask;
     }
 
-    void StartTask()
+    void StartSendTask()
     {
-        lock (_taskLock)
+        lock (sendTaskLock)
         {
-            if (_task == null)
+            if (_sendTask == null)
             {
-                _task = Task.Run(async () =>
+                _sendTask = Task.Run(async () =>
                 {
                     while (!_cancellationTokenSource.IsCancellationRequested)
                     {
-                        _logger?.Debug(
-                            "Device (domain=`{0}', kind=`{1}', id={2}) is waiting for messages to send.",
-                            Domain,
-                            Kind,
-                            Id);
+                        _logger?.Debug("Client `{0}' is waiting for messages to send.", ClientId);
 
                         if (_client.IsConnected
                             || _connectionEvent.WaitOne(TimeSpan.FromSeconds(1)))
@@ -153,13 +167,16 @@ public class Connection : IConnection
                             if (message is { })
                             {
                                 _logger?.Debug(
-                                    "Device (domain=`{0}', kind=`{1}', id={2}) sends message to topic `{3}'.",
-                                    Domain,
-                                    Kind,
-                                    Id,
-                                    message.Topic);
+                                    "Client `{0}' sends message to topic `{1}' (size={2}).",
+                                    ClientId,
+                                    message.Topic,
+                                    message.Payload.Length);
 
-                                _logger?.Trace("Topic `{0}' => `{1}'", message.Topic, message.ConvertPayloadToString());
+                                _logger?.Trace(
+                                    "Sending message (client=`{0}', topic=`{1}'): {2}",
+                                    ClientId,
+                                    message.Topic,
+                                    message.ConvertPayloadToString());
 
                                 try
                                 {
@@ -175,11 +192,7 @@ public class Connection : IConnection
                         }
                         else
                         {
-                            _logger?.Debug(
-                                "Cannot send message, device (domain=`{0}', kind=`{1}', id={2}) is offline.",
-                                Domain,
-                                Kind,
-                                Id);
+                            _logger?.Debug("Client `{0}' can't send message, device is offline.", ClientId);
                         }
                     }
                 });
@@ -200,9 +213,11 @@ public class Connection : IConnection
     {
         var m = ApiTopicRegex.Match(e.ApplicationMessage.Topic);
 
-        if (m.Success)
+        if (m.Success
+            && e.ApplicationMessage.Payload != null
+            && e.ApplicationMessage.Payload.Any())
         {
-            MessageReceived?.Invoke(this, new ApiMessageEventArgs(
+            ApiMessageReceived?.Invoke(this, new ApiMessageEventArgs(
                 m.Groups[1].Value,
                 m.Groups[2].Value,
                 e.ApplicationMessage.Payload));
@@ -210,37 +225,63 @@ public class Connection : IConnection
 
         return Task.CompletedTask;
     }
-
-    public Task SendStatusAsync(EStatus status, CancellationToken cancellationToken)
+   
+    public Task SendDeviceStatusAsync(DeviceStatusMessage message, CancellationToken cancellationToken)
     {
         var mqttMessage = new MqttApplicationMessageBuilder()
-            .WithTopic($"{Domain}/{Kind}/{Id}/status")
-            .WithPayload(Convert.ToInt32(status).ToString())
+            .WithTopic($"{message.Device.Domain}/{message.Device.Kind}/{message.Device.Id}/status")
+            .WithPayload(Convert.ToInt32(message.Status).ToString())
             .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
             .WithRetainFlag()
             .Build();
 
-        if (!_messageQueue.TryEnqueue(mqttMessage, TimeSpan.Zero))
-        {
-            _logger?.Warn(
-                "Couldn't enqeueue status message (domain=`{0}', kind=`{1}', id={2}, status=`{3}').",
-                Domain,
-                Kind,
-                Id,
-                status);
-        }
+        return _client.PublishAsync(mqttMessage, cancellationToken);
+    }
 
-        return Task.CompletedTask;
+    public async Task SendApiInfoAsync(ApiInfoMessage message, CancellationToken cancellationToken)
+    {
+        var ((domain, kind, id), topic, version)= message;
+
+        var builder = new MqttApplicationMessageBuilder()
+            .WithTopic($"{domain}/{kind}/{id}/a/{topic}/version")
+            .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
+            .WithRetainFlag();
+
+        await _client.PublishAsync(
+            builder
+                .WithPayload(version)
+                .Build(),
+            cancellationToken);
+
+        if (_cleanupRetainedMessages)
+        {
+            _retainedMessages.Add(
+                builder
+                    .WithPayload(Array.Empty<byte>())
+                    .Build());
+        }
+    }
+
+    public Task SubscribeToApiMessageAsync(DeviceDetails device, EDirection direction, CancellationToken cancellationToken)
+    {
+        var (domain, kind, id) = device;
+
+        var topic = $"{domain}/{kind}/{id}/a/+/{((direction == EDirection.In) ? "<" : ">")}/+";
+
+        return _client.SubscribeAsync(
+            topic,
+            MqttQualityOfServiceLevel.AtLeastOnce,
+            cancellationToken);
     }
 
     public Task SendApiMessageAsync(ApiMessage message, CancellationToken cancellationToken)
     {
-        var (api, topic, options, payload) = message;
+        var ((domain, kind, id), api, topic, options, payload) = message;
 
         var json = Serializer.Serialize(payload);
 
         var mqttMessage = new MqttApplicationMessageBuilder()
-            .WithTopic($"{Domain}/{Kind}/{Id}/a/{api}/o/{topic}")
+            .WithTopic($"{domain}/{kind}/{id}/a/{api}/>/{topic}")
             .WithPayload(json)
             .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
             .WithRetainFlag(options.Retain)
@@ -249,13 +290,7 @@ public class Connection : IConnection
 
         if (!_messageQueue.TryEnqueue(mqttMessage, options.TimeToLive))
         {
-            _logger?.Warn(
-                "Couldn't enqeueue api message (domain=`{0}', kind=`{1}', id={2}, api=`{3}', topic=`{4}').",
-                Domain,
-                Kind,
-                Id,
-                message.Api,
-                message.Topic);
+            _logger?.Warn("Couldn't enqueue api message (client=`{0}').", ClientId);
         }
 
         return Task.CompletedTask;
@@ -263,10 +298,35 @@ public class Connection : IConnection
 
     public void Dispose()
     {
+        try
+        {
+            DeleteRetainedMessagesAsync().Wait();
+        }
+        catch(Exception ex)
+        {
+            _logger?.Error(ex);
+        }
+
         _client.Dispose();
 
-        _cancellationTokenSource.Cancel();
+        CancelSendTask();
+    }
 
-        Task.WhenAny(_task).Wait();
+    void CancelSendTask()
+    {
+        try
+        {
+            _cancellationTokenSource.Cancel();
+
+            if (_sendTask != null)
+            {
+
+                Task.WhenAny(_sendTask).Wait();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger?.Error(ex);
+        }
     }
 }

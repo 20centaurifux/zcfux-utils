@@ -39,13 +39,15 @@ public class Client : IDisposable
     readonly ISerializer _serializer;
     readonly ILogger? _logger;
 
-    string Kind => _connection.Kind;
+    string Domain { get; }
 
-    int Id => _connection.Id;
+    string Kind { get; }
+
+    int Id { get; }
 
     protected Client(Options options)
     {
-        (_connection, _serializer, _logger) = options;
+        ((Domain, Kind, Id), _connection, _serializer, _logger) = options;
 
         (_apis, _subscriptions, _methods) = RegisterApis();
 
@@ -56,7 +58,7 @@ public class Client : IDisposable
 
         _connection.Connected += Connected;
         _connection.Disconnected += Disconnected;
-        _connection.MessageReceived += MessageReceived;
+        _connection.ApiMessageReceived += MessageReceived;
     }
 
     (IReadOnlyCollection<Api>, IReadOnlyCollection<Task>, IReadOnlyDictionary<string, Method>) RegisterApis()
@@ -184,13 +186,17 @@ public class Client : IDisposable
                         topic,
                         typeof(T).Name);
 
-                    var message = new ApiMessage(
-                        apiTopic,
-                        topic,
-                        options,
-                        current);
+                    if (current != null)
+                    {
+                        var message = new ApiMessage(
+                            new DeviceDetails(Domain, Kind, Id),
+                            apiTopic,
+                            topic,
+                            options,
+                            current);
 
-                    await _connection.SendApiMessageAsync(message, _cancellationTokenSource.Token);
+                        await _connection.SendApiMessageAsync(message, _cancellationTokenSource.Token);
+                    }
 
                     completed = !await enumerator.MoveNextAsync();
                 }
@@ -253,8 +259,23 @@ public class Client : IDisposable
 
         try
         {
+            var device = new DeviceDetails(Domain, Kind, Id);
+
+            var token = _cancellationTokenSource.Token;
+
             _connection
-                .SendStatusAsync(EStatus.Online, _cancellationTokenSource.Token)
+                .SendDeviceStatusAsync(new DeviceStatusMessage(device, EDeviceStatus.Connecting), token)
+                .Wait();
+
+            var tasks = _apis
+                .Select(api => _connection
+                    .SendApiInfoAsync(new ApiInfoMessage(device, api.Topic, api.Version), token))
+                .ToArray();
+
+            Task.WaitAll(tasks);
+
+            _connection
+                .SendDeviceStatusAsync(new DeviceStatusMessage(device, EDeviceStatus.Online), token)
                 .Wait();
         }
         catch (Exception ex)
@@ -350,7 +371,7 @@ public class Client : IDisposable
     {
         _connection.Connected -= Connected;
         _connection.Disconnected -= Disconnected;
-        _connection.MessageReceived -= MessageReceived;
+        _connection.ApiMessageReceived -= MessageReceived;
 
         _cancellationTokenSource.Cancel();
 

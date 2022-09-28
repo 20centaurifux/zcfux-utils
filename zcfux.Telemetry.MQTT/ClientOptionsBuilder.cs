@@ -31,6 +31,7 @@ public sealed class ClientOptionsBuilder
     bool _tls;
     bool _allowUntrustedCertificates;
     TimeSpan _timeout = TimeSpan.FromSeconds(30);
+    LastWillOptions? _lastWillOptions;
 
     ClientOptionsBuilder Clone()
     {
@@ -40,7 +41,8 @@ public sealed class ClientOptionsBuilder
             _port = _port,
             _tls = _tls,
             _allowUntrustedCertificates = _allowUntrustedCertificates,
-            _timeout = _timeout
+            _timeout = _timeout,
+            _lastWillOptions = _lastWillOptions
         };
 
         return builder;
@@ -100,12 +102,27 @@ public sealed class ClientOptionsBuilder
         return builder;
     }
 
+    public ClientOptionsBuilder WithLastWill(LastWillOptions lastWill)
+    {
+        var builder = Clone();
+
+        builder._lastWillOptions = lastWill;
+
+        return builder;
+    }
+
     public ClientOptions Build()
     {
         var port = _port.GetValueOrDefault(_tls
             ? DefaultTlsPort
             : DefaultPort);
 
-        return new ClientOptions(_address, port, _tls, _allowUntrustedCertificates, _timeout);
+        return new ClientOptions(
+            _address,
+            port,
+            _tls,
+            _allowUntrustedCertificates,
+            _timeout,
+            _lastWillOptions);
     }
 }

@@ -21,9 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Telemetry;
 
-public sealed record ApiMessage(
-    DeviceDetails Device,
-    string Api,
-    string Topic,
-    MessageOptions Options,
-    object Payload);
+public sealed record DeviceDetails(
+    string Domain,
+    string Kind,
+    int Id);

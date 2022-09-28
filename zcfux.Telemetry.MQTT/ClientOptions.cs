@@ -26,4 +26,5 @@ public sealed record ClientOptions(
     int Port,
     bool Tls,
     bool AllowUntrustedCertificates,
-    TimeSpan Timeout);
+    TimeSpan Timeout,
+    LastWillOptions? LastWill);

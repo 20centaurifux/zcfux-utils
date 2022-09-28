@@ -21,9 +21,24 @@
  ***************************************************************************/
 namespace zcfux.Telemetry;
 
-public sealed record ApiMessage(
-    DeviceDetails Device,
-    string Api,
-    string Topic,
-    MessageOptions Options,
-    object Payload);
+public interface IConnection : IDisposable
+{
+    event EventHandler? Connected;
+    event EventHandler? Disconnected;
+    event EventHandler<ApiMessageEventArgs>? ApiMessageReceived;
+    event EventHandler<DeviceStatusEventArgs>? DeviceStatusReceived;
+
+    bool IsConnected { get; }
+
+    Task ConnectAsync();
+
+    Task DisconnectAsync();
+
+    Task SendDeviceStatusAsync(DeviceStatusMessage message, CancellationToken cancellationToken);
+
+    Task SendApiInfoAsync(ApiInfoMessage message, CancellationToken cancellationToken);
+
+    Task SubscribeToApiMessageAsync(DeviceDetails device, EDirection direction, CancellationToken cancellationToken);
+
+    Task SendApiMessageAsync(ApiMessage message, CancellationToken cancellationToken);
+}

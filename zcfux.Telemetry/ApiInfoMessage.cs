@@ -19,14 +19,20 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using zcfux.Logging;
+namespace zcfux.Telemetry;
 
-namespace zcfux.Telemetry.MQTT.Device;
-
-public sealed record Options(
-    string Domain,
-    string Kind,
-    int Id,
-    ClientOptions ClientOptions,
-    IMessageQueue MessageQueue,
-    ILogger? Logger);
+public sealed record ApiInfoMessage(
+    DeviceDetails Device,
+    string Topic,
+    string Version)
+{
+    public ApiInfoMessage(
+        string domain,
+        string kind,
+        int id,
+        string topic,
+        string version)
+        : this(new DeviceDetails(domain, kind, id), topic, version)
+    {
+    }
+}

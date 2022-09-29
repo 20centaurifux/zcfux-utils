@@ -18,10 +18,10 @@ namespace zcfux.Telemetry.MQTT
         [Api(Topic = "pwr", Version = "1.0")]
         public interface IPowerApi
         {
-            [Out(Topic = "status", Retain = false)]
+            [Event(Topic = "status", Retain = true)]
             IAsyncEnumerable<bool> On { get; }
 
-            [In(Topic = "status")]
+            [Command(Topic = "status", TimeToLive = 5)]
             void ChangeStatus(bool on);
         }
 
@@ -49,22 +49,17 @@ namespace zcfux.Telemetry.MQTT
 
             public void Connected()
             {
-                _producer.Publish(true);
+                _producer.Publish(_state);
             }
         }
 
-        public sealed class Bulb : Client, IBulb
+        public sealed class Bulb : Client
         {
             public IPowerApi Power { get; } = new PowerImpl();
 
-            public Bulb(Telemetry.Device.Options options)
+            public Bulb(Options options)
                 : base(options)
             {
-            }
-
-            public void Test()
-            {
-                Power.ChangeStatus(true);
             }
         }
 
@@ -72,11 +67,12 @@ namespace zcfux.Telemetry.MQTT
         {
             var connectionOptions = new ConnectionOptionsBuilder()
                 .WithClientOptions(new ClientOptionsBuilder()
+                    .WithClientId("1")
                     .WithLastWill(new LastWillOptionsBuilder()
                         .WithDomain(Domains.Device)
                         .WithKind(Kinds.Bulb)
                         .WithId(23)
-                        .WithMessageOptions(new MessageOptions(Retain: true, TimeToLive: TimeSpan.Zero))
+                        .WithMessageOptions(new MessageOptions(Retain: true))
                         .Build())
                     .Build())
                 .WithMessageQueue(new MemoryMessageQueue(50))
@@ -86,8 +82,6 @@ namespace zcfux.Telemetry.MQTT
 
             using (var connection = new Connection(connectionOptions))
             {
-                connection.ConnectAsync().Wait();
-
                 var deviceOptions = new OptionsBuilder()
                     .WithDomain(Domains.Device)
                     .WithKind(Kinds.Bulb)
@@ -99,6 +93,8 @@ namespace zcfux.Telemetry.MQTT
 
                 using (var bulb = new Bulb(deviceOptions))
                 {
+                    connection.ConnectAsync().Wait();
+
                     Console.ReadLine();
                 }
 

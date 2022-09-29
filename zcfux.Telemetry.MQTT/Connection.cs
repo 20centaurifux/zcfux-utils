@@ -87,9 +87,12 @@ public class Connection : IConnection
         var builder = Factory.CreateClientOptionsBuilder()
             .WithTcpServer(options.Address, options.Port)
             .WithTimeout(options.Timeout)
+            .WithKeepAlivePeriod(options.KeepAlive)
             .WithProtocolVersion(MQTTnet.Formatter.MqttProtocolVersion.V500)
-            .WithSessionExpiryInterval(0)
-            .WithCleanSession();
+            .WithClientId(options.ClientId)
+            .WithSessionExpiryInterval(options.SessionTimeout)
+            .WithCleanSession(false)
+            .WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce);
 
         if (options.Tls)
         {
@@ -97,6 +100,12 @@ public class Connection : IConnection
             {
                 o.AllowUntrustedCertificates = options.AllowUntrustedCertificates;
             });
+        }
+
+        if (options.Credentials is Credentials credentials)
+        {
+            builder = builder
+                .WithCredentials(credentials.Username, credentials.Password);
         }
 
         if (options.LastWill is { } lwt)
@@ -213,6 +222,12 @@ public class Connection : IConnection
     {
         var m = ApiTopicRegex.Match(e.ApplicationMessage.Topic);
 
+        _logger?.Trace("Message received in `{0}' (size={1}).",
+            e.ApplicationMessage.Topic,
+            (e.ApplicationMessage.Payload == null)
+                ? 0
+                : e.ApplicationMessage.Payload.Length);
+
         if (m.Success
             && e.ApplicationMessage.Payload != null
             && e.ApplicationMessage.Payload.Any())
@@ -262,11 +277,11 @@ public class Connection : IConnection
         }
     }
 
-    public Task SubscribeToApiMessageAsync(DeviceDetails device, EDirection direction, CancellationToken cancellationToken)
+    public Task SubscribeToApiMessagesAsync(DeviceDetails device, string api, EDirection direction, CancellationToken cancellationToken)
     {
         var (domain, kind, id) = device;
 
-        var topic = $"{domain}/{kind}/{id}/a/+/{((direction == EDirection.In) ? "<" : ">")}/+";
+        var topic = $"{domain}/{kind}/{id}/a/{api}/{((direction == EDirection.In) ? "<" : ">")}/+";
 
         return _client.SubscribeAsync(
             topic,
@@ -285,10 +300,10 @@ public class Connection : IConnection
             .WithPayload(json)
             .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
             .WithRetainFlag(options.Retain)
-            .WithMessageExpiryInterval(Convert.ToUInt32(options.TimeToLive.TotalSeconds))
+            .WithMessageExpiryInterval(options.TimeToLive)
             .Build();
 
-        if (!_messageQueue.TryEnqueue(mqttMessage, options.TimeToLive))
+        if (!_messageQueue.TryEnqueue(mqttMessage, message.Options.TimeToLive))
         {
             _logger?.Warn("Couldn't enqueue api message (client=`{0}').", ClientId);
         }

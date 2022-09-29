@@ -19,6 +19,7 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using System.Collections.Concurrent;
 using System.Reflection;
 using zcfux.Logging;
 
@@ -27,13 +28,42 @@ namespace zcfux.Telemetry.Device;
 public class Client : IDisposable
 {
     sealed record Api(Type Type, object Instance, string Topic, string Version);
+
+    sealed class MethodKey
+    {
+        public string Api { get; }
+
+        public string Topic { get; }
+
+        public MethodKey(string api, string topic)
+            => (Api, Topic) = (api, topic);
+
+        public override string ToString()
+            => $"{Api}/{Topic}";
+
+        public override int GetHashCode()
+            => ToString().GetHashCode();
+
+        public override bool Equals(object? obj)
+        {
+            var equals = false;
+
+            if (obj is MethodKey other)
+            {
+                equals = ToString().Equals(other.ToString());
+            }
+
+            return equals;
+        }
+    }
+
     sealed record Method(object Instance, MethodInfo MethodInfo, Type ParameterType);
 
     readonly CancellationTokenSource _cancellationTokenSource = new();
 
     readonly IReadOnlyCollection<Api> _apis;
     readonly IReadOnlyCollection<Task> _subscriptions;
-    readonly IReadOnlyDictionary<string, Method> _methods;
+    readonly IReadOnlyDictionary<MethodKey, Method> _methods;
 
     readonly IConnection _connection;
     readonly ISerializer _serializer;
@@ -61,11 +91,11 @@ public class Client : IDisposable
         _connection.ApiMessageReceived += MessageReceived;
     }
 
-    (IReadOnlyCollection<Api>, IReadOnlyCollection<Task>, IReadOnlyDictionary<string, Method>) RegisterApis()
+    (IReadOnlyCollection<Api>, IReadOnlyCollection<Task>, IReadOnlyDictionary<MethodKey, Method>) RegisterApis()
     {
         var apis = new List<Api>();
         var subscriptions = new List<Task>();
-        var methods = new Dictionary<string, Method>();
+        var methods = new Dictionary<MethodKey, Method>();
 
         _logger?.Debug("Discovering device (kind=`{0}', id={1}) apis.", Kind, Id);
 
@@ -113,7 +143,7 @@ public class Client : IDisposable
 
         foreach (var prop in props)
         {
-            if (prop.GetCustomAttributes(typeof(OutAttribute), false).SingleOrDefault() is OutAttribute attr)
+            if (prop.GetCustomAttributes(typeof(EventAttribute), false).SingleOrDefault() is EventAttribute attr)
             {
                 if (prop.PropertyType.IsGenericType
                     && prop.PropertyType.GetGenericTypeDefinition() == typeof(IAsyncEnumerable<>))
@@ -133,7 +163,7 @@ public class Client : IDisposable
                         attr.Topic,
                         parameterType.Name,
                         attr.Retain,
-                        attr.TimeToLive.TotalSeconds);
+                        attr.TimeToLive);
 
                     var method = typeof(Client)
                         .GetMethod(
@@ -218,7 +248,7 @@ public class Client : IDisposable
         return task;
     }
 
-    IEnumerable<KeyValuePair<string, Method>> RegisterMethods(Api api)
+    IEnumerable<KeyValuePair<MethodKey, Method>> RegisterMethods(Api api)
     {
         _logger?.Debug("Searching for methods (api=`{0}').", api.Topic);
 
@@ -226,7 +256,7 @@ public class Client : IDisposable
 
         foreach (var method in methods)
         {
-            if (method.GetCustomAttributes(typeof(InAttribute), false).SingleOrDefault() is InAttribute attr)
+            if (method.GetCustomAttributes(typeof(CommandAttribute), false).SingleOrDefault() is CommandAttribute attr)
             {
                 var parameterType = method
                     .GetParameters()
@@ -240,12 +270,9 @@ public class Client : IDisposable
                     api.Topic,
                     attr.Topic);
 
-                yield return new KeyValuePair<string, Method>(
-                    $"{api.Topic}/{attr.Topic}",
-                    new Method(
-                        api.Instance,
-                        method,
-                        parameterType));
+                yield return new KeyValuePair<MethodKey, Method>(
+                    new MethodKey(api.Topic, attr.Topic),
+                    new Method(api.Instance, method, parameterType));
             }
         }
     }
@@ -270,9 +297,13 @@ public class Client : IDisposable
             var tasks = _apis
                 .Select(api => _connection
                     .SendApiInfoAsync(new ApiInfoMessage(device, api.Topic, api.Version), token))
-                .ToArray();
+                .ToList();
 
-            Task.WaitAll(tasks);
+            tasks.AddRange(_apis
+                .Select(api => _connection
+                    .SubscribeToApiMessagesAsync(device, api.Topic, EDirection.In, token)));
+
+            Task.WaitAll(tasks.ToArray());
 
             _connection
                 .SendDeviceStatusAsync(new DeviceStatusMessage(device, EDeviceStatus.Online), token)
@@ -327,7 +358,7 @@ public class Client : IDisposable
     void MessageReceived(object? sender, ApiMessageEventArgs e)
     {
         _logger?.Debug(
-            "Message received (device kind=`{0}', id={1}, api=`{2}', topic=`{3}', payload size={4}).",
+            "Processing message (device kind=`{0}', id={1}, api=`{2}', topic=`{3}', size={4}).",
             Kind,
             Id,
             e.Api,
@@ -337,7 +368,7 @@ public class Client : IDisposable
                 : 0);
 
         if (e.Payload is { }
-            && _methods.TryGetValue($"{e.Api}/{e.Topic}", out var method))
+            && _methods.TryGetValue(new MethodKey(e.Api, e.Topic), out var method))
         {
             try
             {

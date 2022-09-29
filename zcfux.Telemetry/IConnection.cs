@@ -38,7 +38,7 @@ public interface IConnection : IDisposable
 
     Task SendApiInfoAsync(ApiInfoMessage message, CancellationToken cancellationToken);
 
-    Task SubscribeToApiMessageAsync(DeviceDetails device, EDirection direction, CancellationToken cancellationToken);
+    Task SubscribeToApiMessagesAsync(DeviceDetails device, string api, EDirection direction, CancellationToken cancellationToken);
 
     Task SendApiMessageAsync(ApiMessage message, CancellationToken cancellationToken);
 }

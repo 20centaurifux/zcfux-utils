@@ -26,21 +26,21 @@ namespace zcfux.Telemetry.MQTT;
 
 public sealed class MemoryMessageQueue : IMessageQueue
 {
-    sealed record Item(MqttApplicationMessage Message, TimeSpan TimeToLive, Stopwatch? Stopwatch)
+    sealed record Item(MqttApplicationMessage Message, uint SecondsToLive, Stopwatch? Stopwatch)
     {
         public bool IsExpired
-            => Stopwatch is { } && (Stopwatch.Elapsed > TimeToLive);
+            => Stopwatch is { } && (Stopwatch.Elapsed.TotalSeconds > SecondsToLive);
     }
 
     readonly object _lock = new();
     readonly Queue<Item> _items = new();
-    readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+    readonly SemaphoreSlim _semaphore = new(0);
     readonly int _limit;
 
     public MemoryMessageQueue(int Limit)
         => _limit = Limit;
 
-    public bool TryEnqueue(MqttApplicationMessage message, TimeSpan timeToLive)
+    public bool TryEnqueue(MqttApplicationMessage message, uint secondsToLive)
     {
         var success = false;
 
@@ -50,8 +50,8 @@ public sealed class MemoryMessageQueue : IMessageQueue
             {
                 _items.Enqueue(new Item(
                     message,
-                    timeToLive,
-                    (timeToLive == TimeSpan.Zero)
+                    secondsToLive,
+                    (secondsToLive == 0)
                         ? null
                         : Stopwatch.StartNew()));
 

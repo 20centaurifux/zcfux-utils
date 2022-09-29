@@ -23,4 +23,4 @@ namespace zcfux.Telemetry;
 
 public sealed record MessageOptions(
     bool Retain,
-    TimeSpan TimeToLive);
+    uint TimeToLive = 0);

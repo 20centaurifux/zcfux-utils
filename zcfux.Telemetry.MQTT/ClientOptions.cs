@@ -27,4 +27,8 @@ public sealed record ClientOptions(
     bool Tls,
     bool AllowUntrustedCertificates,
     TimeSpan Timeout,
+    TimeSpan KeepAlive,
+    string ClientId,
+    uint SessionTimeout,
+    Credentials? Credentials,
     LastWillOptions? LastWill);

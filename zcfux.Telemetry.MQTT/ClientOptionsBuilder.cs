@@ -30,7 +30,11 @@ public sealed class ClientOptionsBuilder
     int? _port;
     bool _tls;
     bool _allowUntrustedCertificates;
-    TimeSpan _timeout = TimeSpan.FromSeconds(30);
+    TimeSpan _timeout = TimeSpan.FromSeconds(15);
+    TimeSpan _keepAlive = TimeSpan.FromSeconds(30);
+    string _clientId = Guid.NewGuid().ToString();
+    uint _sessionTimeout = 60 * 5;
+    Credentials? _credentials;
     LastWillOptions? _lastWillOptions;
 
     ClientOptionsBuilder Clone()
@@ -42,6 +46,10 @@ public sealed class ClientOptionsBuilder
             _tls = _tls,
             _allowUntrustedCertificates = _allowUntrustedCertificates,
             _timeout = _timeout,
+            _keepAlive = _keepAlive,
+            _clientId = _clientId,
+            _sessionTimeout = _sessionTimeout,
+            _credentials = _credentials,
             _lastWillOptions = _lastWillOptions
         };
 
@@ -102,6 +110,44 @@ public sealed class ClientOptionsBuilder
         return builder;
     }
 
+    public ClientOptionsBuilder WithKeepAlive(TimeSpan keepAlive)
+    {
+        var builder = Clone();
+
+        builder._keepAlive = keepAlive;
+
+        return builder;
+    }
+
+    public ClientOptionsBuilder WithClientId(string clientId)
+    {
+        var builder = Clone();
+
+        builder._clientId = clientId;
+
+        return builder;
+    }
+
+    public ClientOptionsBuilder WithSessionTimeout(uint timeout)
+    {
+        var builder = Clone();
+
+        builder._sessionTimeout = timeout;
+
+        return builder;
+    }
+
+    public ClientOptionsBuilder WithCredentials(Credentials credentials)
+    {
+        var builder = Clone();
+
+        builder._credentials = credentials;
+
+        return builder;
+    }
+    public ClientOptionsBuilder WithCredentials(string username, string password)
+        => WithCredentials(new Credentials(username, password));
+
     public ClientOptionsBuilder WithLastWill(LastWillOptions lastWill)
     {
         var builder = Clone();
@@ -123,6 +169,10 @@ public sealed class ClientOptionsBuilder
             _tls,
             _allowUntrustedCertificates,
             _timeout,
+            _keepAlive,
+            _clientId,
+            _sessionTimeout,
+            _credentials,
             _lastWillOptions);
     }
 }

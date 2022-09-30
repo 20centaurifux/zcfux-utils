@@ -29,7 +29,7 @@ public sealed class ConnectionOptionsBuilder
     IMessageQueue? _messageQueue;
     ILogger? _logger;
     bool _cleanupRetainedMessages;
-
+    TimeSpan? _reconnect;
     ConnectionOptionsBuilder Clone()
     {
         var builder = new ConnectionOptionsBuilder
@@ -37,7 +37,8 @@ public sealed class ConnectionOptionsBuilder
             _clientOptions = _clientOptions,
             _messageQueue = _messageQueue,
             _logger = _logger,
-            _cleanupRetainedMessages = _cleanupRetainedMessages
+            _cleanupRetainedMessages = _cleanupRetainedMessages,
+            _reconnect = _reconnect
         };
 
         return builder;
@@ -78,6 +79,14 @@ public sealed class ConnectionOptionsBuilder
 
         return builder;
     }
+    public ConnectionOptionsBuilder WithReconnect(TimeSpan? reconnect)
+    {
+        var builder = Clone();
+
+        builder._reconnect = reconnect;
+
+        return builder;
+    }
 
     public ConnectionOptions Build()
     {
@@ -87,7 +96,8 @@ public sealed class ConnectionOptionsBuilder
             _clientOptions!,
             _messageQueue!,
             _logger,
-            _cleanupRetainedMessages);
+            _cleanupRetainedMessages,
+            _reconnect);
     }
 
     void ThrowIfIncomplete()

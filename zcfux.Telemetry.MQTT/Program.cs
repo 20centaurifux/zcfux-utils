@@ -1,5 +1,4 @@
-﻿using zcfux.Logging;
-using zcfux.Telemetry.Device;
+﻿using zcfux.Telemetry.Device;
 
 namespace zcfux.Telemetry.MQTT
 {
@@ -22,14 +21,7 @@ namespace zcfux.Telemetry.MQTT
             IAsyncEnumerable<bool> On { get; }
 
             [Command(Topic = "status", TimeToLive = 5)]
-            void ChangeStatus(bool on);
-        }
-
-        public interface IBulb
-        {
-            IPowerApi Power { get; }
-
-            void Test();
+            Task ChangeStatus(bool on);
         }
 
         sealed class PowerImpl : IPowerApi, IConnected
@@ -40,11 +32,13 @@ namespace zcfux.Telemetry.MQTT
 
             public IAsyncEnumerable<bool> On => _producer;
 
-            public void ChangeStatus(bool on)
+            public Task ChangeStatus(bool on)
             {
                 _state = on;
 
                 _producer.Publish(on);
+
+                return Task.CompletedTask;
             }
 
             public void Connected()
@@ -63,7 +57,7 @@ namespace zcfux.Telemetry.MQTT
             }
         }
 
-        static void Main(string[] args)
+        static async Task RunClientAsync(CancellationToken cancellationToken)
         {
             var connectionOptions = new ConnectionOptionsBuilder()
                 .WithClientOptions(new ClientOptionsBuilder()
@@ -76,30 +70,98 @@ namespace zcfux.Telemetry.MQTT
                         .Build())
                     .Build())
                 .WithMessageQueue(new MemoryMessageQueue(50))
-                .WithLogger(Factory.FromAssembly("zcfux.Logging", "zcfux.Logging.Console.Writer"))
+                .WithReconnect(TimeSpan.FromSeconds(30))
+                .WithLogger(Logging.Factory.FromAssembly("zcfux.Logging", "zcfux.Logging.Console.Writer"))
                 .WithCleanupRetainedMessages()
                 .Build();
 
             using (var connection = new Connection(connectionOptions))
             {
-                var deviceOptions = new OptionsBuilder()
+                var options = new OptionsBuilder()
                     .WithDomain(Domains.Device)
                     .WithKind(Kinds.Bulb)
                     .WithId(23)
-                    .WithConnection(connection)
                     .WithSerializer(new Serializer())
-                    .WithLogger(Factory.FromAssembly("zcfux.Logging", "zcfux.Logging.Console.Writer"))
+                    .WithConnection(connection)
+                    .WithLogger(Logging.Factory.FromAssembly("zcfux.Logging", "zcfux.Logging.Console.Writer"))
                     .Build();
 
-                using (var bulb = new Bulb(deviceOptions))
+                using (var bulb = new Bulb(options))
                 {
-                    connection.ConnectAsync().Wait();
+                    await connection.ConnectAsync(CancellationToken.None);
 
-                    Console.ReadLine();
+                    while (!cancellationToken.IsCancellationRequested)
+                    {
+                        try
+                        {
+                            await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
+                        }
+                        catch { }
+                    }
                 }
 
-                Console.WriteLine("Dispose");
+                await connection.DisconnectAsync(CancellationToken.None);
             }
+        }
+
+        static async Task RunControllerAsync(CancellationToken cancellationToken)
+        {
+            var connectionOptions = new ConnectionOptionsBuilder()
+                .WithClientOptions(new ClientOptionsBuilder()
+                    .WithClientId("2")
+                    .Build())
+                .WithMessageQueue(new MemoryMessageQueue(50))
+                .WithReconnect(TimeSpan.FromSeconds(30))
+                .WithLogger(Logging.Factory.FromAssembly("zcfux.Logging", "zcfux.Logging.Console.Writer"))
+                .Build();
+
+            using (var connection = new Connection(connectionOptions))
+            {
+                var options = new OptionsBuilder()
+                    .WithDomain(Domains.Device)
+                    .WithKind(Kinds.Bulb)
+                    .WithId(23)
+                    .WithSerializer(new Serializer())
+                    .WithConnection(connection)
+                    .WithLogger(Logging.Factory.FromAssembly("zcfux.Logging", "zcfux.Logging.Console.Writer"))
+                    .Build();
+
+                var proxy = ProxyFactory.CreateApiProxy<IPowerApi>(options);
+
+                var reader = proxy.On.GetAsyncEnumerator(cancellationToken);
+
+                await connection.ConnectAsync(CancellationToken.None);
+
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        await reader.MoveNextAsync();
+
+                        var value = reader.Current;
+                    }
+                    catch { }
+                }
+
+                await connection.DisconnectAsync(CancellationToken.None);
+            }
+        }
+
+        static void Main(string[] args)
+        {
+            var cancellationTokenSource = new CancellationTokenSource();
+
+            var tasks = new Task[]
+            {
+                RunClientAsync(cancellationTokenSource.Token),
+                RunControllerAsync(cancellationTokenSource.Token)
+            };
+
+            Console.ReadLine();
+
+            cancellationTokenSource.Cancel();
+
+            Task.WhenAll(tasks);
         }
     }
 }

@@ -26,5 +26,7 @@ public enum EDeviceStatus
 {
     Offline,
     Connecting,
-    Online
+    Online,
+    Warning,
+    Error
 }

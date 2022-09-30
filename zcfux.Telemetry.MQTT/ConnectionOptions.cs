@@ -27,4 +27,5 @@ public sealed record ConnectionOptions(
     ClientOptions ClientOptions,
     IMessageQueue MessageQueue,
     ILogger? Logger,
-    bool CleanupRetainedMessages);
+    bool CleanupRetainedMessages,
+    TimeSpan? Reconnect);

@@ -19,7 +19,6 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Collections.Concurrent;
 using System.Reflection;
 using zcfux.Logging;
 
@@ -363,11 +362,15 @@ public class Client : IDisposable
             Id,
             e.Api,
             e.Topic,
-            (e.Payload is { })
+            (e is { Payload: { } })
                 ? e.Payload.Length
                 : 0);
 
         if (e.Payload is { }
+            && e.Direction.Equals(EDirection.In)
+            && e.Device.Domain.Equals(Domain)
+            && e.Device.Kind.Equals(Kind)
+            && e.Device.Id.Equals(Id)
             && _methods.TryGetValue(new MethodKey(e.Api, e.Topic), out var method))
         {
             try

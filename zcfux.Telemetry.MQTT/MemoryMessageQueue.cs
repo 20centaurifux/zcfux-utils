@@ -26,7 +26,11 @@ namespace zcfux.Telemetry.MQTT;
 
 public sealed class MemoryMessageQueue : IMessageQueue
 {
-    sealed record Item(MqttApplicationMessage Message, uint SecondsToLive, Stopwatch? Stopwatch)
+    sealed record Item(
+        MqttApplicationMessage Message,
+        uint SecondsToLive,
+        Stopwatch? Stopwatch,
+        TaskCompletionSource TaskCompletionSource)
     {
         public bool IsExpired
             => Stopwatch is { } && (Stopwatch.Elapsed.TotalSeconds > SecondsToLive);
@@ -37,31 +41,37 @@ public sealed class MemoryMessageQueue : IMessageQueue
     readonly SemaphoreSlim _semaphore = new(0);
     readonly int _limit;
 
-    public MemoryMessageQueue(int Limit)
-        => _limit = Limit;
+    public MemoryMessageQueue(int limit)
+        => _limit = limit;
 
-    public bool TryEnqueue(MqttApplicationMessage message, uint secondsToLive)
+    public Task EnqueueAsync(MqttApplicationMessage message, uint secondsToLive)
     {
-        var success = false;
+        var taskCompletionSource = new TaskCompletionSource();
 
         lock (_lock)
         {
-            if (_items.Count < _limit)
+            if (_items.Count == _limit)
             {
-                _items.Enqueue(new Item(
+                taskCompletionSource.SetException(
+                    new InvalidOperationException("Nessage queue is full."));
+            }
+            else
+            {
+                var item = new Item(
                     message,
                     secondsToLive,
                     (secondsToLive == 0)
                         ? null
-                        : Stopwatch.StartNew()));
+                        : Stopwatch.StartNew(),
+                    taskCompletionSource);
 
-                success = true;
+                _items.Enqueue(item);
 
                 _semaphore.Release();
             }
         }
 
-        return success;
+        return taskCompletionSource.Task;
     }
 
     public async Task<MqttApplicationMessage?> TryPeekAsync(CancellationToken cancellationToken)
@@ -85,20 +95,30 @@ public sealed class MemoryMessageQueue : IMessageQueue
     {
         lock (_lock)
         {
-            _items.Dequeue();
+            Dequeue_Unlocked(cancelled: false);
         }
     }
 
     void Shrink_Unlocked()
     {
-        while (_items.TryPeek(out var item))
+        while (_items.TryPeek(out var item)
+            && item.IsExpired)
         {
-            if (!item.IsExpired)
-            {
-                break;
-            }
+            Dequeue_Unlocked(cancelled: true);
+        }
+    }
 
-            _items.Dequeue();
+    void Dequeue_Unlocked(bool cancelled)
+    {
+        var taskCompletionSource = _items.Dequeue().TaskCompletionSource;
+
+        if (cancelled)
+        {
+            taskCompletionSource.SetCanceled();
+        }
+        else
+        {
+            taskCompletionSource.SetResult();
         }
     }
 }

@@ -25,18 +25,25 @@ public interface IConnection : IDisposable
 {
     event EventHandler? Connected;
     event EventHandler? Disconnected;
+    event EventHandler<ApiInfoEventArgs>? ApiInfoReceived;
     event EventHandler<ApiMessageEventArgs>? ApiMessageReceived;
     event EventHandler<DeviceStatusEventArgs>? DeviceStatusReceived;
 
     bool IsConnected { get; }
 
-    Task ConnectAsync();
+    string ClientId { get; }
 
-    Task DisconnectAsync();
+    Task ConnectAsync(CancellationToken cancellationToken);
 
-    Task SendDeviceStatusAsync(DeviceStatusMessage message, CancellationToken cancellationToken);
+    Task DisconnectAsync(CancellationToken cancellationToken);
+
+    Task SubscribeToApiInfoAsync(DeviceDetails device, string api, CancellationToken cancellationToken);
 
     Task SendApiInfoAsync(ApiInfoMessage message, CancellationToken cancellationToken);
+
+    Task SubscribeToDeviceStatusAsync(DeviceDetails device, CancellationToken cancellationToken);
+
+    Task SendDeviceStatusAsync(DeviceStatusMessage message, CancellationToken cancellationToken);
 
     Task SubscribeToApiMessagesAsync(DeviceDetails device, string api, EDirection direction, CancellationToken cancellationToken);
 

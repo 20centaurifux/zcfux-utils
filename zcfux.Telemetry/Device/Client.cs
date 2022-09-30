@@ -129,7 +129,7 @@ public class Client : IDisposable
             }
         }
 
-        _logger?.Debug("Device apis disovery completed.");
+        _logger?.Debug("Device apis discovery completed.");
 
         return (apis, subscriptions, methods);
     }
@@ -194,43 +194,45 @@ public class Client : IDisposable
         var taskReadsFromEnumerator = new TaskCompletionSource();
 
         var task = Task.Run(async () =>
-        {
-            var enumerator = source.GetAsyncEnumerator(_cancellationTokenSource.Token);
-
-            var moveNextTask = enumerator.MoveNextAsync();
-
-            taskReadsFromEnumerator.SetResult();
-
-            if (await moveNextTask)
             {
-                var completed = false;
-
-                while (!completed)
+                await using (var enumerator = source.GetAsyncEnumerator(_cancellationTokenSource.Token))
                 {
-                    var current = enumerator.Current;
+                    var moveNextTask = enumerator.MoveNextAsync();
 
-                    _logger?.Trace(
-                        "Received asynchronous enumerable value (api=`{0}', topic=`{1}', type={2}).",
-                        apiTopic,
-                        topic,
-                        typeof(T).Name);
+                    taskReadsFromEnumerator.SetResult();
 
-                    if (current != null)
+                    if (await moveNextTask)
                     {
-                        var message = new ApiMessage(
-                            new DeviceDetails(Domain, Kind, Id),
-                            apiTopic,
-                            topic,
-                            options,
-                            current);
+                        var completed = false;
 
-                        await _connection.SendApiMessageAsync(message, _cancellationTokenSource.Token);
+                        while (!completed)
+                        {
+                            var current = enumerator.Current;
+
+                            _logger?.Trace(
+                                "Received asynchronous enumerable value (api=`{0}', topic=`{1}', type={2}).",
+                                apiTopic,
+                                topic,
+                                typeof(T).Name);
+
+                            if (current != null)
+                            {
+                                var message = new ApiMessage(
+                                    new DeviceDetails(Domain, Kind, Id),
+                                    apiTopic,
+                                    topic,
+                                    options,
+                                    current);
+
+                                await _connection.SendApiMessageAsync(message, _cancellationTokenSource.Token);
+                            }
+
+                            completed = !await enumerator.MoveNextAsync();
+                        }
                     }
-
-                    completed = !await enumerator.MoveNextAsync();
                 }
             }
-        });
+        );
 
         _logger?.Debug(
             "Waiting for asynchronous enumerable task (api=`{0}', topic=`{1}') to start.",

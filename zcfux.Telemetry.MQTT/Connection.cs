@@ -34,15 +34,19 @@ public class Connection : IConnection
     static readonly MqttFactory Factory = new();
 
     static readonly Regex DeviceStatusRegex = new(
-      "^([a-z0-9]+)/([a-z0-9]+)/([0-9]+)/status",
-      RegexOptions.IgnoreCase);
+        "^([a-z0-9]+)/([a-z0-9]+)/([0-9]+)/status$",
+        RegexOptions.IgnoreCase);
 
     static readonly Regex ApiVersionRegex = new(
-        "^([a-z0-9]+)/([a-z0-9]+)/([0-9]+)/a/([a-z0-9]+)/version",
+        "^([a-z0-9]+)/([a-z0-9]+)/([0-9]+)/a/([a-z0-9]+)/version$",
         RegexOptions.IgnoreCase);
 
     static readonly Regex ApiTopicRegex = new(
-        "^([a-z0-9]+)/([a-z0-9]+)/([0-9]+)/a/([a-z0-9]+)/([<|>])/([a-z0-9]+)",
+        "^([a-z0-9]+)/([a-z0-9]+)/([0-9]+)/a/([a-z0-9]+)/([<|>])/([a-z0-9]+)$",
+        RegexOptions.IgnoreCase);
+
+    static readonly Regex ResponseRegex = new(
+        "^([a-z0-9]+)/([a-z0-9]+)/([0-9]+)/r",
         RegexOptions.IgnoreCase);
 
     static readonly ISerializer Serializer = new Serializer();
@@ -78,6 +82,7 @@ public class Connection : IConnection
     public event EventHandler<ApiInfoEventArgs>? ApiInfoReceived;
     public event EventHandler<ApiMessageEventArgs>? ApiMessageReceived;
     public event EventHandler<DeviceStatusEventArgs>? DeviceStatusReceived;
+    public event EventHandler<ResponseEventArgs>? ResponseReceived;
 
     public bool IsConnected
         => Interlocked.Read(ref _connectivity) == Online;
@@ -277,7 +282,7 @@ public class Connection : IConnection
                         {
                             await Task.Delay(_reconnect.Value, token);
 
-                            lock(_reconnectLock)
+                            lock (_reconnectLock)
                             {
                                 _reconnectCancellationTokenSource = null;
                                 _reconnectTask = null;
@@ -326,55 +331,64 @@ public class Connection : IConnection
         _logger?.Trace("Client `{0}' received message in `{1}' (size={2}): `{3}'",
             ClientId,
             e.ApplicationMessage.Topic,
-            (e.ApplicationMessage.Payload == null)
-                ? 0
-                : e.ApplicationMessage.Payload.Length,
+            e.ApplicationMessage.Payload?.Length ?? 0,
             e.ApplicationMessage.ConvertPayloadToString());
 
-        if (e.ApplicationMessage.Payload != null
-            && e.ApplicationMessage.Payload.Any())
-        {
-            var _ = TryProcessDeviceStatus(e.ApplicationMessage)
+        var _ = TryProcessDeviceStatus(e.ApplicationMessage)
                 || TryProcessApiInfo(e.ApplicationMessage)
-                || TryProcessApiMessage(e.ApplicationMessage);
-        }
+                || TryProcessApiMessage(e.ApplicationMessage)
+                || TryProcessResponse(e.ApplicationMessage);
 
         return Task.CompletedTask;
     }
 
     bool TryProcessDeviceStatus(MqttApplicationMessage message)
     {
-        var m = DeviceStatusRegex.Match(message.Topic);
+        var success = false;
 
-        if (m.Success)
+        if (message.Payload is { })
         {
-            DeviceStatusReceived?.Invoke(this, new DeviceStatusEventArgs(
-                new DeviceDetails(
-                    m.Groups[1].Value,
-                    m.Groups[2].Value,
-                    Convert.ToInt32(m.Groups[3].Value)),
-                Serializer.Deserialize<EDeviceStatus>(message.Payload)));
+            var m = DeviceStatusRegex.Match(message.Topic);
+
+            if (m.Success)
+            {
+                DeviceStatusReceived?.Invoke(this, new DeviceStatusEventArgs(
+                    new DeviceDetails(
+                        m.Groups[1].Value,
+                        m.Groups[2].Value,
+                        Convert.ToInt32(m.Groups[3].Value)),
+                    Serializer.Deserialize<EDeviceStatus>(message.Payload)));
+            }
+
+            success = m.Success;
         }
 
-        return m.Success;
+        return success;
     }
 
     bool TryProcessApiInfo(MqttApplicationMessage message)
     {
-        var m = ApiVersionRegex.Match(message.Topic);
+        var success = false;
 
-        if (m.Success)
+        if (message.Payload is { })
         {
-            ApiInfoReceived?.Invoke(this, new ApiInfoEventArgs(
-                new DeviceDetails(
-                    m.Groups[1].Value,
-                    m.Groups[2].Value,
-                    Convert.ToInt32(m.Groups[3].Value)),
-                m.Groups[4].Value,
-                message.ConvertPayloadToString()));
+            var m = ApiVersionRegex.Match(message.Topic);
+
+            if (m.Success)
+            {
+                ApiInfoReceived?.Invoke(this, new ApiInfoEventArgs(
+                    new DeviceDetails(
+                        m.Groups[1].Value,
+                        m.Groups[2].Value,
+                        Convert.ToInt32(m.Groups[3].Value)),
+                    m.Groups[4].Value,
+                    message.ConvertPayloadToString()));
+            }
+
+            success = m.Success;
         }
 
-        return m.Success;
+        return success;
     }
 
     bool TryProcessApiMessage(MqttApplicationMessage message)
@@ -383,6 +397,29 @@ public class Connection : IConnection
 
         if (m.Success)
         {
+            string? responseTopic = null;
+
+            if (!string.IsNullOrEmpty(message.ResponseTopic))
+            {
+                responseTopic = message.ResponseTopic;
+            }
+
+            int? messageId = null;
+
+            if (message.CorrelationData is { Length: 4 })
+            {
+                var bytes = message.CorrelationData;
+
+                if (BitConverter.IsLittleEndian)
+                {
+                    bytes = bytes
+                        .Reverse()
+                        .ToArray();
+                }
+
+                messageId = BitConverter.ToInt32(bytes);
+            }
+
             ApiMessageReceived?.Invoke(this, new ApiMessageEventArgs(
                 new DeviceDetails(
                     m.Groups[1].Value,
@@ -393,7 +430,9 @@ public class Connection : IConnection
                 message.Payload,
                 (m.Groups[5].Value == ">")
                     ? EDirection.Out
-                    : EDirection.In));
+                    : EDirection.In,
+                responseTopic,
+                messageId));
         }
 
         return m.Success;
@@ -407,6 +446,43 @@ public class Connection : IConnection
             $"{domain}/{kind}/{id}/status",
             MqttQualityOfServiceLevel.AtLeastOnce,
             cancellationToken);
+    }
+
+    bool TryProcessResponse(MqttApplicationMessage message)
+    {
+        var success = false;
+
+        if (message.Payload is { }
+            && message.CorrelationData is { Length: 4 })
+        {
+            var m = ResponseRegex.Match(message.Topic);
+
+            if (m.Success)
+            {
+                var bytes = message.CorrelationData;
+
+                if (BitConverter.IsLittleEndian)
+                {
+                    bytes = bytes
+                        .Reverse()
+                        .ToArray();
+                }
+
+                var messageId = BitConverter.ToInt32(bytes);
+                
+                ResponseReceived?.Invoke(this, new ResponseEventArgs(
+                    new DeviceDetails(
+                        m.Groups[1].Value,
+                        m.Groups[2].Value,
+                        Convert.ToInt32(m.Groups[3].Value)),
+                    messageId,
+                    message.Payload));
+            }
+
+            success = m.Success;
+        }
+
+        return success;
     }
 
     public Task SendDeviceStatusAsync(DeviceStatusMessage message, CancellationToken cancellationToken)
@@ -457,7 +533,8 @@ public class Connection : IConnection
         }
     }
 
-    public Task SubscribeToApiMessagesAsync(DeviceDetails device, string api, EDirection direction, CancellationToken cancellationToken)
+    public Task SubscribeToApiMessagesAsync(DeviceDetails device, string api, EDirection direction,
+        CancellationToken cancellationToken)
     {
         var (domain, kind, id) = device;
 
@@ -471,19 +548,81 @@ public class Connection : IConnection
 
     public Task SendApiMessageAsync(ApiMessage message, CancellationToken cancellationToken)
     {
-        var ((domain, kind, id), api, topic, options, payload) = message;
+        var ((domain, kind, id), api, topic, options, direction, payload, _, _) = message;
 
-        var json = Serializer.Serialize(payload);
+        var json = Array.Empty<byte>();
 
-        var mqttMessage = new MqttApplicationMessageBuilder()
-            .WithTopic($"{domain}/{kind}/{id}/a/{api}/>/{topic}")
+        if (payload is { })
+        {
+            json = Serializer.Serialize(payload);
+        }
+
+        var builder = new MqttApplicationMessageBuilder()
+            .WithTopic($"{domain}/{kind}/{id}/a/{api}/{((direction == EDirection.In) ? "<" : ">")}/{topic}")
             .WithPayload(json)
             .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
             .WithRetainFlag(options.Retain)
-            .WithMessageExpiryInterval(options.TimeToLive)
-            .Build();
+            .WithMessageExpiryInterval(options.TimeToLive);
+
+        if (message.ResponseTopic is { })
+        {
+            builder = builder.WithResponseTopic(message.ResponseTopic);
+        }
+
+        if (message.MessageId.HasValue)
+        {
+            var bytes = BitConverter.GetBytes(message.MessageId.Value);
+
+            if (BitConverter.IsLittleEndian)
+            {
+                bytes = bytes
+                    .Reverse()
+                    .ToArray();
+            }
+
+            builder = builder.WithCorrelationData(bytes);
+        }
+
+        var mqttMessage = builder.Build();
 
         return _messageQueue.EnqueueAsync(mqttMessage, message.Options.TimeToLive);
+    }
+
+    public Task SubscribeResponseAsync(DeviceDetails device, CancellationToken cancellationToken)
+    {
+        var (domain, kind, id) = device;
+
+        var topic = $"{domain}/{kind}/{id}/r";
+
+        return _client.SubscribeAsync(
+            topic,
+            MqttQualityOfServiceLevel.AtLeastOnce,
+            cancellationToken);
+    }
+
+    public Task SendResponseAsync(ResponseMessage message, CancellationToken cancellationToken)
+    {
+        var (topic, messageId, payload) = message;
+
+        var json = Serializer.Serialize(payload);
+
+        var correlationData = BitConverter.GetBytes(messageId);
+
+        if (BitConverter.IsLittleEndian)
+        {
+            correlationData = correlationData
+                .Reverse()
+                .ToArray();
+        }
+
+        var mqttMessage = new MqttApplicationMessageBuilder()
+            .WithTopic(topic)
+            .WithPayload(json)
+            .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
+            .WithCorrelationData(correlationData)
+            .Build();
+
+        return _messageQueue.EnqueueAsync(mqttMessage, 60 * 5);
     }
 
     public void Dispose()
@@ -510,7 +649,6 @@ public class Connection : IConnection
 
             if (_sendTask != null)
             {
-
                 Task.WhenAny(_sendTask).Wait();
             }
         }

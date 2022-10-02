@@ -19,6 +19,7 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using System.Diagnostics;
 using System.Reflection;
 using zcfux.Logging;
 
@@ -56,7 +57,84 @@ public class Client : IDisposable
         }
     }
 
-    sealed record Method(object Instance, MethodInfo MethodInfo, Type ParameterType);
+    sealed record Method(object Instance, MethodInfo MethodInfo, Type ParameterType, Type ReturnType);
+
+    sealed record PendingTask(Task Task, Type ReturnType, string? ResponseTopic, int? MessageId);
+
+    sealed class PendingTasks
+    {
+        readonly object _lock = new();
+        readonly List<PendingTask> _tasks = new();
+        readonly AutoResetEvent _event = new(false);
+
+        public void Put(PendingTask pendingTask)
+        {
+            lock (_tasks)
+            {
+                _tasks.Add(pendingTask);
+                _event.Set();
+            }
+        }
+
+        public PendingTask? Wait(TimeSpan timeout)
+        {
+            PendingTask? match = null;
+
+            if (HasPendingTasks())
+            {
+                var snapshot = GetSnapshot();
+
+                var index = Task.WaitAny(snapshot.Select(t => t.Task).ToArray(), timeout);
+
+                if (index != -1)
+                {
+                    match = snapshot[index];
+
+                    RemovePendingTaskAt(index);
+                }
+            }
+            else
+            {
+                var timer = Stopwatch.StartNew();
+
+                if (_event.WaitOne(timeout))
+                {
+                    var timeoutLeft = (timeout - timer.Elapsed);
+
+                    if (timeoutLeft > TimeSpan.Zero)
+                    {
+                        match = Wait(timeoutLeft);
+                    }
+                }
+            }
+
+            return match;
+        }
+
+        bool HasPendingTasks()
+        {
+            lock (_lock)
+            {
+                return _tasks.Any();
+            }
+        }
+
+        PendingTask[] GetSnapshot()
+        {
+            lock (_lock)
+            {
+                return _tasks.ToArray();
+            }
+        }
+
+        void RemovePendingTaskAt(int index)
+        {
+            lock (_lock)
+            {
+                _tasks.RemoveAt(index);
+            }
+        }
+    }
 
     readonly CancellationTokenSource _cancellationTokenSource = new();
 
@@ -67,6 +145,10 @@ public class Client : IDisposable
     readonly IConnection _connection;
     readonly ISerializer _serializer;
     readonly ILogger? _logger;
+
+    readonly PendingTasks _pendingTasks = new();
+
+    readonly Task _pendingTaskProcessor;
 
     string Domain { get; }
 
@@ -88,6 +170,8 @@ public class Client : IDisposable
         _connection.Connected += Connected;
         _connection.Disconnected += Disconnected;
         _connection.ApiMessageReceived += MessageReceived;
+
+        _pendingTaskProcessor = ProcessPendingTasksAsync();
     }
 
     (IReadOnlyCollection<Api>, IReadOnlyCollection<Task>, IReadOnlyDictionary<MethodKey, Method>) RegisterApis()
@@ -222,6 +306,7 @@ public class Client : IDisposable
                                     apiTopic,
                                     topic,
                                     options,
+                                    EDirection.Out,
                                     current);
 
                                 await _connection.SendApiMessageAsync(message, _cancellationTokenSource.Token);
@@ -260,9 +345,16 @@ public class Client : IDisposable
             if (method.GetCustomAttributes(typeof(CommandAttribute), false).SingleOrDefault() is CommandAttribute attr)
             {
                 var parameterType = method
-                    .GetParameters()
-                    .Single()
-                    .ParameterType;
+                                        .GetParameters()
+                                        .SingleOrDefault()
+                                        ?.ParameterType
+                                    ?? typeof(void);
+
+                var returnType = method
+                                     .ReturnType
+                                     .GetGenericArguments()
+                                     .SingleOrDefault()
+                                 ?? typeof(void);
 
                 _logger?.Debug(
                     "Found method {0}({1}) (api=`{2}', topic=`{3}').",
@@ -273,7 +365,7 @@ public class Client : IDisposable
 
                 yield return new KeyValuePair<MethodKey, Method>(
                     new MethodKey(api.Topic, attr.Topic),
-                    new Method(api.Instance, method, parameterType));
+                    new Method(api.Instance, method, parameterType, returnType));
             }
         }
     }
@@ -293,7 +385,7 @@ public class Client : IDisposable
 
             _connection
                 .SendDeviceStatusAsync(new DeviceStatusMessage(device, EDeviceStatus.Connecting), token)
-                .Wait();
+                .Wait(token);
 
             var tasks = _apis
                 .Select(api => _connection
@@ -308,7 +400,7 @@ public class Client : IDisposable
 
             _connection
                 .SendDeviceStatusAsync(new DeviceStatusMessage(device, EDeviceStatus.Online), token)
-                .Wait();
+                .Wait(token);
         }
         catch (Exception ex)
         {
@@ -368,8 +460,7 @@ public class Client : IDisposable
                 ? e.Payload.Length
                 : 0);
 
-        if (e.Payload is { }
-            && e.Direction.Equals(EDirection.In)
+        if (e.Direction.Equals(EDirection.In)
             && e.Device.Domain.Equals(Domain)
             && e.Device.Kind.Equals(Kind)
             && e.Device.Id.Equals(Id)
@@ -377,9 +468,29 @@ public class Client : IDisposable
         {
             try
             {
-                var parameter = _serializer.Deserialize(e.Payload, method.ParameterType);
+                var parameters = new List<object?>();
 
-                method.MethodInfo.Invoke(method.Instance, new[] { parameter });
+                if (method.ParameterType != typeof(void))
+                {
+                    object? value = null;
+
+                    if (e.Payload != null)
+                    {
+                        value = _serializer.Deserialize(e.Payload, method.ParameterType);
+                    }
+
+                    parameters.Add(value);
+                }
+
+                var task = method.MethodInfo.Invoke(method.Instance, parameters.ToArray()) as Task;
+
+                var pendingTask = new PendingTask(
+                    task!,
+                    method.ReturnType,
+                    e.ResponseTopic,
+                    e.MessageId);
+
+                _pendingTasks.Put(pendingTask);
             }
             catch (Exception ex)
             {
@@ -403,6 +514,44 @@ public class Client : IDisposable
         }
     }
 
+    Task ProcessPendingTasksAsync()
+    {
+        return Task.Run(async () =>
+        {
+            while (!_cancellationTokenSource.IsCancellationRequested)
+            {
+                if (_pendingTasks.Wait(TimeSpan.FromSeconds(5)) is { } pendingTask)
+                {
+                    if (pendingTask.ReturnType != typeof(void)
+                        && pendingTask.ResponseTopic is { }
+                        && pendingTask.MessageId.HasValue
+                        && pendingTask.Task.IsCompleted)
+                    {
+                        try
+                        {
+                            var result = pendingTask
+                                .Task
+                                .GetType()
+                                .GetProperty("Result")
+                                ?.GetValue(pendingTask.Task);
+
+                            var message = new ResponseMessage(
+                                pendingTask.ResponseTopic,
+                                pendingTask.MessageId.Value,
+                                result!);
+
+                            await _connection.SendResponseAsync(message, _cancellationTokenSource.Token);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.Error(ex);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     public virtual void Dispose()
     {
         _connection.Connected -= Connected;
@@ -412,5 +561,7 @@ public class Client : IDisposable
         _cancellationTokenSource.Cancel();
 
         Task.WhenAll(_subscriptions.ToArray());
+
+        _pendingTaskProcessor.Wait();
     }
 }

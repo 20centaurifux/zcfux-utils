@@ -33,6 +33,18 @@ public sealed class ApiMessageEventArgs : EventArgs
 
     public EDirection Direction { get; }
 
-    public ApiMessageEventArgs(DeviceDetails device, string api, string topic, byte[] payload, EDirection direction)
-        => (Device, Api, Topic, Payload, Direction) = (device, api, topic, payload, direction);
+    public string? ResponseTopic { get; }
+
+    public int? MessageId { get; }
+
+    public ApiMessageEventArgs(
+        DeviceDetails device,
+        string api,
+        string topic,
+        byte[] payload,
+        EDirection direction,
+        string? responseTopic,
+        int? messageId)
+        => (Device, Api, Topic, Payload, Direction, ResponseTopic, MessageId)
+            = (device, api, topic, payload, direction, responseTopic, messageId);
 }

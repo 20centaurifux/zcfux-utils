@@ -26,4 +26,7 @@ public sealed record ApiMessage(
     string Api,
     string Topic,
     MessageOptions Options,
-    object Payload);
+    EDirection Direction,
+    object? Payload,
+    string? ResponseTopic = null,
+    int? MessageId = null);

@@ -19,21 +19,26 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using Castle.DynamicProxy;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using zcfux.Logging;
 
 namespace zcfux.Telemetry.Device;
 
 internal sealed class ApiInterceptor : IInterceptor
 {
-    sealed record Command(string Topic, uint TimeToLive, Type ParameterType, bool Blocking);
+    sealed record Command(string Topic, uint TimeToLive);
 
     sealed record Event(IProducer Producer, Type ParameterType);
 
-    private readonly Type _apiType;
-    
+    sealed record PendingResponse(Action<byte[]> SetResult, Stopwatch Stopwatch);
+
+    ConcurrentDictionary<int, PendingResponse> _pendingResponses = new();
+
+    readonly Type _apiType;
+
     readonly IConnection _connection;
     readonly ISerializer _serializer;
     readonly ILogger? _logger;
@@ -42,6 +47,9 @@ internal sealed class ApiInterceptor : IInterceptor
 
     readonly string _apiTopic;
     readonly string _version;
+
+    readonly object _messageIdLock = new();
+    int _messageId;
 
     IReadOnlyDictionary<string, Command> _commands = default!;
     IReadOnlyDictionary<string, Event> _events = default!;
@@ -66,7 +74,7 @@ internal sealed class ApiInterceptor : IInterceptor
     public ApiInterceptor(Type type, Options options)
     {
         _apiType = type;
-        
+
         (_device, _connection, _serializer, _logger) = options;
 
         var attr = _apiType
@@ -85,6 +93,7 @@ internal sealed class ApiInterceptor : IInterceptor
         _connection.DeviceStatusReceived += DeviceStatusReceived;
         _connection.ApiInfoReceived += ApiInfoReceived;
         _connection.ApiMessageReceived += ApiMessageReceived;
+        _connection.ResponseReceived += ResponseReceived;
     }
 
     void RegisterCommands()
@@ -99,18 +108,11 @@ internal sealed class ApiInterceptor : IInterceptor
         {
             if (method.GetCustomAttributes(typeof(CommandAttribute), false).SingleOrDefault() is CommandAttribute attr)
             {
-                if (method.ReturnType == typeof(Task) || method.ReturnType == typeof(void))
+                if (method.ReturnType == typeof(void)
+                    || method.ReturnType == typeof(Task)
+                    || method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
                 {
-                    var parameterType = method
-                        .GetParameters()
-                        .Single()
-                        .ParameterType;
-
-                    var command = new Command(
-                        attr.Topic,
-                        attr.TimeToLive,
-                        parameterType,
-                        method.ReturnType == typeof(void));
+                    var command = new Command(attr.Topic, attr.TimeToLive);
 
                     var signature = MethodSignature(method);
 
@@ -203,7 +205,10 @@ internal sealed class ApiInterceptor : IInterceptor
                 .SubscribeToApiInfoAsync(new ApiFilter(_device, _apiTopic), CancellationToken.None),
 
             _connection
-                .SubscribeToApiMessagesAsync(_device, _apiTopic, EDirection.Out, CancellationToken.None)
+                .SubscribeToApiMessagesAsync(_device, _apiTopic, EDirection.Out, CancellationToken.None),
+
+            _connection
+                .SubscribeResponseAsync(_device, CancellationToken.None)
         };
 
         Task.WaitAll(tasks);
@@ -314,6 +319,25 @@ internal sealed class ApiInterceptor : IInterceptor
         }
     }
 
+    void ResponseReceived(object? sender, ResponseEventArgs e)
+    {
+        if (_pendingResponses.TryGetValue(e.MessageId, out var pendingResponse))
+        {
+            try
+            {
+                pendingResponse.SetResult(e.Payload);
+            }
+            catch (Exception ex)
+            {
+                _logger?.Error(ex);
+            }
+            finally
+            {
+                _pendingResponses.Remove(e.MessageId, out var _);
+            }
+        }
+    }
+
     public void Intercept(IInvocation invocation)
     {
         if (invocation.Method.Name.StartsWith("get_"))
@@ -352,27 +376,94 @@ internal sealed class ApiInterceptor : IInterceptor
             throw new ApplicationException("Incompatible endpoint.");
         }
 
-        var message = new ApiMessage(
-            _device,
-            _apiTopic,
-            command.Topic,
-            new MessageOptions(Retain: false, TimeToLive: command.TimeToLive),
-            invocation.Arguments.Single());
+        var parameter = invocation
+            .Arguments
+            .SingleOrDefault();
 
-        var task = _connection.SendApiMessageAsync(message, CancellationToken.None);
-
-        if (command.Blocking)
+        if (invocation.Method.ReturnType == typeof(void)
+            || invocation.Method.ReturnType == typeof(Task))
         {
-            task.Wait();
+            var task = SendCommand(command.Topic, command.TimeToLive, parameter);
+
+            if (invocation.Method.ReturnType == typeof(void))
+            {
+                task.Wait();
+            }
+            else
+            {
+                invocation.ReturnValue = task;
+            }
         }
         else
         {
+            var task = SendRequest(
+                command.Topic,
+                command.TimeToLive,
+                parameter,
+                invocation.Method.ReturnType.GetGenericArguments().Single());
+
             invocation.ReturnValue = task;
         }
     }
 
+    Task SendCommand(string topic, uint timeToLive, object? parameter)
+    {
+        var message = new ApiMessage(
+            _device,
+            _apiTopic,
+            topic,
+            new MessageOptions(Retain: false, TimeToLive: timeToLive),
+            EDirection.In,
+            parameter);
+
+        var task = _connection.SendApiMessageAsync(message, CancellationToken.None);
+
+        return task;
+    }
+
+    Task SendRequest(string topic, uint timeToLive, object? parameter, Type returnType)
+    {
+        var messageId = NextMessageId();
+
+        var t = typeof(TaskCompletionSource<>).MakeGenericType(returnType);
+
+        dynamic taskCompletionSource = Activator.CreateInstance(t)!;
+
+        var method = t.GetMethod("SetResult");
+
+        _pendingResponses[messageId] = new PendingResponse(
+            payload =>
+            {
+                var p = _serializer.Deserialize(payload, returnType);
+
+                method?.Invoke(taskCompletionSource, new[] { p });
+            },
+            Stopwatch.StartNew());
+
+        var message = new ApiMessage(
+            _device,
+            _apiTopic,
+            topic,
+            new MessageOptions(Retain: false, TimeToLive: timeToLive),
+            EDirection.In,
+            parameter,
+            $"{_device.Domain}/{_device.Kind}/{_device.Id}/r",
+            messageId);
+
+        _connection.SendApiMessageAsync(message, CancellationToken.None).Wait();
+
+        return taskCompletionSource.Task;
+    }
+
     static string MethodSignature(MethodInfo method)
-        => $"{method.ReturnType} {method.Name}({method.GetParameters().Single().ParameterType})";
+    {
+        var parameterType = method
+            .GetParameters()
+            .SingleOrDefault()
+            ?.Name;
+
+        return $"{method.ReturnType} {method.Name}({parameterType ?? string.Empty})";
+    }
 
     void ExchangeState(EFlag newState)
     {
@@ -446,6 +537,19 @@ internal sealed class ApiInterceptor : IInterceptor
             {
                 _detectedVersion = value;
             }
+        }
+    }
+
+    int NextMessageId()
+    {
+        lock (_messageIdLock)
+        {
+            if (_messageId == int.MaxValue)
+            {
+                _messageId = 0;
+            }
+
+            return ++_messageId;
         }
     }
 }

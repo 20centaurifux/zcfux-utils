@@ -22,10 +22,14 @@ namespace zcfux.Telemetry.MQTT
 
             [Command(Topic = "status", TimeToLive = 5)]
             Task ChangeStatusAsync(bool on);
+
+            [Command(Topic = "toggle", TimeToLive = 5)]
+            Task<bool> ToggleAsync();
         }
 
         sealed class PowerImpl : IPowerApi, IConnected
         {
+            readonly object _lock = new();
             bool _state;
 
             readonly Producer<bool> _producer = new();
@@ -34,11 +38,30 @@ namespace zcfux.Telemetry.MQTT
 
             public Task ChangeStatusAsync(bool on)
             {
-                _state = on;
+                lock (_lock)
+                {
+                    _state = on;
+                }
 
                 _producer.Publish(on);
 
                 return Task.CompletedTask;
+            }
+
+            public Task<bool> ToggleAsync()
+            {
+                var newState = false;
+
+                lock (_lock)
+                {
+                    newState = !_state;
+
+                    _state = newState;
+                }
+
+                _producer.Publish(newState);
+
+                return Task.FromResult(newState);
             }
 
             public void Connected()
@@ -132,15 +155,26 @@ namespace zcfux.Telemetry.MQTT
 
                 await connection.ConnectAsync(CancellationToken.None);
 
+                var task = reader.MoveNextAsync();
+
+                await proxy.ChangeStatusAsync(true);
+
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     try
                     {
-                        await reader.MoveNextAsync();
+                        if (task.IsCompleted)
+                        {
+                            var value = reader.Current;
 
-                        var value = reader.Current;
+                            task = reader.MoveNextAsync();
+                        }
+
+                        await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
+
+                        await proxy.ToggleAsync();
                     }
-                    catch { }
+                    catch (Exception ex) { }
                 }
 
                 await connection.DisconnectAsync(CancellationToken.None);
@@ -222,7 +256,7 @@ namespace zcfux.Telemetry.MQTT
             var tasks = new Task[]
             {
                 RunClientAsync(cancellationTokenSource.Token),
-                RunDiscovererAsync(cancellationTokenSource.Token),
+                //RunDiscovererAsync(cancellationTokenSource.Token),
                 RunControllerAsync(cancellationTokenSource.Token)
             };
 

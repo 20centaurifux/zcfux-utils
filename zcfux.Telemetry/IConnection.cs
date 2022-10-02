@@ -28,6 +28,7 @@ public interface IConnection : IDisposable
     event EventHandler<ApiInfoEventArgs>? ApiInfoReceived;
     event EventHandler<ApiMessageEventArgs>? ApiMessageReceived;
     event EventHandler<DeviceStatusEventArgs>? DeviceStatusReceived;
+    event EventHandler<ResponseEventArgs>? ResponseReceived;
 
     bool IsConnected { get; }
 
@@ -40,7 +41,7 @@ public interface IConnection : IDisposable
     Task SubscribeToDeviceStatusAsync(DeviceFilter filter, CancellationToken cancellationToken);
 
     Task SendDeviceStatusAsync(DeviceStatusMessage message, CancellationToken cancellationToken);
-    
+
     Task SubscribeToApiInfoAsync(ApiFilter filter, CancellationToken cancellationToken);
 
     Task SendApiInfoAsync(ApiInfoMessage message, CancellationToken cancellationToken);
@@ -48,4 +49,8 @@ public interface IConnection : IDisposable
     Task SubscribeToApiMessagesAsync(DeviceDetails device, string api, EDirection direction, CancellationToken cancellationToken);
 
     Task SendApiMessageAsync(ApiMessage message, CancellationToken cancellationToken);
+
+    Task SubscribeResponseAsync(DeviceDetails device, CancellationToken cancellationToken);
+
+    Task SendResponseAsync(ResponseMessage message, CancellationToken cancellationToken);
 }

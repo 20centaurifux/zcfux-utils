@@ -19,30 +19,47 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using Castle.DynamicProxy;
+using zcfux.Telemetry.Device;
 
-namespace zcfux.Telemetry.Device;
+namespace zcfux.Telemetry.Discovery;
 
-public static class ProxyFactory
+public sealed class ApiRegistry
 {
-    static readonly ProxyGenerator Generator = new();
+    sealed record Api(string Topic, int Major, int Minor, Type Type);
 
-    public static TApi CreateApiProxy<TApi>(Options options)
-        where TApi : class
+    readonly object _lock = new();
+    readonly HashSet<Api> _apis = new();
+
+    public void Register<TApi>()
     {
-        var interceptor = new ApiInterceptor(typeof(TApi), options);
+        var t = typeof(TApi);
 
-        var proxy = Generator.CreateInterfaceProxyWithoutTarget<TApi>(interceptor);
+        var attr = t
+            .GetCustomAttributes(typeof(ApiAttribute), false)
+            .OfType<ApiAttribute>()
+            .Single();
 
-        return proxy!;
+        var (major, minor) = Version.Parse(attr.Version);
+
+        lock (_lock)
+        {
+            _apis.Add(new Api(attr.Topic, major, minor, t));
+        }
     }
-    
-    public static object CreateApiProxy(Type type, Options options)
+
+    public Type Resolve(string topic, string version)
     {
-        var interceptor = new ApiInterceptor(type, options);
+        var (major, minor) = Version.Parse(version);
 
-        var proxy = Generator.CreateInterfaceProxyWithoutTarget(type, interceptor);
+        lock (_lock)
+        {
+            var api = _apis
+                .Where(api =>
+                    (api.Major == major) && (api.Minor >= minor))
+                .MaxBy(api => api.Minor);
 
-        return proxy!;
+            return api?.Type
+                   ?? throw new ApiNotFoundException();
+        }
     }
 }

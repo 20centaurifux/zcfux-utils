@@ -19,30 +19,12 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using Castle.DynamicProxy;
+namespace zcfux.Telemetry.Discovery;
 
-namespace zcfux.Telemetry.Device;
-
-public static class ProxyFactory
+public sealed class StatusEventArgs : EventArgs
 {
-    static readonly ProxyGenerator Generator = new();
+    public EDeviceStatus Status { get; }
 
-    public static TApi CreateApiProxy<TApi>(Options options)
-        where TApi : class
-    {
-        var interceptor = new ApiInterceptor(typeof(TApi), options);
-
-        var proxy = Generator.CreateInterfaceProxyWithoutTarget<TApi>(interceptor);
-
-        return proxy!;
-    }
-    
-    public static object CreateApiProxy(Type type, Options options)
-    {
-        var interceptor = new ApiInterceptor(type, options);
-
-        var proxy = Generator.CreateInterfaceProxyWithoutTarget(type, interceptor);
-
-        return proxy!;
-    }
+    public StatusEventArgs(EDeviceStatus status)
+        => (Status) = (status);
 }

@@ -21,18 +21,19 @@
  ***************************************************************************/
 using Castle.DynamicProxy;
 using System.Reflection;
-using System.Text.RegularExpressions;
+using System.Runtime.CompilerServices;
 using zcfux.Logging;
 
 namespace zcfux.Telemetry.Device;
 
-internal sealed class ApiInterceptor<TApi> : IInterceptor
+internal sealed class ApiInterceptor : IInterceptor
 {
     sealed record Command(string Topic, uint TimeToLive, Type ParameterType, bool Blocking);
+
     sealed record Event(IProducer Producer, Type ParameterType);
 
-    static readonly Regex VersionRegex = new("^([\\d+])\\.([\\d]+)$");
-
+    private readonly Type _apiType;
+    
     readonly IConnection _connection;
     readonly ISerializer _serializer;
     readonly ILogger? _logger;
@@ -62,11 +63,13 @@ internal sealed class ApiInterceptor<TApi> : IInterceptor
     readonly object _detectedVersionLock = new();
     string? _detectedVersion;
 
-    public ApiInterceptor(Options options)
+    public ApiInterceptor(Type type, Options options)
     {
+        _apiType = type;
+        
         (_device, _connection, _serializer, _logger) = options;
 
-        var attr = typeof(TApi)
+        var attr = _apiType
             .GetCustomAttributes(typeof(ApiAttribute), false)
             .OfType<ApiAttribute>()
             .Single();
@@ -86,11 +89,11 @@ internal sealed class ApiInterceptor<TApi> : IInterceptor
 
     void RegisterCommands()
     {
-        _logger?.Debug("Discovering commands (client=`{0}', api=`{1}').", _connection.ClientId,  _apiTopic);
+        _logger?.Debug("Discovering commands (client=`{0}', api=`{1}').", _connection.ClientId, _apiTopic);
 
         var m = new Dictionary<string, Command>();
 
-        var methods = typeof(TApi).GetMethods(BindingFlags.Instance | BindingFlags.Public);
+        var methods = _apiType.GetMethods(BindingFlags.Instance | BindingFlags.Public);
 
         foreach (var method in methods)
         {
@@ -142,7 +145,7 @@ internal sealed class ApiInterceptor<TApi> : IInterceptor
         var events = new Dictionary<string, Event>();
         var eventGetters = new Dictionary<string, Event>();
 
-        var props = typeof(TApi).GetProperties(BindingFlags.Instance | BindingFlags.Public);
+        var props = _apiType.GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
         foreach (var prop in props)
         {
@@ -157,7 +160,7 @@ internal sealed class ApiInterceptor<TApi> : IInterceptor
                         .Single();
 
                     _logger?.Debug(
-                        "Found event (client=`{0}', api=`{1}', topic=`{2}', type={4}).",
+                        "Found event (client=`{0}', api=`{1}', topic=`{2}', type={3}).",
                         _connection.ClientId,
                         _apiTopic,
                         attr.Topic,
@@ -189,21 +192,21 @@ internal sealed class ApiInterceptor<TApi> : IInterceptor
             id,
             _apiTopic);
 
+        ExchangeState(EFlag.Connecting);
+
         var tasks = new[]
         {
             _connection
-                .SubscribeToDeviceStatusAsync(_device, CancellationToken.None),
+                .SubscribeToDeviceStatusAsync(new DeviceFilter(_device), CancellationToken.None),
 
             _connection
-                .SubscribeToApiInfoAsync(_device, _apiTopic, CancellationToken.None),
+                .SubscribeToApiInfoAsync(new ApiFilter(_device, _apiTopic), CancellationToken.None),
 
             _connection
                 .SubscribeToApiMessagesAsync(_device, _apiTopic, EDirection.Out, CancellationToken.None)
         };
 
         Task.WaitAll(tasks);
-
-        SetStateFlags(EFlag.Connecting);
     }
 
     void Disconnected(object? sender, EventArgs e)
@@ -281,36 +284,11 @@ internal sealed class ApiInterceptor<TApi> : IInterceptor
 
     bool VersionIsCompatible(string version)
     {
-        var compatible = false;
+        var (major1, minor1) = Version.Parse(_version);
+        var (major2, minor2) = Version.Parse(version);
 
-        var m2 = VersionRegex.Match(version);
-
-        if (m2.Success)
-        {
-            var m1 = VersionRegex.Match(_version);
-
-            if (m2.Success)
-            {
-                var desiredVersion = m1
-                    .Groups
-                    .Values
-                    .Skip(1)
-                    .Select(g => int.Parse(g.Value))
-                    .ToArray();
-
-                var discoveredVersion = m2
-                    .Groups
-                    .Values
-                    .Skip(1)
-                    .Select(g => int.Parse(g.Value))
-                    .ToArray();
-
-                compatible = (desiredVersion[0] == discoveredVersion[0])
-                    && (desiredVersion[1] <= discoveredVersion[1]);
-            }
-        }
-
-        return compatible;
+        return (major1 == major2)
+               && (minor1 <= minor2);
     }
 
     void ApiMessageReceived(object? sender, ApiMessageEventArgs e)

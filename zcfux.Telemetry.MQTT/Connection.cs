@@ -216,7 +216,7 @@ public class Connection : IConnection
                                     message.Payload.Length);
 
                                 _logger?.Trace(
-                                    "Sending message (client=`{0}', topic=`{1}'): ? `{2}'",
+                                    "Sending message (client=`{0}', topic=`{1}'): `{2}'",
                                     ClientId,
                                     message.Topic,
                                     message.ConvertPayloadToString());
@@ -399,9 +399,33 @@ public class Connection : IConnection
         return m.Success;
     }
 
-    public Task SubscribeToApiInfoAsync(DeviceDetails device, string api, CancellationToken cancellationToken)
+    public Task SubscribeToDeviceStatusAsync(DeviceFilter filter, CancellationToken cancellationToken)
     {
-        var (domain, kind, id) = device;
+        var (domain, kind, id) = filter;
+
+        return _client.SubscribeAsync(
+            $"{domain}/{kind}/{id}/status",
+            MqttQualityOfServiceLevel.AtLeastOnce,
+            cancellationToken);
+    }
+
+    public Task SendDeviceStatusAsync(DeviceStatusMessage message, CancellationToken cancellationToken)
+    {
+        var ((domain, kind, id), status) = message;
+
+        var mqttMessage = new MqttApplicationMessageBuilder()
+            .WithTopic($"{domain}/{kind}/{id}/status")
+            .WithPayload(Convert.ToInt32(status).ToString())
+            .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
+            .WithRetainFlag()
+            .Build();
+
+        return _client.PublishAsync(mqttMessage, cancellationToken);
+    }
+
+    public Task SubscribeToApiInfoAsync(ApiFilter filter, CancellationToken cancellationToken)
+    {
+        var (domain, kind, id, api) = filter;
 
         return _client.SubscribeAsync(
             $"{domain}/{kind}/{id}/a/{api}/version",
@@ -431,30 +455,6 @@ public class Connection : IConnection
                     .WithPayload(Array.Empty<byte>())
                     .Build());
         }
-    }
-
-    public Task SubscribeToDeviceStatusAsync(DeviceDetails device, CancellationToken cancellationToken)
-    {
-        var (domain, kind, id) = device;
-
-        return _client.SubscribeAsync(
-            $"{domain}/{kind}/{id}/status",
-            MqttQualityOfServiceLevel.AtLeastOnce,
-            cancellationToken);
-    }
-
-    public Task SendDeviceStatusAsync(DeviceStatusMessage message, CancellationToken cancellationToken)
-    {
-        var ((domain, kind, id), status) = message;
-
-        var mqttMessage = new MqttApplicationMessageBuilder()
-            .WithTopic($"{domain}/{kind}/{id}/status")
-            .WithPayload(Convert.ToInt32(status).ToString())
-            .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
-            .WithRetainFlag()
-            .Build();
-
-        return _client.PublishAsync(mqttMessage, cancellationToken);
     }
 
     public Task SubscribeToApiMessagesAsync(DeviceDetails device, string api, EDirection direction, CancellationToken cancellationToken)

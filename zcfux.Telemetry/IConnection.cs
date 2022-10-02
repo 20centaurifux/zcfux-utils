@@ -37,13 +37,13 @@ public interface IConnection : IDisposable
 
     Task DisconnectAsync(CancellationToken cancellationToken);
 
-    Task SubscribeToApiInfoAsync(DeviceDetails device, string api, CancellationToken cancellationToken);
-
-    Task SendApiInfoAsync(ApiInfoMessage message, CancellationToken cancellationToken);
-
-    Task SubscribeToDeviceStatusAsync(DeviceDetails device, CancellationToken cancellationToken);
+    Task SubscribeToDeviceStatusAsync(DeviceFilter filter, CancellationToken cancellationToken);
 
     Task SendDeviceStatusAsync(DeviceStatusMessage message, CancellationToken cancellationToken);
+    
+    Task SubscribeToApiInfoAsync(ApiFilter filter, CancellationToken cancellationToken);
+
+    Task SendApiInfoAsync(ApiInfoMessage message, CancellationToken cancellationToken);
 
     Task SubscribeToApiMessagesAsync(DeviceDetails device, string api, EDirection direction, CancellationToken cancellationToken);
 

@@ -103,7 +103,7 @@ namespace zcfux.Telemetry.Device
             return builder;
         }
 
-        public OptionsBuilder WithLogger(ILogger logger)
+        public OptionsBuilder WithLogger(ILogger? logger)
         {
             var builder = Clone();
 

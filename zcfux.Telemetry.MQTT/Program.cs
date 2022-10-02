@@ -1,4 +1,4 @@
-﻿using zcfux.Telemetry.Device;
+﻿using zcfux.Telemetry.Discovery;
 
 namespace zcfux.Telemetry.MQTT
 {
@@ -21,7 +21,7 @@ namespace zcfux.Telemetry.MQTT
             IAsyncEnumerable<bool> On { get; }
 
             [Command(Topic = "status", TimeToLive = 5)]
-            Task ChangeStatus(bool on);
+            Task ChangeStatusAsync(bool on);
         }
 
         sealed class PowerImpl : IPowerApi, IConnected
@@ -32,7 +32,7 @@ namespace zcfux.Telemetry.MQTT
 
             public IAsyncEnumerable<bool> On => _producer;
 
-            public Task ChangeStatus(bool on)
+            public Task ChangeStatusAsync(bool on)
             {
                 _state = on;
 
@@ -47,11 +47,11 @@ namespace zcfux.Telemetry.MQTT
             }
         }
 
-        public sealed class Bulb : Client
+        public sealed class Bulb : Device.Client
         {
             public IPowerApi Power { get; } = new PowerImpl();
 
-            public Bulb(Options options)
+            public Bulb(Device.Options options)
                 : base(options)
             {
             }
@@ -77,7 +77,7 @@ namespace zcfux.Telemetry.MQTT
 
             using (var connection = new Connection(connectionOptions))
             {
-                var options = new OptionsBuilder()
+                var options = new Device.OptionsBuilder()
                     .WithDomain(Domains.Device)
                     .WithKind(Kinds.Bulb)
                     .WithId(23)
@@ -117,7 +117,7 @@ namespace zcfux.Telemetry.MQTT
 
             using (var connection = new Connection(connectionOptions))
             {
-                var options = new OptionsBuilder()
+                var options = new Device.OptionsBuilder()
                     .WithDomain(Domains.Device)
                     .WithKind(Kinds.Bulb)
                     .WithId(23)
@@ -126,7 +126,7 @@ namespace zcfux.Telemetry.MQTT
                     .WithLogger(Logging.Factory.FromAssembly("zcfux.Logging", "zcfux.Logging.Console.Writer"))
                     .Build();
 
-                var proxy = ProxyFactory.CreateApiProxy<IPowerApi>(options);
+                var proxy = Device.ProxyFactory.CreateApiProxy<IPowerApi>(options);
 
                 var reader = proxy.On.GetAsyncEnumerator(cancellationToken);
 
@@ -147,6 +147,74 @@ namespace zcfux.Telemetry.MQTT
             }
         }
 
+        static async Task RunDiscovererAsync(CancellationToken cancellationToken)
+        {
+            var connectionOptions = new ConnectionOptionsBuilder()
+                .WithClientOptions(new ClientOptionsBuilder()
+                    .WithClientId("discoverer")
+                    .Build())
+                .WithMessageQueue(new MemoryMessageQueue(50))
+                .WithReconnect(TimeSpan.FromSeconds(30))
+                .WithLogger(Logging.Factory.FromAssembly("zcfux.Logging", "zcfux.Logging.Console.Writer"))
+                .Build();
+
+            using (var connection = new Connection(connectionOptions))
+            {
+                var apiRegistry = new Discovery.ApiRegistry();
+
+                apiRegistry.Register<IPowerApi>();
+
+                var options = new Discovery.OptionsBuilder()
+                    .WithConnection(connection)
+                    .WithFilter(new DeviceFilter("d", DeviceFilter.All, DeviceFilter.All))
+                    .WithApiRegistry(apiRegistry)
+                    .WithSerializer(new Serializer())
+                    .WithLogger(Logging.Factory.FromAssembly("zcfux.Logging", "zcfux.Logging.Console.Writer"))
+                    .Build();
+
+                var discoverer = new Discovery.Discoverer(options);
+
+                IDiscoveredDevice? discoveredDevice = null;
+
+                discoverer.Discovered += (s1, e1) =>
+                {
+                    discoveredDevice = e1.Device;
+
+                    discoveredDevice.StatusChanged += (s2, e2) =>
+                    {
+                        var status = e2.Status;
+                    };
+
+                    discoveredDevice.Registered += (s2, e2) =>
+                    {
+                        var api = e2.Api;
+                    };
+                };
+
+                await connection.ConnectAsync(CancellationToken.None);
+
+                var status = true;
+
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+
+                        if (discoveredDevice?.TryGetApi<IPowerApi>() is { } powerApi)
+                        {
+                            await powerApi.ChangeStatusAsync(on: status);
+
+                            status = !status;
+                        }
+                    }
+                    catch { }
+                }
+
+                await connection.DisconnectAsync(CancellationToken.None);
+            }
+        }
+
         static void Main(string[] args)
         {
             var cancellationTokenSource = new CancellationTokenSource();
@@ -154,6 +222,7 @@ namespace zcfux.Telemetry.MQTT
             var tasks = new Task[]
             {
                 RunClientAsync(cancellationTokenSource.Token),
+                RunDiscovererAsync(cancellationTokenSource.Token),
                 RunControllerAsync(cancellationTokenSource.Token)
             };
 

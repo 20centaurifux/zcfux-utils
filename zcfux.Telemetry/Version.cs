@@ -19,30 +19,30 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using Castle.DynamicProxy;
+using System.Text.RegularExpressions;
 
-namespace zcfux.Telemetry.Device;
+namespace zcfux.Telemetry;
 
-public static class ProxyFactory
+public static class Version
 {
-    static readonly ProxyGenerator Generator = new();
+    static readonly Regex VersionRegex = new("^([\\d+])\\.([\\d]+)$");
 
-    public static TApi CreateApiProxy<TApi>(Options options)
-        where TApi : class
+    public static (int, int) Parse(string version)
     {
-        var interceptor = new ApiInterceptor(typeof(TApi), options);
+        var m = VersionRegex.Match(version);
 
-        var proxy = Generator.CreateInterfaceProxyWithoutTarget<TApi>(interceptor);
+        if (!m.Success)
+        {
+            throw new ArgumentException("Version format is invalid.");
+        }
 
-        return proxy!;
-    }
-    
-    public static object CreateApiProxy(Type type, Options options)
-    {
-        var interceptor = new ApiInterceptor(type, options);
+        var parts = m
+            .Groups
+            .Values
+            .Skip(1)
+            .Select(g => int.Parse(g.Value))
+            .ToArray();
 
-        var proxy = Generator.CreateInterfaceProxyWithoutTarget(type, interceptor);
-
-        return proxy!;
+        return (parts[0], parts[1]);
     }
 }

@@ -24,6 +24,7 @@ using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Protocol;
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using zcfux.Logging;
 
@@ -33,6 +34,8 @@ public class Connection : IConnection
 {
     static readonly MqttFactory Factory = new();
 
+    static readonly CultureInfo LoggingCulture = CultureInfo.GetCultureInfo("en-US");
+    
     static readonly Regex DeviceStatusRegex = new(
         "^([a-z0-9]+)/([a-z0-9]+)/([0-9]+)/status$",
         RegexOptions.IgnoreCase);
@@ -273,7 +276,10 @@ public class Connection : IConnection
 
                         var token = _reconnectCancellationTokenSource.Token;
 
-                        _logger?.Debug("Reconnecting client `{0}' in {1}.", ClientId, _reconnect.Value.Humanize());
+                        _logger?.Debug(
+                            "Reconnecting client `{0}' in {1}.",
+                            ClientId,
+                            _reconnect.Value.Humanize(culture: LoggingCulture));
 
                         _reconnectTask = Task.Run(async () =>
                         {

@@ -21,8 +21,10 @@
  ***************************************************************************/
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Globalization;
 using Castle.DynamicProxy;
 using System.Reflection;
+using Humanizer;
 using zcfux.Logging;
 
 namespace zcfux.Telemetry.Device;
@@ -30,6 +32,8 @@ namespace zcfux.Telemetry.Device;
 internal sealed class ApiInterceptor : IInterceptor, IDisposable
 {
     static readonly TimeSpan ResponseTimeout = TimeSpan.FromMinutes(1);
+
+    static readonly CultureInfo LoggingCulture = CultureInfo.GetCultureInfo("en-US");
 
     sealed record Command(string Topic, uint TimeToLive);
 
@@ -329,6 +333,8 @@ internal sealed class ApiInterceptor : IInterceptor, IDisposable
 
     void ResponseReceived(object? sender, ResponseEventArgs e)
     {
+        _logger?.Debug("Response (message id={0}) received.", e.MessageId);
+
         if (_pendingResponses.TryRemove(e.MessageId, out var pendingResponse))
         {
             try
@@ -339,6 +345,10 @@ internal sealed class ApiInterceptor : IInterceptor, IDisposable
             {
                 _logger?.Error(ex);
             }
+        }
+        else
+        {
+            _logger?.Warn("Pending response (message id={0}) not found.", e.MessageId);
         }
     }
 
@@ -412,6 +422,14 @@ internal sealed class ApiInterceptor : IInterceptor, IDisposable
 
     Task SendCommand(string topic, uint timeToLive, object? parameter)
     {
+        _logger?.Debug(
+            "Sending command (domain=`{0}', kind=`{1}', id={2}, api=`{3}', topic=`{4}').",
+            _device.Domain,
+            _device.Kind,
+            _device.Id,
+            _apiTopic,
+            topic);
+
         var message = new ApiMessage(
             _device,
             _apiTopic,
@@ -428,6 +446,15 @@ internal sealed class ApiInterceptor : IInterceptor, IDisposable
     Task SendRequest(string topic, uint timeToLive, object? parameter, Type returnType)
     {
         var messageId = NextMessageId();
+
+        _logger?.Debug(
+            "Sending request (domain=`{0}', kind=`{1}', id={2}, api=`{3}', topic=`{4}', message id={5}).",
+            _device.Domain,
+            _device.Kind,
+            _device.Id,
+            _apiTopic,
+            topic,
+            messageId);
 
         var t = typeof(TaskCompletionSource<>).MakeGenericType(returnType);
 
@@ -572,25 +599,57 @@ internal sealed class ApiInterceptor : IInterceptor, IDisposable
         {
             while (!_cancellationTokenSource.IsCancellationRequested)
             {
-                await Task.Delay(ResponseTimeout);
+                var expiredMessageIds = new List<int>();
 
-                var expired = _pendingResponses
-                    .Where(kv => kv.Value.Stopwatch.Elapsed > ResponseTimeout)
-                    .Select(kv => kv.Key)
-                    .ToArray();
+                var timeout = ResponseTimeout;
 
-                foreach (var messageId in expired)
+                foreach (var (messageId, pendingResponse) in _pendingResponses)
                 {
-                    if (_pendingResponses.TryRemove(messageId, out var pendingResponse))
+                    var elapsed = pendingResponse.Stopwatch.Elapsed;
+
+                    if (elapsed >= ResponseTimeout)
                     {
-                        try
+                        expiredMessageIds.Add(messageId);
+                    }
+                    else
+                    {
+                        var diff = (ResponseTimeout - elapsed);
+
+                        if (diff < timeout)
                         {
-                            pendingResponse.Cancel();
+                            timeout = diff;
                         }
-                        catch (Exception ex)
-                        {
-                            _logger?.Error(ex);
-                        }
+                    }
+                }
+
+                _logger?.Debug(
+                    "Cleaning pending responses in {0}.",
+                    timeout.Humanize(culture: LoggingCulture));
+
+                await Task.WhenAll(
+                    CancelResponsesAsync(expiredMessageIds.ToArray()),
+                    Task.Delay(timeout));
+            }
+        }, _cancellationTokenSource.Token);
+    }
+
+    Task CancelResponsesAsync(int[] messageIds)
+    {
+        return Task.Run(() =>
+        {
+            foreach (var messageId in messageIds)
+            {
+                if (_pendingResponses.TryRemove(messageId, out var pendingResponse))
+                {
+                    try
+                    {
+                        _logger?.Debug("Cancelling request (message id={0}).", messageId);
+
+                        pendingResponse.Cancel();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.Error(ex);
                     }
                 }
             }

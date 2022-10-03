@@ -26,7 +26,7 @@ public sealed class EventAttribute : Attribute
 {
     public string Topic { get; set; } = default!;
 
-    public bool Retain { get; set; } = default!;
+    public bool Retain { get; set; }
 
     public uint TimeToLive { get; set; } = 0;
 }

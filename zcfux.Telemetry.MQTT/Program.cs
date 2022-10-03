@@ -257,7 +257,7 @@ namespace zcfux.Telemetry.MQTT
 
             var tasks = new Task[]
             {
-                //RunClientAsync(cancellationTokenSource.Token),
+                RunClientAsync(cancellationTokenSource.Token),
                 //RunDiscovererAsync(cancellationTokenSource.Token),
                 RunControllerAsync(cancellationTokenSource.Token)
             };

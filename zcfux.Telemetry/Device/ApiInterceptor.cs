@@ -27,15 +27,17 @@ using zcfux.Logging;
 
 namespace zcfux.Telemetry.Device;
 
-internal sealed class ApiInterceptor : IInterceptor
+internal sealed class ApiInterceptor : IInterceptor, IDisposable
 {
+    static readonly TimeSpan ResponseTimeout = TimeSpan.FromMinutes(1);
+
     sealed record Command(string Topic, uint TimeToLive);
 
     sealed record Event(IProducer Producer, Type ParameterType);
 
-    sealed record PendingResponse(Action<byte[]> SetResult, Stopwatch Stopwatch);
+    sealed record PendingResponse(Action<byte[]> SetResult, Action Cancel, Stopwatch Stopwatch);
 
-    ConcurrentDictionary<int, PendingResponse> _pendingResponses = new();
+    readonly ConcurrentDictionary<int, PendingResponse> _pendingResponses = new();
 
     readonly Type _apiType;
 
@@ -71,6 +73,10 @@ internal sealed class ApiInterceptor : IInterceptor
     readonly object _detectedVersionLock = new();
     string? _detectedVersion;
 
+    readonly Task _cleanPendingResponsesTask;
+
+    readonly CancellationTokenSource _cancellationTokenSource = new();
+
     public ApiInterceptor(Type type, Options options)
     {
         _apiType = type;
@@ -94,6 +100,8 @@ internal sealed class ApiInterceptor : IInterceptor
         _connection.ApiInfoReceived += ApiInfoReceived;
         _connection.ApiMessageReceived += ApiMessageReceived;
         _connection.ResponseReceived += ResponseReceived;
+
+        _cleanPendingResponsesTask = CleanPendingResponsesAsync();
     }
 
     void RegisterCommands()
@@ -321,7 +329,7 @@ internal sealed class ApiInterceptor : IInterceptor
 
     void ResponseReceived(object? sender, ResponseEventArgs e)
     {
-        if (_pendingResponses.TryGetValue(e.MessageId, out var pendingResponse))
+        if (_pendingResponses.TryRemove(e.MessageId, out var pendingResponse))
         {
             try
             {
@@ -330,10 +338,6 @@ internal sealed class ApiInterceptor : IInterceptor
             catch (Exception ex)
             {
                 _logger?.Error(ex);
-            }
-            finally
-            {
-                _pendingResponses.Remove(e.MessageId, out _);
             }
         }
     }
@@ -429,14 +433,23 @@ internal sealed class ApiInterceptor : IInterceptor
 
         dynamic taskCompletionSource = Activator.CreateInstance(t)!;
 
-        var method = t.GetMethod("SetResult");
+        var setResult = t.GetMethod("SetResult");
+
+        var setCanceled = t.GetMethod(
+            "SetCanceled",
+            BindingFlags.Instance | BindingFlags.Public,
+            Array.Empty<Type>());
 
         _pendingResponses[messageId] = new PendingResponse(
             payload =>
             {
                 var p = _serializer.Deserialize(payload, returnType);
 
-                method?.Invoke(taskCompletionSource, new[] { p });
+                setResult?.Invoke(taskCompletionSource, new[] { p });
+            },
+            () =>
+            {
+                setCanceled?.Invoke(taskCompletionSource, Array.Empty<object>());
             },
             Stopwatch.StartNew());
 
@@ -551,5 +564,43 @@ internal sealed class ApiInterceptor : IInterceptor
 
             return ++_messageId;
         }
+    }
+
+    Task CleanPendingResponsesAsync()
+    {
+        return Task.Run(async () =>
+        {
+            while (!_cancellationTokenSource.IsCancellationRequested)
+            {
+                await Task.Delay(ResponseTimeout);
+
+                var expired = _pendingResponses
+                    .Where(kv => kv.Value.Stopwatch.Elapsed > ResponseTimeout)
+                    .Select(kv => kv.Key)
+                    .ToArray();
+
+                foreach (var messageId in expired)
+                {
+                    if (_pendingResponses.TryRemove(messageId, out var pendingResponse))
+                    {
+                        try
+                        {
+                            pendingResponse.Cancel();
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.Error(ex);
+                        }
+                    }
+                }
+            }
+        }, _cancellationTokenSource.Token);
+    }
+
+    public void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+
+        _cleanPendingResponsesTask.Wait();
     }
 }

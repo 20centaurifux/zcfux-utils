@@ -158,7 +158,7 @@ namespace zcfux.Telemetry.MQTT
                 var task = reader.MoveNextAsync();
 
                 await proxy.ChangeStatusAsync(true);
-
+                
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     try
@@ -170,7 +170,7 @@ namespace zcfux.Telemetry.MQTT
                             task = reader.MoveNextAsync();
                         }
 
-                        await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
+                        //await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
 
                         await proxy.ToggleAsync();
                     }
@@ -254,8 +254,7 @@ namespace zcfux.Telemetry.MQTT
             var cancellationTokenSource = new CancellationTokenSource();
 
             var tasks = new Task[]
-            {
-                RunClientAsync(cancellationTokenSource.Token),
+            { RunClientAsync(cancellationTokenSource.Token),
                 //RunDiscovererAsync(cancellationTokenSource.Token),
                 RunControllerAsync(cancellationTokenSource.Token)
             };

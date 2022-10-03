@@ -333,7 +333,7 @@ internal sealed class ApiInterceptor : IInterceptor
             }
             finally
             {
-                _pendingResponses.Remove(e.MessageId, out var _);
+                _pendingResponses.Remove(e.MessageId, out _);
             }
         }
     }

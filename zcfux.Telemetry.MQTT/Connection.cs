@@ -210,32 +210,29 @@ public class Connection : IConnection
                         if (_client.IsConnected
                             || _connectionEvent.WaitOne(TimeSpan.FromSeconds(1)))
                         {
-                            var message = await _messageQueue.TryPeekAsync(_cancellationTokenSource.Token);
+                            var message = await _messageQueue.PeekAsync(_cancellationTokenSource.Token);
 
-                            if (message is { })
+                            _logger?.Debug(
+                                "Client `{0}' sends message to topic `{1}' (size={2}).",
+                                ClientId,
+                                message.Topic,
+                                message.Payload.Length);
+
+                            _logger?.Trace(
+                                "Sending message (client=`{0}', topic=`{1}'): `{2}'",
+                                ClientId,
+                                message.Topic,
+                                message.ConvertPayloadToString());
+
+                            try
                             {
-                                _logger?.Debug(
-                                    "Client `{0}' sends message to topic `{1}' (size={2}).",
-                                    ClientId,
-                                    message.Topic,
-                                    message.Payload.Length);
+                                await _client.PublishAsync(message);
 
-                                _logger?.Trace(
-                                    "Sending message (client=`{0}', topic=`{1}'): `{2}'",
-                                    ClientId,
-                                    message.Topic,
-                                    message.ConvertPayloadToString());
-
-                                try
-                                {
-                                    await _client.PublishAsync(message);
-
-                                    _messageQueue.Dequeue();
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger?.Error(ex);
-                                }
+                                _messageQueue.Dequeue();
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger?.Error(ex);
                             }
                         }
                         else
@@ -469,7 +466,7 @@ public class Connection : IConnection
                 }
 
                 var messageId = BitConverter.ToInt32(bytes);
-                
+
                 ResponseReceived?.Invoke(this, new ResponseEventArgs(
                     new DeviceDetails(
                         m.Groups[1].Value,

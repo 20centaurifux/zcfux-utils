@@ -38,7 +38,7 @@ public sealed class MemoryMessageQueue : IMessageQueue
 
     readonly object _lock = new();
     readonly Queue<Item> _items = new();
-    readonly SemaphoreSlim _semaphore = new(0);
+    readonly AutoResetEvent _event = new(false);
     readonly int _limit;
 
     public MemoryMessageQueue(int limit)
@@ -46,7 +46,7 @@ public sealed class MemoryMessageQueue : IMessageQueue
 
     public Task EnqueueAsync(MqttApplicationMessage message, uint secondsToLive)
     {
-        var taskCompletionSource = new TaskCompletionSource();
+        var taskCompletionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         lock (_lock)
         {
@@ -67,28 +67,51 @@ public sealed class MemoryMessageQueue : IMessageQueue
 
                 _items.Enqueue(item);
 
-                _semaphore.Release();
+                _event.Set();
             }
         }
 
         return taskCompletionSource.Task;
     }
 
-    public async Task<MqttApplicationMessage?> TryPeekAsync(CancellationToken cancellationToken)
+    public Task<MqttApplicationMessage> PeekAsync(CancellationToken cancellationToken)
     {
-        await _semaphore.WaitAsync(cancellationToken);
+        var taskCompletionSource = new TaskCompletionSource<MqttApplicationMessage>();
 
+        Task.Run(() =>
+        {
+            do
+            {
+                if (TryPeek() is { } message)
+                {
+                    taskCompletionSource.SetResult(message);
+                }
+                else
+                {
+                    _event.WaitOne(TimeSpan.FromMilliseconds(500));
+                }
+            } while (!taskCompletionSource.Task.IsCompleted
+                     && !cancellationToken.IsCancellationRequested);
+        }, cancellationToken);
+
+        return taskCompletionSource.Task;
+    }
+
+    MqttApplicationMessage? TryPeek()
+    {
+        MqttApplicationMessage? message = null;
+        
         lock (_lock)
         {
             Shrink_Unlocked();
 
             if (_items.TryPeek(out var item))
             {
-                return item.Message;
+                message = item.Message;
             }
         }
 
-        return null;
+        return message;
     }
 
     public void Dequeue()
@@ -102,7 +125,7 @@ public sealed class MemoryMessageQueue : IMessageQueue
     void Shrink_Unlocked()
     {
         while (_items.TryPeek(out var item)
-            && item.IsExpired)
+               && item.IsExpired)
         {
             Dequeue_Unlocked(cancelled: true);
         }

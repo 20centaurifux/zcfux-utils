@@ -27,7 +27,7 @@ public interface IMessageQueue
 {
     Task EnqueueAsync(MqttApplicationMessage message, uint secondsToLive);
 
-    Task<MqttApplicationMessage?> TryPeekAsync(CancellationToken cancellationToken);
+    Task<MqttApplicationMessage> PeekAsync(CancellationToken cancellationToken);
 
     void Dequeue();
 }

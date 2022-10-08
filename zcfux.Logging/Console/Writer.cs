@@ -25,7 +25,11 @@ namespace zcfux.Logging.Console;
 internal sealed class Writer : IWriter
 {
     public void WriteMessage(ESeverity severity, string message)
-        => System.Console.WriteLine($"{DateTime.Now} {severity} {message}");
+    {
+        var now = DateTime.Now;
+
+        System.Console.WriteLine($"{now}.{now.Millisecond} {severity} {message}");
+    }
 
     public void WriteException(ESeverity severity, Exception exception)
         => WriteMessage(severity, exception?.ToString()!);

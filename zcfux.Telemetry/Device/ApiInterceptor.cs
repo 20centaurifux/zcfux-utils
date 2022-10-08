@@ -222,7 +222,7 @@ internal sealed class ApiInterceptor : IInterceptor
 
                 Task.WaitAll(tasks);
 
-                foreach(var ev in _events.Values)
+                foreach (var ev in _events.Values)
                 {
                     ev.Producer.Enable();
                 }
@@ -376,14 +376,32 @@ internal sealed class ApiInterceptor : IInterceptor
 
     void InterceptGetter(IInvocation invocation)
     {
-        var propertyName = invocation.Method.Name.Substring(4);
+        var propertyName = invocation.Method.Name[4..];
 
         if (!_eventGetters.TryGetValue(propertyName, out var ev))
         {
             throw new ApplicationException($"Property `{propertyName}' not found.");
         }
 
-        invocation.ReturnValue = ev.Producer;
+        _apiInfoReceived.WaitOne(TimeSpan.FromSeconds(1));
+
+        if ((State & EFlag.Compatible) == EFlag.Compatible)
+        {
+            invocation.ReturnValue = ev.Producer;
+        }
+        else
+        {
+            var producedType = ev
+                .Producer
+                .GetType()
+                .GetGenericArguments()
+                .Single();
+
+            invocation.ReturnValue = Activator
+                .CreateInstance(
+                    typeof(EmptyAsyncEnumerable<>)
+                        .MakeGenericType(producedType));
+        }
     }
 
     void InterceptCommand(IInvocation invocation)
@@ -442,7 +460,7 @@ internal sealed class ApiInterceptor : IInterceptor
     {
         if (!await WaitForCompatibilityAsync(TimeSpan.FromSeconds(timeToLive)))
         {
-            throw new ApplicationException("Endpoint not compatible.");
+            throw new OperationCanceledException();
         }
 
         _logger?.Debug(
@@ -470,7 +488,7 @@ internal sealed class ApiInterceptor : IInterceptor
 
         if (!await WaitForCompatibilityAsync(TimeSpan.FromSeconds(timeToLive)))
         {
-            throw new ApplicationException("Endpoint not compatible.");
+            throw new OperationCanceledException();
         }
 
         var secondsLeft = (uint)Math.Floor((timeToLive - stopwatch.Elapsed.TotalSeconds));
@@ -524,8 +542,9 @@ internal sealed class ApiInterceptor : IInterceptor
         var responseTask = taskCompletionSource.Task;
 
         if (await Task.WhenAny(
-            responseTask,
-            Task.Delay(TimeSpan.FromSeconds(responseTimeout))) != taskCompletionSource.Task)
+                responseTask,
+                Task.Delay(TimeSpan.FromSeconds(responseTimeout)))
+            != taskCompletionSource.Task)
         {
             throw new OperationCanceledException();
         }

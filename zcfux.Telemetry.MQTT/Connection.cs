@@ -19,37 +19,34 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using Humanizer;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Protocol;
 using System.Collections.Concurrent;
-using System.Globalization;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using zcfux.Logging;
 
 namespace zcfux.Telemetry.MQTT;
 
-public class Connection : IConnection
+public sealed class Connection : IConnection
 {
     static readonly MqttFactory Factory = new();
 
-    static readonly CultureInfo LoggingCulture = CultureInfo.GetCultureInfo("en-US");
-    
     static readonly Regex DeviceStatusRegex = new(
-        "^([a-z0-9]+)/([a-z0-9]+)/([0-9]+)/status$",
+        "^([a-z0-9-_]+)/([a-z0-9-_]+)/([0-9]+)/status$",
         RegexOptions.IgnoreCase);
 
     static readonly Regex ApiVersionRegex = new(
-        "^([a-z0-9]+)/([a-z0-9]+)/([0-9]+)/a/([a-z0-9]+)/version$",
+        "^([a-z0-9-_]+)/([a-z0-9-_]+)/([0-9]+)/a/([a-z0-9-_]+)/version$",
         RegexOptions.IgnoreCase);
 
     static readonly Regex ApiTopicRegex = new(
-        "^([a-z0-9]+)/([a-z0-9]+)/([0-9]+)/a/([a-z0-9]+)/([<|>])/([a-z0-9]+)$",
+        "^([a-z0-9-_]+)/([a-z0-9-_]+)/([0-9]+)/a/([a-z0-9-_]+)/([<|>])/([a-z0-9]+)$",
         RegexOptions.IgnoreCase);
 
     static readonly Regex ResponseRegex = new(
-        "^([a-z0-9]+)/([a-z0-9]+)/([0-9]+)/r",
+        "^r/[a-z0-9-_]+/([a-z0-9-_]+)/([a-z0-9-_]+)/([0-9]+)",
         RegexOptions.IgnoreCase);
 
     static readonly ISerializer Serializer = new Serializer();
@@ -68,10 +65,11 @@ public class Connection : IConnection
     readonly bool _cleanupRetainedMessages;
 
     long _connectivity = Offline;
-    readonly AutoResetEvent _connectionEvent = new(false);
+    readonly ManualResetEvent _onlineEvent = new(false);
+    readonly AutoResetEvent _offlineEvent = new(false);
 
-    readonly object _sendTaskLock = new();
-    Task? _sendTask;
+    readonly Task _sendTask;
+    readonly TimeSpan _retrySendingInterval;
 
     readonly TimeSpan? _reconnect;
     readonly object _reconnectLock = new();
@@ -107,6 +105,9 @@ public class Connection : IConnection
         _client.ConnectedAsync += ClientConnected;
         _client.DisconnectedAsync += ClientDisconnected;
         _client.ApplicationMessageReceivedAsync += ApplicationMessageReceivedAsync;
+
+        _retrySendingInterval = options.RetrySendingInterval;
+        _sendTask = SendMessagesAsync();
     }
 
     static MqttClientOptions BuildMqttClientOptions(ClientOptions options)
@@ -147,20 +148,21 @@ public class Connection : IConnection
         return builder.Build();
     }
 
-    public Task ConnectAsync(CancellationToken cancellationToken)
+    public async Task ConnectAsync(CancellationToken cancellationToken)
     {
         _logger?.Debug("Connecting client `{0}'.", ClientId);
 
-        return _client.ConnectAsync(_clientOptions, cancellationToken);
+        await _client.ConnectAsync(_clientOptions, cancellationToken);
+
+        _onlineEvent.WaitOne();
+        _onlineEvent.Reset();
     }
 
     public async Task DisconnectAsync(CancellationToken cancellationToken)
     {
         _logger?.Debug("Disconnecting client `{0}'.", ClientId);
 
-        CancelReconnect();
-
-        await DeleteRetainedMessagesAsync();
+        await Task.WhenAny(CancelReconnectAsync(), DeleteRetainedMessagesAsync());
 
         Interlocked.Exchange(ref _connectivity, GracefulDisconnect);
 
@@ -169,9 +171,11 @@ public class Connection : IConnection
             .Build();
 
         await _client.DisconnectAsync(opts, cancellationToken);
+
+        _offlineEvent.WaitOne();
     }
 
-    public async Task DeleteRetainedMessagesAsync()
+    async Task DeleteRetainedMessagesAsync()
     {
         if (IsConnected)
         {
@@ -179,7 +183,10 @@ public class Connection : IConnection
                 .Select(msg => _client.PublishAsync(msg, CancellationToken.None))
                 .ToArray();
 
-            await Task.WhenAll(tasks);
+            if (tasks.Any())
+            {
+                await Task.WhenAll(tasks);
+            }
         }
     }
 
@@ -189,63 +196,95 @@ public class Connection : IConnection
 
         Interlocked.Exchange(ref _connectivity, Online);
 
-        _connectionEvent.Set();
+        try
+        {
+            Connected?.Invoke(this, EventArgs.Empty);
+        }
+        catch (Exception ex)
+        {
+            _logger?.Error(ex);
+        }
 
-        Connected?.Invoke(this, EventArgs.Empty);
-
-        StartSendTask();
+        _onlineEvent.Set();
 
         return Task.CompletedTask;
     }
 
-    void StartSendTask()
+    Task SendMessagesAsync()
     {
-        lock (_sendTaskLock)
+        var task = Task.Factory.StartNew(async () =>
         {
-            if (_sendTask == null)
+            MqttApplicationMessage? message = null;
+            TimeSpan? expiryInterval = null;
+            Stopwatch stopwatch = new();
+
+            while (!_cancellationTokenSource.IsCancellationRequested)
             {
-                _sendTask = Task.Run(async () =>
+                try
                 {
-                    while (!_cancellationTokenSource.IsCancellationRequested)
+                    if (message != null
+                        && expiryInterval.HasValue
+                        && stopwatch.Elapsed > expiryInterval.Value)
+                    {
+                        _logger?.Debug("Message expired (client=`{0}').", ClientId);
+
+                        message = null;
+                    }
+
+                    if (message == null)
                     {
                         _logger?.Debug("Client `{0}' is waiting for messages to send.", ClientId);
 
-                        if (_client.IsConnected
-                            || _connectionEvent.WaitOne(TimeSpan.FromSeconds(1)))
+                        message = await _messageQueue.DequeueAsync(_cancellationTokenSource.Token);
+
+                        if (message.MessageExpiryInterval == 0)
                         {
-                            var message = await _messageQueue.PeekAsync(_cancellationTokenSource.Token);
-
-                            _logger?.Debug(
-                                "Client `{0}' sends message to topic `{1}' (size={2}).",
-                                ClientId,
-                                message.Topic,
-                                message.Payload.Length);
-
-                            _logger?.Trace(
-                                "Sending message (client=`{0}', topic=`{1}'): `{2}'",
-                                ClientId,
-                                message.Topic,
-                                message.ConvertPayloadToString());
-
-                            try
-                            {
-                                await _client.PublishAsync(message);
-
-                                _messageQueue.Dequeue();
-                            }
-                            catch (Exception ex)
-                            {
-                                _logger?.Error(ex);
-                            }
+                            expiryInterval = null;
                         }
                         else
                         {
-                            _logger?.Debug("Client `{0}' can't send message, device is offline.", ClientId);
+                            expiryInterval = TimeSpan.FromSeconds(message.MessageExpiryInterval);
+
+                            stopwatch.Restart();
                         }
                     }
-                });
+
+                    if (_client.IsConnected
+                        || _onlineEvent.WaitOne(TimeSpan.FromSeconds(1)))
+                    {
+                        _logger?.Debug(
+                            "Client `{0}' sends message to topic `{1}' (size={2}).",
+                            ClientId,
+                            message.Topic,
+                            message.Payload.Length);
+
+                        _logger?.Trace(
+                            "Sending message (client=`{0}', topic=`{1}'): `{2}'",
+                            ClientId,
+                            message.Topic,
+                            message.ConvertPayloadToString());
+
+                        await _client.PublishAsync(message, _cancellationTokenSource.Token);
+
+                        message = null;
+                    }
+                    else
+                    {
+                        _logger?.Debug("Client `{0}' is disconnected, cannot send messages.", ClientId);
+
+                        await Task.Delay(_retrySendingInterval, _cancellationTokenSource.Token);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger?.Warn(ex);
+                    
+                    await Task.Delay(_retrySendingInterval, _cancellationTokenSource.Token);
+                }
             }
-        }
+        }, TaskCreationOptions.LongRunning);
+
+        return task;
     }
 
     Task ClientDisconnected(MqttClientDisconnectedEventArgs e)
@@ -254,14 +293,21 @@ public class Connection : IConnection
 
         var previousStatus = Interlocked.Exchange(ref _connectivity, Offline);
 
-        Disconnected?.Invoke(this, EventArgs.Empty);
+        try
+        {
+            Disconnected?.Invoke(this, EventArgs.Empty);
+        }
+        catch (Exception ex)
+        {
+            _logger?.Error(ex);
+        }
 
-        InitializeReconnect(previousStatus);
+        _offlineEvent.Set();
 
-        return Task.CompletedTask;
+        return InitializeReconnectAsync(previousStatus);
     }
 
-    void InitializeReconnect(long previousStatus)
+    async Task InitializeReconnectAsync(long previousStatus)
     {
         if (_reconnect.HasValue)
         {
@@ -277,9 +323,9 @@ public class Connection : IConnection
                         var token = _reconnectCancellationTokenSource.Token;
 
                         _logger?.Debug(
-                            "Reconnecting client `{0}' in {1}.",
+                            "Reconnecting client `{0}' in {1}s.",
                             ClientId,
-                            _reconnect.Value.Humanize(culture: LoggingCulture));
+                            _reconnect.Value.TotalSeconds);
 
                         _reconnectTask = Task.Run(async () =>
                         {
@@ -292,18 +338,18 @@ public class Connection : IConnection
                             }
 
                             return ConnectAsync(token);
-                        });
+                        }, token);
                     }
                 }
             }
             else
             {
-                CancelReconnect();
+                await CancelReconnectAsync();
             }
         }
     }
 
-    void CancelReconnect()
+    async Task CancelReconnectAsync()
     {
         CancellationTokenSource? cancellationTokenSource = null;
         Task? task = null;
@@ -325,13 +371,14 @@ public class Connection : IConnection
         {
             cancellationTokenSource.Cancel();
 
-            Task.WhenAll(task).Wait();
+            await task;
         }
     }
 
     Task ApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs e)
     {
-        _logger?.Trace("Client `{0}' received message in `{1}' (size={2}): `{3}'",
+        _logger?.Trace(
+            "Client `{0}' received message in `{1}' (size={2}): `{3}'",
             ClientId,
             e.ApplicationMessage.Topic,
             e.ApplicationMessage.Payload?.Length ?? 0,
@@ -355,12 +402,19 @@ public class Connection : IConnection
 
             if (m.Success)
             {
-                DeviceStatusReceived?.Invoke(this, new DeviceStatusEventArgs(
-                    new DeviceDetails(
-                        m.Groups[1].Value,
-                        m.Groups[2].Value,
-                        Convert.ToInt32(m.Groups[3].Value)),
-                    Serializer.Deserialize<EDeviceStatus>(message.Payload)));
+                try
+                {
+                    DeviceStatusReceived?.Invoke(this, new DeviceStatusEventArgs(
+                        new DeviceDetails(
+                            m.Groups[1].Value,
+                            m.Groups[2].Value,
+                            Convert.ToInt32(m.Groups[3].Value)),
+                        Serializer.Deserialize<EDeviceStatus>(message.Payload)));
+                }
+                catch (Exception ex)
+                {
+                    _logger?.Error(ex);
+                }
             }
 
             success = m.Success;
@@ -379,13 +433,20 @@ public class Connection : IConnection
 
             if (m.Success)
             {
-                ApiInfoReceived?.Invoke(this, new ApiInfoEventArgs(
-                    new DeviceDetails(
-                        m.Groups[1].Value,
-                        m.Groups[2].Value,
-                        Convert.ToInt32(m.Groups[3].Value)),
-                    m.Groups[4].Value,
-                    message.ConvertPayloadToString()));
+                try
+                {
+                    ApiInfoReceived?.Invoke(this, new ApiInfoEventArgs(
+                        new DeviceDetails(
+                            m.Groups[1].Value,
+                            m.Groups[2].Value,
+                            Convert.ToInt32(m.Groups[3].Value)),
+                        m.Groups[4].Value,
+                        message.ConvertPayloadToString()));
+                }
+                catch (Exception ex)
+                {
+                    _logger?.Error(ex);
+                }
             }
 
             success = m.Success;
@@ -423,19 +484,26 @@ public class Connection : IConnection
                 messageId = BitConverter.ToInt32(bytes);
             }
 
-            ApiMessageReceived?.Invoke(this, new ApiMessageEventArgs(
-                new DeviceDetails(
-                    m.Groups[1].Value,
-                    m.Groups[2].Value,
-                    Convert.ToInt32(m.Groups[3].Value)),
-                m.Groups[4].Value,
-                m.Groups[6].Value,
-                message.Payload,
-                (m.Groups[5].Value == ">")
-                    ? EDirection.Out
-                    : EDirection.In,
-                responseTopic,
-                messageId));
+            try
+            {
+                ApiMessageReceived?.Invoke(this, new ApiMessageEventArgs(
+                    new DeviceDetails(
+                        m.Groups[1].Value,
+                        m.Groups[2].Value,
+                        Convert.ToInt32(m.Groups[3].Value)),
+                    m.Groups[4].Value,
+                    m.Groups[6].Value,
+                    message.Payload,
+                    (m.Groups[5].Value == ">")
+                        ? EDirection.Out
+                        : EDirection.In,
+                    responseTopic,
+                    messageId));
+            }
+            catch (Exception ex)
+            {
+                _logger?.Error(ex);
+            }
         }
 
         return m.Success;
@@ -473,13 +541,20 @@ public class Connection : IConnection
 
                 var messageId = BitConverter.ToInt32(bytes);
 
-                ResponseReceived?.Invoke(this, new ResponseEventArgs(
-                    new DeviceDetails(
-                        m.Groups[1].Value,
-                        m.Groups[2].Value,
-                        Convert.ToInt32(m.Groups[3].Value)),
-                    messageId,
-                    message.Payload));
+                try
+                {
+                    ResponseReceived?.Invoke(this, new ResponseEventArgs(
+                        new DeviceDetails(
+                            m.Groups[1].Value,
+                            m.Groups[2].Value,
+                            Convert.ToInt32(m.Groups[3].Value)),
+                        messageId,
+                        message.Payload));
+                }
+                catch (Exception ex)
+                {
+                    _logger?.Error(ex);
+                }
             }
 
             success = m.Success;
@@ -588,14 +663,14 @@ public class Connection : IConnection
 
         var mqttMessage = builder.Build();
 
-        return _messageQueue.EnqueueAsync(mqttMessage, message.Options.TimeToLive);
+        return _messageQueue.EnqueueAsync(mqttMessage, message.Options.TimeToLive, cancellationToken);
     }
 
     public Task SubscribeResponseAsync(DeviceDetails device, CancellationToken cancellationToken)
     {
         var (domain, kind, id) = device;
 
-        var topic = $"{domain}/{kind}/{id}/r";
+        var topic = $"r/{ClientId}/{domain}/{kind}/{id}";
 
         return _client.SubscribeAsync(
             topic,
@@ -625,7 +700,7 @@ public class Connection : IConnection
             .WithCorrelationData(correlationData)
             .Build();
 
-        return _messageQueue.EnqueueAsync(mqttMessage, 60 * 5);
+        return _messageQueue.EnqueueAsync(mqttMessage, 60 * 5, cancellationToken);
     }
 
     public void Dispose()
@@ -650,10 +725,7 @@ public class Connection : IConnection
         {
             _cancellationTokenSource.Cancel();
 
-            if (_sendTask != null)
-            {
-                Task.WhenAny(_sendTask).Wait();
-            }
+            Task.WhenAny(_sendTask).Wait();
         }
         catch (Exception ex)
         {

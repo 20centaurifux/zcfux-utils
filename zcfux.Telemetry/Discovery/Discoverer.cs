@@ -54,13 +54,12 @@ public sealed class Discoverer
         _logger?.Debug("Discoverer (client=`{0}') connected.", _connection.ClientId);
 
         var tasks = _filters
-            .Select(f => _connection.SubscribeToDeviceStatusAsync(f, CancellationToken.None))
+            .Select(f => _connection.SubscribeToDeviceStatusAsync(f))
             .ToList();
 
         tasks.AddRange(
             _filters.Select(f => _connection.SubscribeToApiInfoAsync(
-                new ApiFilter(f, ApiFilter.All),
-                CancellationToken.None)));
+                new ApiFilter(f, ApiFilter.All))));
 
         Task.WaitAll(tasks.ToArray());
 

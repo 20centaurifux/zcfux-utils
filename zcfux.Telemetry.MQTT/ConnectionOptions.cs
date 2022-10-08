@@ -26,6 +26,7 @@ namespace zcfux.Telemetry.MQTT;
 public sealed record ConnectionOptions(
     ClientOptions ClientOptions,
     IMessageQueue MessageQueue,
+    TimeSpan RetrySendingInterval,
     ILogger? Logger,
     bool CleanupRetainedMessages,
     TimeSpan? Reconnect);

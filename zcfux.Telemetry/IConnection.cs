@@ -34,23 +34,23 @@ public interface IConnection : IDisposable
 
     string ClientId { get; }
 
-    Task ConnectAsync(CancellationToken cancellationToken);
+    Task ConnectAsync(CancellationToken cancellationToken = default);
 
-    Task DisconnectAsync(CancellationToken cancellationToken);
+    Task DisconnectAsync(CancellationToken cancellationToken = default);
 
-    Task SubscribeToDeviceStatusAsync(DeviceFilter filter, CancellationToken cancellationToken);
+    Task SubscribeToDeviceStatusAsync(DeviceFilter filter, CancellationToken cancellationToken = default);
 
-    Task SendDeviceStatusAsync(DeviceStatusMessage message, CancellationToken cancellationToken);
+    Task SendDeviceStatusAsync(DeviceStatusMessage message, CancellationToken cancellationToken = default);
 
-    Task SubscribeToApiInfoAsync(ApiFilter filter, CancellationToken cancellationToken);
+    Task SubscribeToApiInfoAsync(ApiFilter filter, CancellationToken cancellationToken = default);
 
-    Task SendApiInfoAsync(ApiInfoMessage message, CancellationToken cancellationToken);
+    Task SendApiInfoAsync(ApiInfoMessage message, CancellationToken cancellationToken = default);
 
-    Task SubscribeToApiMessagesAsync(DeviceDetails device, string api, EDirection direction, CancellationToken cancellationToken);
+    Task SubscribeToApiMessagesAsync(DeviceDetails device, string api, EDirection direction, CancellationToken cancellationToken = default);
 
-    Task SendApiMessageAsync(ApiMessage message, CancellationToken cancellationToken);
+    Task SendApiMessageAsync(ApiMessage message, CancellationToken cancellationToken = default);
 
-    Task SubscribeResponseAsync(DeviceDetails device, CancellationToken cancellationToken);
+    Task SubscribeResponseAsync(DeviceDetails device, CancellationToken cancellationToken = default);
 
-    Task SendResponseAsync(ResponseMessage message, CancellationToken cancellationToken);
+    Task SendResponseAsync(ResponseMessage message, CancellationToken cancellationToken = default);
 }

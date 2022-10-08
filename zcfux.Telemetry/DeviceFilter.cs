@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Telemetry;
 
-public record DeviceFilter(
+public sealed record DeviceFilter(
     string Domain,
     string Kind,
     string Id)

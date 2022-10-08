@@ -20,128 +20,74 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using MQTTnet;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace zcfux.Telemetry.MQTT;
 
 public sealed class MemoryMessageQueue : IMessageQueue
 {
-    sealed record Item(
-        MqttApplicationMessage Message,
-        uint SecondsToLive,
-        Stopwatch? Stopwatch,
-        TaskCompletionSource TaskCompletionSource)
-    {
-        public bool IsExpired
-            => Stopwatch is { } && (Stopwatch.Elapsed.TotalSeconds > SecondsToLive);
-    }
-
-    readonly object _lock = new();
-    readonly Queue<Item> _items = new();
-    readonly AutoResetEvent _event = new(false);
+    readonly BlockingCollection<Task<MqttApplicationMessage>> _queue;
     readonly int _limit;
 
     public MemoryMessageQueue(int limit)
-        => _limit = limit;
+        => (_queue, _limit) = (new BlockingCollection<Task<MqttApplicationMessage>>(limit), limit);
 
-    public Task EnqueueAsync(MqttApplicationMessage message, uint secondsToLive)
+    public Task EnqueueAsync(
+        MqttApplicationMessage message,
+        uint secondsToLive,
+        CancellationToken cancellationToken)
     {
-        var taskCompletionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task task;
 
-        lock (_lock)
+        if (_queue.Count == _limit)
         {
-            if (_items.Count == _limit)
-            {
-                taskCompletionSource.SetException(
-                    new InvalidOperationException("Nessage queue is full."));
-            }
-            else
-            {
-                var item = new Item(
-                    message,
-                    secondsToLive,
-                    (secondsToLive == 0)
-                        ? null
-                        : Stopwatch.StartNew(),
-                    taskCompletionSource);
-
-                _items.Enqueue(item);
-
-                _event.Set();
-            }
-        }
-
-        return taskCompletionSource.Task;
-    }
-
-    public Task<MqttApplicationMessage> PeekAsync(CancellationToken cancellationToken)
-    {
-        var taskCompletionSource = new TaskCompletionSource<MqttApplicationMessage>();
-
-        Task.Run(() =>
-        {
-            do
-            {
-                if (TryPeek() is { } message)
-                {
-                    taskCompletionSource.SetResult(message);
-                }
-                else
-                {
-                    _event.WaitOne(TimeSpan.FromMilliseconds(500));
-                }
-            } while (!taskCompletionSource.Task.IsCompleted
-                     && !cancellationToken.IsCancellationRequested);
-        }, cancellationToken);
-
-        return taskCompletionSource.Task;
-    }
-
-    MqttApplicationMessage? TryPeek()
-    {
-        MqttApplicationMessage? message = null;
-        
-        lock (_lock)
-        {
-            Shrink_Unlocked();
-
-            if (_items.TryPeek(out var item))
-            {
-                message = item.Message;
-            }
-        }
-
-        return message;
-    }
-
-    public void Dequeue()
-    {
-        lock (_lock)
-        {
-            Dequeue_Unlocked(cancelled: false);
-        }
-    }
-
-    void Shrink_Unlocked()
-    {
-        while (_items.TryPeek(out var item)
-               && item.IsExpired)
-        {
-            Dequeue_Unlocked(cancelled: true);
-        }
-    }
-
-    void Dequeue_Unlocked(bool cancelled)
-    {
-        var taskCompletionSource = _items.Dequeue().TaskCompletionSource;
-
-        if (cancelled)
-        {
-            taskCompletionSource.SetCanceled();
+            task = Task.FromException(new InvalidOperationException("Message queue is full."));
         }
         else
         {
-            taskCompletionSource.SetResult();
+            var queuedTask = CreateTask(message, secondsToLive, cancellationToken);
+
+            _queue.Add(queuedTask, cancellationToken);
+
+            task = queuedTask;
         }
+
+        return task;
+    }
+
+    static Task<MqttApplicationMessage> CreateTask(
+        MqttApplicationMessage message,
+        uint secondsToLive,
+        CancellationToken cancellationToken)
+    {
+        var stopwatch = Stopwatch.StartNew();
+
+        var task = new Task<MqttApplicationMessage>(() =>
+        {
+            var elapsedSeconds = (uint)Math.Floor(stopwatch.Elapsed.TotalSeconds);
+
+            if (secondsToLive > 0
+                && elapsedSeconds > secondsToLive)
+            {
+                throw new TaskCanceledException();
+            }
+
+            message.MessageExpiryInterval -= elapsedSeconds;
+
+            return message;
+        }, cancellationToken);
+
+        return task;
+    }
+
+    public Task<MqttApplicationMessage> DequeueAsync(
+        CancellationToken cancellationToken)
+    {
+        var task = _queue.Take(cancellationToken);
+
+        task.Start();
+
+        return task;
     }
 }

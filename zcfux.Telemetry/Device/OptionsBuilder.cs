@@ -21,134 +21,144 @@
  ***************************************************************************/
 using zcfux.Logging;
 
-namespace zcfux.Telemetry.Device
+namespace zcfux.Telemetry.Device;
+
+public sealed class OptionsBuilder
 {
-    public sealed class OptionsBuilder
+    string? _domain;
+    string? _kind;
+    int? _id;
+    IConnection? _connection;
+    ISerializer? _serializer;
+    ILogger? _logger;
+
+    OptionsBuilder Clone()
     {
-        string? _domain;
-        string? _kind;
-        int? _id;
-        IConnection? _connection;
-        ISerializer? _serializer;
-        ILogger? _logger;
-
-        OptionsBuilder Clone()
+        var builder = new OptionsBuilder
         {
-            var builder = new OptionsBuilder
-            {
-                _domain = _domain,
-                _kind = _kind,
-                _id = _id,
-                _connection = _connection,
-                _serializer = _serializer,
-                _logger = _logger
-            };
+            _domain = _domain,
+            _kind = _kind,
+            _id = _id,
+            _connection = _connection,
+            _serializer = _serializer,
+            _logger = _logger
+        };
 
-            return builder;
+        return builder;
+    }
+
+    public OptionsBuilder WithDomain(string domain)
+    {
+        var builder = Clone();
+
+        builder._domain = domain;
+
+        return builder;
+    }
+
+    public OptionsBuilder WithKind(string kind)
+    {
+        var builder = Clone();
+
+        builder._kind = kind;
+
+        return builder;
+    }
+
+    public OptionsBuilder WithId(int id)
+    {
+        var builder = Clone();
+
+        builder._id = id;
+
+        return builder;
+    }
+
+    public OptionsBuilder WithDevice(DeviceDetails device)
+    {
+        var builder = Clone();
+
+        builder._domain = device.Domain;
+        builder._kind = device.Kind;
+        builder._id = device.Id;
+
+        return builder;
+    }
+
+    public OptionsBuilder WithDevice(string domain, string kind, int id)
+    {
+        var builder = Clone();
+
+        builder._domain = domain;
+        builder._kind = kind;
+        builder._id = id;
+
+        return builder;
+    }
+
+    public OptionsBuilder WithConnection(IConnection connection)
+    {
+        var builder = Clone();
+
+        builder._connection = connection;
+
+        return builder;
+    }
+
+    public OptionsBuilder WithSerializer(ISerializer serializer)
+    {
+        var builder = Clone();
+
+        builder._serializer = serializer;
+
+        return builder;
+    }
+
+    public OptionsBuilder WithLogger(ILogger? logger)
+    {
+        var builder = Clone();
+
+        builder._logger = logger;
+
+        return builder;
+    }
+
+    public Options Build()
+    {
+        ThrowIfIncomplete();
+
+        return new Options(
+            new DeviceDetails(_domain!, _kind!, _id!.Value),
+            _connection!,
+            _serializer!,
+            _logger);
+    }
+
+    void ThrowIfIncomplete()
+    {
+        if (_domain == null)
+        {
+            throw new ArgumentException("Domain cannot be null.");
         }
 
-        public OptionsBuilder WithDomain(string domain)
+        if (_kind == null)
         {
-            var builder = Clone();
-
-            builder._domain = domain;
-
-            return builder;
+            throw new ArgumentException("Kind cannot be null.");
         }
 
-        public OptionsBuilder WithKind(string kind)
+        if (_id == null)
         {
-            var builder = Clone();
-
-            builder._kind = kind;
-
-            return builder;
+            throw new ArgumentException("Id cannot be null.");
         }
 
-        public OptionsBuilder WithId(int id)
+        if (_connection == null)
         {
-            var builder = Clone();
-
-            builder._id = id;
-
-            return builder;
+            throw new ArgumentException("Connection cannot be null.");
         }
 
-        public OptionsBuilder WithDevice(DeviceDetails device)
+        if (_serializer == null)
         {
-            var builder = Clone();
-
-            builder._domain = device.Domain;
-            builder._kind = device.Kind;
-            builder._id = device.Id;
-
-            return builder;
-        }
-
-        public OptionsBuilder WithConnection(IConnection connection)
-        {
-            var builder = Clone();
-
-            builder._connection = connection;
-
-            return builder;
-        }
-
-        public OptionsBuilder WithSerializer(ISerializer serializer)
-        {
-            var builder = Clone();
-
-            builder._serializer = serializer;
-
-            return builder;
-        }
-
-        public OptionsBuilder WithLogger(ILogger? logger)
-        {
-            var builder = Clone();
-
-            builder._logger = logger;
-
-            return builder;
-        }
-
-        public Options Build()
-        {
-            ThrowIfIncomplete();
-
-            return new Options(
-                new DeviceDetails(_domain!, _kind!, _id!.Value),
-                _connection!,
-                _serializer!,
-                _logger);
-        }
-
-        void ThrowIfIncomplete()
-        {
-            if (_domain == null)
-            {
-                throw new ArgumentException("Domain cannot be null.");
-            }
-
-            if (_kind == null)
-            {
-                throw new ArgumentException("Kind cannot be null.");
-            }
-
-            if (_id == null)
-            {
-                throw new ArgumentException("Id cannot be null.");
-            }
-
-            if (_connection == null)
-            {
-                throw new ArgumentException("Connection cannot be null.");
-            }
-
-            if (_serializer == null)
-            {
-                throw new ArgumentException("Serializer cannot be null.");
-            }
+            throw new ArgumentException("Serializer cannot be null.");
         }
     }
 }

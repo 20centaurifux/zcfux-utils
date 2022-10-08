@@ -25,9 +25,7 @@ namespace zcfux.Telemetry.MQTT;
 
 public interface IMessageQueue
 {
-    Task EnqueueAsync(MqttApplicationMessage message, uint secondsToLive);
+    Task EnqueueAsync(MqttApplicationMessage message, uint secondsToLive, CancellationToken cancellationToken);
 
-    Task<MqttApplicationMessage> PeekAsync(CancellationToken cancellationToken);
-
-    void Dequeue();
+    Task<MqttApplicationMessage> DequeueAsync(CancellationToken cancellationToken);
 }

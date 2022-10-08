@@ -19,7 +19,6 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Diagnostics;
 using System.Reflection;
 using zcfux.Logging;
 
@@ -76,47 +75,47 @@ public class Client : IDisposable
             }
         }
 
-        public PendingTask? Wait(TimeSpan timeout)
+        public Task<PendingTask> WaitAsync(CancellationToken cancellationToken)
         {
-            PendingTask? match = null;
+            PendingTask? pendingTask = null;
 
-            if (HasPendingTasks())
+            while (pendingTask == null)
             {
-                var snapshot = GetSnapshot();
+                cancellationToken.ThrowIfCancellationRequested();
 
-                var index = Task.WaitAny(snapshot.Select(t => t.Task).ToArray(), timeout);
+                pendingTask = WaitForTask(cancellationToken);
+
+                if (pendingTask == null)
+                {
+                    _event.WaitOne(500);
+                }
+            }
+
+            return Task.FromResult(pendingTask);
+        }
+
+        PendingTask? WaitForTask(CancellationToken cancellationToken)
+        {
+            PendingTask? pendingTask = null;
+
+            var snapshot = GetSnapshot();
+
+            if (snapshot.Any())
+            {
+                var index = Task.WaitAny(
+                    snapshot.Select(t => t.Task).ToArray(),
+                    500,
+                    cancellationToken);
 
                 if (index != -1)
                 {
-                    match = snapshot[index];
+                    pendingTask = snapshot[index];
 
                     RemovePendingTaskAt(index);
                 }
             }
-            else
-            {
-                var timer = Stopwatch.StartNew();
 
-                if (_event.WaitOne(timeout))
-                {
-                    var timeoutLeft = (timeout - timer.Elapsed);
-
-                    if (timeoutLeft > TimeSpan.Zero)
-                    {
-                        match = Wait(timeoutLeft);
-                    }
-                }
-            }
-
-            return match;
-        }
-
-        bool HasPendingTasks()
-        {
-            lock (_lock)
-            {
-                return _tasks.Any();
-            }
+            return pendingTask;
         }
 
         PendingTask[] GetSnapshot()
@@ -162,16 +161,16 @@ public class Client : IDisposable
 
         (_apis, _subscriptions, _methods) = RegisterApis();
 
+        _connection.Connected += Connected;
+        _connection.Disconnected += Disconnected;
+        _connection.ApiMessageReceived += ApiMessageReceived;
+
+        _pendingTaskProcessor = ProcessPendingTasksAsync();
+
         if (_connection.IsConnected)
         {
             ClientConnected();
         }
-
-        _connection.Connected += Connected;
-        _connection.Disconnected += Disconnected;
-        _connection.ApiMessageReceived += MessageReceived;
-
-        _pendingTaskProcessor = ProcessPendingTasksAsync();
     }
 
     (IReadOnlyCollection<Api>, IReadOnlyCollection<Task>, IReadOnlyDictionary<MethodKey, Method>) RegisterApis()
@@ -275,15 +274,17 @@ public class Client : IDisposable
             apiTopic,
             topic);
 
-        var taskReadsFromEnumerator = new TaskCompletionSource();
+        var enumeratorCreated = new AutoResetEvent(false);
 
-        var task = Task.Run(async () =>
+        var task = Task.Factory.StartNew(async () =>
+        {
+            try
             {
                 await using (var enumerator = source.GetAsyncEnumerator(_cancellationTokenSource.Token))
                 {
-                    var moveNextTask = enumerator.MoveNextAsync();
+                    enumeratorCreated.Set();
 
-                    taskReadsFromEnumerator.SetResult();
+                    var moveNextTask = enumerator.MoveNextAsync();
 
                     if (await moveNextTask)
                     {
@@ -317,14 +318,18 @@ public class Client : IDisposable
                     }
                 }
             }
-        );
+            catch (Exception ex)
+            {
+                _logger?.Error(ex);
+            }
+        }, TaskCreationOptions.LongRunning);
 
         _logger?.Debug(
             "Waiting for asynchronous enumerable task (api=`{0}', topic=`{1}') to start.",
             apiTopic,
             topic);
 
-        taskReadsFromEnumerator.Task.Wait();
+        enumeratorCreated.WaitOne();
 
         _logger?.Debug(
             "Asynchronous enumerable task (api=`{0}', topic=`{1}') started successfully.",
@@ -412,18 +417,26 @@ public class Client : IDisposable
 
     void InvokeConnectionHandlers()
     {
-        foreach (var api in _apis)
+        var l = new List<IConnected>();
+
+        if (this is IConnected c1)
         {
-            if (api.Instance is IConnected c)
+            l.Add(c1);
+        }
+
+        l.AddRange(_apis
+            .Select(api => api.Instance)
+            .OfType<IConnected>());
+
+        foreach (var c2 in l)
+        {
+            try
             {
-                try
-                {
-                    c.Connected();
-                }
-                catch (Exception ex)
-                {
-                    _logger?.Warn(ex);
-                }
+                c2.Connected();
+            }
+            catch (Exception ex)
+            {
+                _logger?.Warn(ex);
             }
         }
     }
@@ -432,23 +445,31 @@ public class Client : IDisposable
     {
         _logger?.Info("Device (kind=`{0}', id={1}) disconnected from message broker.", Kind, Id);
 
-        foreach (var api in _apis)
+        var l = new List<IDisconnected>();
+
+        if (this is IDisconnected d1)
         {
-            if (api.Instance is IDisconnected c)
+            l.Add(d1);
+        }
+
+        l.AddRange(_apis
+            .Select(api => api.Instance)
+            .OfType<IDisconnected>());
+
+        foreach (var d2 in l)
+        {
+            try
             {
-                try
-                {
-                    c.Disconnected();
-                }
-                catch (Exception ex)
-                {
-                    _logger?.Warn(ex);
-                }
+                d2.Disconnected();
+            }
+            catch (Exception ex)
+            {
+                _logger?.Warn(ex);
             }
         }
     }
 
-    void MessageReceived(object? sender, ApiMessageEventArgs e)
+    void ApiMessageReceived(object? sender, ApiMessageEventArgs e)
     {
         _logger?.Debug(
             "Processing message (device kind=`{0}', id={1}, api=`{2}', topic=`{3}', size={4}).",
@@ -516,52 +537,54 @@ public class Client : IDisposable
 
     Task ProcessPendingTasksAsync()
     {
-        return Task.Run(async () =>
+        return Task.Factory.StartNew(async () =>
         {
             while (!_cancellationTokenSource.IsCancellationRequested)
             {
-                if (_pendingTasks.Wait(TimeSpan.FromSeconds(5)) is { } pendingTask)
+                var pendingTask = await _pendingTasks.WaitAsync(_cancellationTokenSource.Token);
+
+                if (pendingTask.ReturnType != typeof(void)
+                    && pendingTask.ResponseTopic is { }
+                    && pendingTask.MessageId.HasValue
+                    && pendingTask.Task.IsCompleted)
                 {
-                    if (pendingTask.ReturnType != typeof(void)
-                        && pendingTask.ResponseTopic is { }
-                        && pendingTask.MessageId.HasValue
-                        && pendingTask.Task.IsCompleted)
+                    try
                     {
-                        try
-                        {
-                            var result = pendingTask
-                                .Task
-                                .GetType()
-                                .GetProperty("Result")
-                                ?.GetValue(pendingTask.Task);
+                        var result = pendingTask
+                            .Task
+                            .GetType()
+                            .GetProperty("Result")
+                            ?.GetValue(pendingTask.Task);
 
-                            var message = new ResponseMessage(
-                                pendingTask.ResponseTopic,
-                                pendingTask.MessageId.Value,
-                                result!);
+                        var message = new ResponseMessage(
+                            pendingTask.ResponseTopic,
+                            pendingTask.MessageId.Value,
+                            result!);
 
-                            await _connection.SendResponseAsync(message, _cancellationTokenSource.Token);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger?.Error(ex);
-                        }
+                        await _connection.SendResponseAsync(message, _cancellationTokenSource.Token);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.Error(ex);
                     }
                 }
             }
-        });
+        }, TaskCreationOptions.LongRunning);
     }
 
     public virtual void Dispose()
     {
         _connection.Connected -= Connected;
         _connection.Disconnected -= Disconnected;
-        _connection.ApiMessageReceived -= MessageReceived;
+        _connection.ApiMessageReceived -= ApiMessageReceived;
 
         _cancellationTokenSource.Cancel();
 
-        Task.WhenAll(_subscriptions.ToArray());
+        if (_subscriptions.Any())
+        {
+            Task.WhenAny(_subscriptions.ToArray()).Wait();
+        }
 
-        _pendingTaskProcessor.Wait();
+        Task.WhenAny(_pendingTaskProcessor).Wait();
     }
 }

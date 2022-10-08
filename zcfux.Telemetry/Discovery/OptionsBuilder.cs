@@ -22,103 +22,102 @@
 using System.Collections.Immutable;
 using zcfux.Logging;
 
-namespace zcfux.Telemetry.Discovery
+namespace zcfux.Telemetry.Discovery;
+
+public sealed class OptionsBuilder
 {
-    public sealed class OptionsBuilder
+    IConnection? _connection;
+    ImmutableList<DeviceFilter> _filters = ImmutableList<DeviceFilter>.Empty;
+    ApiRegistry? _apiRegistry;
+    private ISerializer? _serializer;
+    ILogger? _logger;
+
+    OptionsBuilder Clone()
     {
-        IConnection? _connection;
-        ImmutableList<DeviceFilter> _filters = ImmutableList<DeviceFilter>.Empty;
-        ApiRegistry? _apiRegistry;
-        private ISerializer? _serializer;
-        ILogger? _logger;
-
-        OptionsBuilder Clone()
+        var builder = new OptionsBuilder
         {
-            var builder = new OptionsBuilder
-            {
-                _connection = _connection,
-                _filters = _filters,
-                _apiRegistry = _apiRegistry,
-                _serializer =  _serializer,
-                _logger = _logger
-            };
+            _connection = _connection,
+            _filters = _filters,
+            _apiRegistry = _apiRegistry,
+            _serializer = _serializer,
+            _logger = _logger
+        };
 
-            return builder;
+        return builder;
+    }
+
+    public OptionsBuilder WithConnection(IConnection connection)
+    {
+        var builder = Clone();
+
+        builder._connection = connection;
+
+        return builder;
+    }
+
+    public OptionsBuilder WithFilter(DeviceFilter deviceFilter)
+    {
+        var builder = Clone();
+
+        builder._filters = builder._filters.Add(deviceFilter);
+
+        return builder;
+    }
+
+    public OptionsBuilder WithApiRegistry(ApiRegistry apiRegistry)
+    {
+        var builder = Clone();
+
+        builder._apiRegistry = apiRegistry;
+
+        return builder;
+    }
+
+    public OptionsBuilder WithSerializer(ISerializer serializer)
+    {
+        var builder = Clone();
+
+        builder._serializer = serializer;
+
+        return builder;
+    }
+
+    public OptionsBuilder WithLogger(ILogger? logger)
+    {
+        var builder = Clone();
+
+        builder._logger = logger;
+
+        return builder;
+    }
+
+    public Options Build()
+    {
+        ThrowIfIncomplete();
+
+        return new Options(
+            _connection!,
+            _filters,
+            _apiRegistry!,
+            _serializer!,
+            _logger);
+    }
+
+    void ThrowIfIncomplete()
+    {
+        if (_connection == null)
+        {
+            throw new ArgumentException("Connection cannot be null.");
         }
 
-        public OptionsBuilder WithConnection(IConnection connection)
+        if (_apiRegistry == null)
         {
-            var builder = Clone();
-
-            builder._connection = connection;
-
-            return builder;
+            throw new ArgumentException("ApiRegistry cannot be null.");
         }
 
-        public OptionsBuilder WithFilter(DeviceFilter deviceFilter)
+        if (_serializer == null)
         {
-            var builder = Clone();
-
-            builder._filters = builder._filters.Add(deviceFilter);
-
-            return builder;
-        }
-
-        public OptionsBuilder WithApiRegistry(ApiRegistry apiRegistry)
-        {
-            var builder = Clone();
-
-            builder._apiRegistry = apiRegistry;
-
-            return builder;
-        }
-
-        public OptionsBuilder WithSerializer(ISerializer serializer)
-        {
-            var builder = Clone();
-
-            builder._serializer = serializer;
-
-            return builder;
-        }
-        
-        public OptionsBuilder WithLogger(ILogger? logger)
-        {
-            var builder = Clone();
-
-            builder._logger = logger;
-
-            return builder;
-        }
-
-        public Options Build()
-        {
-            ThrowIfIncomplete();
-
-            return new Options(
-                _connection!,
-                _filters,
-                _apiRegistry!,
-                _serializer!,
-                _logger);
-        }
-
-        void ThrowIfIncomplete()
-        {
-            if (_connection == null)
-            {
-                throw new ArgumentException("Connection cannot be null.");
-            }
-
-            if (_apiRegistry == null)
-            {
-                throw new ArgumentException("ApiRegistry cannot be null.");
-            }
-            
-            if (_serializer == null)
-            {
-                throw new ArgumentException("Serializer cannot be null.");
-            }
+            throw new ArgumentException("Serializer cannot be null.");
         }
     }
 }

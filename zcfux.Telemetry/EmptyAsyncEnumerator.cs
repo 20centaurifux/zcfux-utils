@@ -21,21 +21,13 @@
  ***************************************************************************/
 namespace zcfux.Telemetry;
 
-public sealed record ApiFilter(
-    string Domain,
-    string Kind,
-    string Id,
-    string Api)
+internal sealed class EmptyAsyncEnumerator<T> : IAsyncEnumerator<T>
 {
-    public static readonly string All = "+";
+    public static readonly EmptyAsyncEnumerator<T> Instance = new();
 
-    public ApiFilter(DeviceDetails device, string api)
-        : this(device.Domain, device.Kind, device.Id.ToString(), api)
-    {
-    }
-    
-    public ApiFilter(DeviceFilter filter, string api)
-        : this(filter.Domain, filter.Kind, filter.Id, api)
-    {
-    }
+    public T Current => default!;
+
+    public ValueTask DisposeAsync() => default;
+
+    public ValueTask<bool> MoveNextAsync() => new(false);
 }

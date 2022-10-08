@@ -27,4 +27,6 @@ public sealed class CommandAttribute : Attribute
     public string Topic { get; set; } = default!;
 
     public uint TimeToLive { get; set; } = 5;
+
+    public uint ResponseTimeout { get; set; } = 5;
 }

@@ -27,6 +27,7 @@ public sealed class ConnectionOptionsBuilder
 {
     ClientOptions? _clientOptions;
     IMessageQueue? _messageQueue;
+    TimeSpan _retrySendingInterval = TimeSpan.FromSeconds(5);
     ILogger? _logger;
     bool _cleanupRetainedMessages;
     TimeSpan? _reconnect;
@@ -36,6 +37,7 @@ public sealed class ConnectionOptionsBuilder
         {
             _clientOptions = _clientOptions,
             _messageQueue = _messageQueue,
+            _retrySendingInterval = _retrySendingInterval,
             _logger = _logger,
             _cleanupRetainedMessages = _cleanupRetainedMessages,
             _reconnect = _reconnect
@@ -58,6 +60,15 @@ public sealed class ConnectionOptionsBuilder
         var builder = Clone();
 
         builder._messageQueue = messageQueue;
+
+        return builder;
+    }
+    
+    public ConnectionOptionsBuilder WithRetrySendingInterval(TimeSpan interval)
+    {
+        var builder = Clone();
+
+        builder._retrySendingInterval = interval;
 
         return builder;
     }
@@ -95,6 +106,7 @@ public sealed class ConnectionOptionsBuilder
         return new ConnectionOptions(
             _clientOptions!,
             _messageQueue!,
+            _retrySendingInterval,
             _logger,
             _cleanupRetainedMessages,
             _reconnect);

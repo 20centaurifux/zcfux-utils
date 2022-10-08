@@ -21,27 +21,19 @@
  ***************************************************************************/
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Globalization;
 using Castle.DynamicProxy;
 using System.Reflection;
-using Humanizer;
 using zcfux.Logging;
 
 namespace zcfux.Telemetry.Device;
 
-internal sealed class ApiInterceptor : IInterceptor, IDisposable
+internal sealed class ApiInterceptor : IInterceptor
 {
-    static readonly TimeSpan ResponseTimeout = TimeSpan.FromMinutes(1);
-
-    static readonly CultureInfo LoggingCulture = CultureInfo.GetCultureInfo("en-US");
-
-    sealed record Command(string Topic, uint TimeToLive);
+    sealed record Command(string Topic, uint TimeToLive, uint ResponseTimeout);
 
     sealed record Event(IProducer Producer, Type ParameterType);
 
-    sealed record PendingResponse(Action<byte[]> SetResult, Action Cancel, Stopwatch Stopwatch);
-
-    readonly ConcurrentDictionary<int, PendingResponse> _pendingResponses = new();
+    readonly ConcurrentDictionary<int, Action<byte[]>> _pendingResponses = new();
 
     readonly Type _apiType;
 
@@ -64,20 +56,19 @@ internal sealed class ApiInterceptor : IInterceptor, IDisposable
     [Flags]
     enum EFlag
     {
-        Offline = 1,
-        Connecting = 2,
-        Online = 4,
-        Compatible = 8,
-        Incompatible = 16
+        None = 0,
+        Initialized = 1,
+        Online = 2,
+        Compatible = 4
     };
 
     readonly object _stateLock = new();
-    EFlag _state = EFlag.Offline;
+    EFlag _state = EFlag.None;
+
+    readonly ManualResetEvent _apiInfoReceived = new(false);
 
     readonly object _detectedVersionLock = new();
     string? _detectedVersion;
-
-    readonly Task _cleanPendingResponsesTask;
 
     readonly CancellationTokenSource _cancellationTokenSource = new();
 
@@ -105,7 +96,10 @@ internal sealed class ApiInterceptor : IInterceptor, IDisposable
         _connection.ApiMessageReceived += ApiMessageReceived;
         _connection.ResponseReceived += ResponseReceived;
 
-        _cleanPendingResponsesTask = CleanPendingResponsesAsync();
+        if (_connection.IsConnected)
+        {
+            InitializeConnection();
+        }
     }
 
     void RegisterCommands()
@@ -124,7 +118,7 @@ internal sealed class ApiInterceptor : IInterceptor, IDisposable
                     || method.ReturnType == typeof(Task)
                     || method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
                 {
-                    var command = new Command(attr.Topic, attr.TimeToLive);
+                    var command = new Command(attr.Topic, attr.TimeToLive, attr.ResponseTimeout);
 
                     var signature = MethodSignature(method);
 
@@ -180,10 +174,13 @@ internal sealed class ApiInterceptor : IInterceptor, IDisposable
                         attr.Topic,
                         parameterType);
 
-                    var producer = (Activator.CreateInstance(
-                        typeof(Producer<>).MakeGenericType(parameterType)) as IProducer)!;
+                    var ctor = typeof(Producer<>)
+                        .MakeGenericType(parameterType)
+                        .GetConstructor(new[] { typeof(bool) });
 
-                    var ev = new Event(producer, parameterType);
+                    var producer = ctor!.Invoke(new object?[] { false }) as IProducer;
+
+                    var ev = new Event(producer!, parameterType);
 
                     events.Add(attr.Topic, ev);
                     eventGetters.Add(prop.Name, ev);
@@ -197,66 +194,78 @@ internal sealed class ApiInterceptor : IInterceptor, IDisposable
 
     void Connected(object? sender, EventArgs e)
     {
-        var (domain, kind, id) = _device;
+        _logger?.Debug("Proxy (client=`{0}') connected.", _connection.ClientId);
 
-        _logger?.Debug(
-            "Proxy `{0}/{1}/{2}/{3}' connected.",
-            domain,
-            kind,
-            id,
-            _apiTopic);
+        InitializeConnection();
+    }
 
-        ExchangeState(EFlag.Connecting);
-
-        var tasks = new[]
+    void InitializeConnection()
+    {
+        if ((State & EFlag.Initialized) == 0)
         {
-            _connection
-                .SubscribeToDeviceStatusAsync(new DeviceFilter(_device), CancellationToken.None),
+            try
+            {
+                var tasks = new[]
+                {
+                    _connection
+                        .SubscribeToDeviceStatusAsync(new DeviceFilter(_device)),
 
-            _connection
-                .SubscribeToApiInfoAsync(new ApiFilter(_device, _apiTopic), CancellationToken.None),
+                    _connection
+                        .SubscribeToApiInfoAsync(new ApiFilter(_device, _apiTopic)),
 
-            _connection
-                .SubscribeToApiMessagesAsync(_device, _apiTopic, EDirection.Out, CancellationToken.None),
+                    _connection
+                        .SubscribeToApiMessagesAsync(_device, _apiTopic, EDirection.Out),
 
-            _connection
-                .SubscribeResponseAsync(_device, CancellationToken.None)
-        };
+                    _connection
+                        .SubscribeResponseAsync(_device)
+                };
 
-        Task.WaitAll(tasks);
+                Task.WaitAll(tasks);
+
+                foreach(var ev in _events.Values)
+                {
+                    ev.Producer.Enable();
+                }
+
+                WriteState(state => (state | EFlag.Initialized));
+            }
+            catch (Exception ex)
+            {
+                _logger?.Error(ex);
+            }
+        }
     }
 
     void Disconnected(object? sender, EventArgs e)
     {
-        var (domain, kind, id) = _device;
+        _logger?.Debug("Proxy (client=`{0}') disconnected.", _connection.ClientId);
 
-        _logger?.Debug(
-            "Proxy `{0}/{1}/{2}/{3}' disconnected.",
-            domain,
-            kind,
-            id,
-            _apiTopic);
+        try
+        {
+            foreach (var ev in _events.Values)
+            {
+                ev.Producer.Disable();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger?.Error(ex);
+        }
 
-        ExchangeState(EFlag.Offline);
+        WriteState(_ => EFlag.None);
     }
 
     void DeviceStatusReceived(object? sender, DeviceStatusEventArgs e)
     {
         if (e.Device.Equals(_device))
         {
-            switch (e.Status)
+            if (e.Status == EDeviceStatus.Connecting || e.Status == EDeviceStatus.Offline || e.Status == EDeviceStatus.Error)
             {
-                case EDeviceStatus.Connecting:
-                    ExchangeState(EFlag.Connecting);
-                    break;
-
-                case EDeviceStatus.Offline:
-                    ExchangeState(EFlag.Offline);
-                    break;
-
-                case EDeviceStatus.Online:
-                    SwapStateFlags(EFlag.Connecting, EFlag.Online);
-                    break;
+                WriteState(state => (state & ~EFlag.Online));
+            }
+            else
+            {
+                WriteState(state => (state | EFlag.Online));
             }
         }
     }
@@ -265,37 +274,25 @@ internal sealed class ApiInterceptor : IInterceptor, IDisposable
     {
         if (e.Device.Equals(_device)
             && e.Api.Equals(_apiTopic)
-            && !e.Version.Equals(DetectedVersion))
+            && (!e.Version.Equals(DetectedVersion) || (State & EFlag.Compatible) == EFlag.None))
         {
-            var (domain, kind, id) = _device;
-
             if (VersionIsCompatible(e.Version))
             {
-                _logger?.Debug(
-                    "Proxy `{0}/{1}/{2}/{3}' found compatible endpoint (`{4}' >= `{5}').",
-                    domain,
-                    kind,
-                    id,
-                    _apiTopic,
-                    _version,
-                    e.Version);
+                _logger?.Debug("Proxy (client=`{0}') found compatible endpoint.", _connection.ClientId);
 
-                SetStateFlags(EFlag.Compatible);
+                WriteState(state => (state | EFlag.Compatible));
 
                 _connection
                     .SubscribeToApiMessagesAsync(
                         _device,
                         _apiTopic,
-                        EDirection.Out,
-                        CancellationToken.None)
+                        EDirection.Out)
                     .Wait();
-            }
-            else
-            {
-                SetStateFlags(EFlag.Incompatible);
             }
 
             DetectedVersion = e.Version;
+
+            _apiInfoReceived.Set();
         }
     }
 
@@ -314,14 +311,24 @@ internal sealed class ApiInterceptor : IInterceptor, IDisposable
             && e.Api.Equals(_apiTopic)
             && e.Direction == EDirection.Out)
         {
-            if ((State & EFlag.Incompatible) == 0
+            if ((State & EFlag.Compatible) == EFlag.Compatible
                 && _events.TryGetValue(e.Topic, out var ev))
             {
+                if ((State & EFlag.Online) == EFlag.None)
+                {
+                    _logger?.Warn(
+                        "Proxy (client=`{0}') publishes message from offline device (domain=`{1}', kind=`{2}', id={3}).",
+                        _connection.ClientId,
+                        _device.Domain,
+                        _device.Kind,
+                        _device.Id);
+                }
+
                 try
                 {
                     var payload = _serializer.Deserialize(e.Payload, ev.ParameterType);
 
-                    ev.Producer.Publish(payload!);
+                    ev.Producer.Write(payload!);
                 }
                 catch (Exception ex)
                 {
@@ -333,22 +340,25 @@ internal sealed class ApiInterceptor : IInterceptor, IDisposable
 
     void ResponseReceived(object? sender, ResponseEventArgs e)
     {
-        _logger?.Debug("Response (message id={0}) received.", e.MessageId);
+        if (e.Device.Equals(_device))
+        {
+            _logger?.Debug("Proxy (client=`{0}') received response (message={1}).", _connection.ClientId, e.MessageId);
 
-        if (_pendingResponses.TryRemove(e.MessageId, out var pendingResponse))
-        {
-            try
+            if (_pendingResponses.TryRemove(e.MessageId, out var fn))
             {
-                pendingResponse.SetResult(e.Payload);
+                try
+                {
+                    fn(e.Payload);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.Error(ex);
+                }
             }
-            catch (Exception ex)
+            else
             {
-                _logger?.Error(ex);
+                _logger?.Warn("Pending response (message id={0}) not found.", e.MessageId);
             }
-        }
-        else
-        {
-            _logger?.Warn("Pending response (message id={0}) not found.", e.MessageId);
         }
     }
 
@@ -378,50 +388,63 @@ internal sealed class ApiInterceptor : IInterceptor, IDisposable
 
     void InterceptCommand(IInvocation invocation)
     {
+        object? returnValue;
+
         var signature = MethodSignature(invocation.Method);
 
-        if (!_commands.TryGetValue(signature, out var command))
+        if (_commands.TryGetValue(signature, out var command))
         {
-            throw new ApplicationException($"Method with signature `{signature}' not found.");
-        }
+            var parameter = invocation.Arguments.SingleOrDefault();
 
-        if ((State & EFlag.Incompatible) == EFlag.Incompatible)
-        {
-            throw new ApplicationException("Incompatible endpoint.");
-        }
-
-        var parameter = invocation
-            .Arguments
-            .SingleOrDefault();
-
-        if (invocation.Method.ReturnType == typeof(void)
-            || invocation.Method.ReturnType == typeof(Task))
-        {
-            var task = SendCommand(command.Topic, command.TimeToLive, parameter);
-
-            if (invocation.Method.ReturnType == typeof(void))
+            if (invocation.Method.ReturnType == typeof(void)
+                || invocation.Method.ReturnType == typeof(Task))
             {
-                task.Wait();
+                returnValue = SendCommandAsync(
+                    command.Topic,
+                    command.TimeToLive,
+                    parameter);
             }
             else
             {
-                invocation.ReturnValue = task;
+                var genericType = invocation
+                    .Method
+                    .ReturnType
+                    .GetGenericArguments()
+                    .Single();
+
+                var requestResponseAsync = GetType()
+                    .GetMethod("RequestResponseAsync", BindingFlags.Instance | BindingFlags.NonPublic)!
+                    .MakeGenericMethod(genericType);
+
+                returnValue = requestResponseAsync.Invoke(
+                    this,
+                    new[] { command.Topic, command.TimeToLive, command.ResponseTimeout, parameter });
             }
         }
         else
         {
-            var task = SendRequest(
-                command.Topic,
-                command.TimeToLive,
-                parameter,
-                invocation.Method.ReturnType.GetGenericArguments().Single());
+            returnValue = Task.FromException(
+                new ApplicationException(
+                    $"Method with signature `{signature}' not found."));
+        }
 
-            invocation.ReturnValue = task;
+        if (invocation.Method.ReturnType == typeof(void))
+        {
+            (returnValue as IAsyncResult)!.AsyncWaitHandle.WaitOne();
+        }
+        else
+        {
+            invocation.ReturnValue = returnValue;
         }
     }
 
-    Task SendCommand(string topic, uint timeToLive, object? parameter)
+    async Task SendCommandAsync(string topic, uint timeToLive, object? parameter)
     {
+        if (!await WaitForCompatibilityAsync(TimeSpan.FromSeconds(timeToLive)))
+        {
+            throw new ApplicationException("Endpoint not compatible.");
+        }
+
         _logger?.Debug(
             "Sending command (domain=`{0}', kind=`{1}', id={2}, api=`{3}', topic=`{4}').",
             _device.Domain,
@@ -438,14 +461,23 @@ internal sealed class ApiInterceptor : IInterceptor, IDisposable
             EDirection.In,
             parameter);
 
-        var task = _connection.SendApiMessageAsync(message, CancellationToken.None);
-
-        return task;
+        await _connection.SendApiMessageAsync(message);
     }
 
-    Task SendRequest(string topic, uint timeToLive, object? parameter, Type returnType)
+    async Task<T> RequestResponseAsync<T>(string topic, uint timeToLive, uint responseTimeout, object? parameter)
     {
+        var stopwatch = Stopwatch.StartNew();
+
+        if (!await WaitForCompatibilityAsync(TimeSpan.FromSeconds(timeToLive)))
+        {
+            throw new ApplicationException("Endpoint not compatible.");
+        }
+
+        var secondsLeft = (uint)Math.Floor((timeToLive - stopwatch.Elapsed.TotalSeconds));
+
         var messageId = NextMessageId();
+
+        var waitForResponseAsync = WaitForResponseAsync<T>(messageId, responseTimeout);
 
         _logger?.Debug(
             "Sending request (domain=`{0}', kind=`{1}', id={2}, api=`{3}', topic=`{4}', message id={5}).",
@@ -456,41 +488,85 @@ internal sealed class ApiInterceptor : IInterceptor, IDisposable
             topic,
             messageId);
 
-        var t = typeof(TaskCompletionSource<>).MakeGenericType(returnType);
-
-        dynamic taskCompletionSource = Activator.CreateInstance(t)!;
-
-        var setResult = t.GetMethod("SetResult");
-
-        var setCanceled = t.GetMethod(
-            "SetCanceled",
-            BindingFlags.Instance | BindingFlags.Public,
-            Array.Empty<Type>());
-
-        _pendingResponses[messageId] = new PendingResponse(
-            payload =>
-            {
-                var p = _serializer.Deserialize(payload, returnType);
-
-                setResult?.Invoke(taskCompletionSource, new[] { p });
-            },
-            () =>
-            {
-                setCanceled?.Invoke(taskCompletionSource, Array.Empty<object>());
-            },
-            Stopwatch.StartNew());
-
         var message = new ApiMessage(
             _device,
             _apiTopic,
             topic,
-            new MessageOptions(Retain: false, TimeToLive: timeToLive),
+            new MessageOptions(Retain: false, TimeToLive: secondsLeft),
             EDirection.In,
             parameter,
-            $"{_device.Domain}/{_device.Kind}/{_device.Id}/r",
+            $"r/{_connection.ClientId}/{_device.Domain}/{_device.Kind}/{_device.Id}",
             messageId);
 
-        _connection.SendApiMessageAsync(message, CancellationToken.None).Wait();
+        await _connection.SendApiMessageAsync(message);
+
+        return await waitForResponseAsync;
+    }
+
+    async Task<T> WaitForResponseAsync<T>(int messageId, uint responseTimeout)
+    {
+        var taskCompletionSource = new TaskCompletionSource<T>();
+
+        _pendingResponses[messageId] = payload =>
+        {
+            try
+            {
+                var parameter = _serializer.Deserialize<T>(payload);
+
+                taskCompletionSource.SetResult(parameter!);
+            }
+            catch (Exception ex)
+            {
+                taskCompletionSource.SetException(ex);
+            }
+        };
+
+        var responseTask = taskCompletionSource.Task;
+
+        if (await Task.WhenAny(
+            responseTask,
+            Task.Delay(TimeSpan.FromSeconds(responseTimeout))) != taskCompletionSource.Task)
+        {
+            throw new OperationCanceledException();
+        }
+
+        return responseTask.Result;
+    }
+
+    Task<bool> WaitForCompatibilityAsync(TimeSpan timeout)
+    {
+        var taskCompletionSource = new TaskCompletionSource<bool>();
+
+        if ((State & EFlag.Compatible) == EFlag.Compatible)
+        {
+            taskCompletionSource.SetResult(true);
+        }
+        else
+        {
+            var registration = ThreadPool.RegisterWaitForSingleObject(
+                _apiInfoReceived,
+                (_, timedOut) =>
+                {
+                    if (timedOut)
+                    {
+                        taskCompletionSource.TrySetCanceled();
+                    }
+                    else
+                    {
+                        var compatible = (State & EFlag.Compatible) == EFlag.Compatible;
+
+                        taskCompletionSource.TrySetResult(compatible);
+                    }
+                },
+                null,
+                timeout,
+                true);
+
+            taskCompletionSource.Task.ContinueWith(_ =>
+            {
+                registration.Unregister(null);
+            }, CancellationToken.None);
+        }
 
         return taskCompletionSource.Task;
     }
@@ -505,49 +581,18 @@ internal sealed class ApiInterceptor : IInterceptor, IDisposable
         return $"{method.ReturnType} {method.Name}({parameterType ?? string.Empty})";
     }
 
-    void ExchangeState(EFlag newState)
+    void WriteState(Func<EFlag, EFlag> fn)
     {
+        EFlag newState;
+
         lock (_stateLock)
         {
-            ExchangeState_Unlocked(newState);
+            newState = fn(_state);
+
+            _state = newState;
         }
-    }
 
-    void SetStateFlags(EFlag bitmask)
-    {
-        lock (_stateLock)
-        {
-            ExchangeState_Unlocked(_state | bitmask);
-        }
-    }
-
-    void SwapStateFlags(EFlag unset, EFlag set)
-    {
-        lock (_stateLock)
-        {
-            var newState = (_state & ~unset);
-
-            ExchangeState_Unlocked(newState | set);
-        }
-    }
-
-    void ExchangeState_Unlocked(EFlag newState)
-    {
-        lock (_stateLock)
-        {
-            if (newState != _state)
-            {
-                _state = newState;
-
-                _logger?.Debug(
-                    "Proxy state (`{0}/{1}/{2}/{3}') changed: {4}",
-                    _device.Domain,
-                    _device.Kind,
-                    _device.Id,
-                    _apiTopic,
-                    _state);
-            }
-        }
+        _logger?.Debug("Proxy (client=`{0}' state changed: {1}", _connection.ClientId, newState);
     }
 
     EFlag State
@@ -591,75 +636,5 @@ internal sealed class ApiInterceptor : IInterceptor, IDisposable
 
             return ++_messageId;
         }
-    }
-
-    Task CleanPendingResponsesAsync()
-    {
-        return Task.Run(async () =>
-        {
-            while (!_cancellationTokenSource.IsCancellationRequested)
-            {
-                var expiredMessageIds = new List<int>();
-
-                var timeout = ResponseTimeout;
-
-                foreach (var (messageId, pendingResponse) in _pendingResponses)
-                {
-                    var elapsed = pendingResponse.Stopwatch.Elapsed;
-
-                    if (elapsed >= ResponseTimeout)
-                    {
-                        expiredMessageIds.Add(messageId);
-                    }
-                    else
-                    {
-                        var diff = (ResponseTimeout - elapsed);
-
-                        if (diff < timeout)
-                        {
-                            timeout = diff;
-                        }
-                    }
-                }
-
-                _logger?.Debug(
-                    "Cleaning pending responses in {0}.",
-                    timeout.Humanize(culture: LoggingCulture));
-
-                await Task.WhenAll(
-                    CancelResponsesAsync(expiredMessageIds.ToArray()),
-                    Task.Delay(timeout));
-            }
-        }, _cancellationTokenSource.Token);
-    }
-
-    Task CancelResponsesAsync(int[] messageIds)
-    {
-        return Task.Run(() =>
-        {
-            foreach (var messageId in messageIds)
-            {
-                if (_pendingResponses.TryRemove(messageId, out var pendingResponse))
-                {
-                    try
-                    {
-                        _logger?.Debug("Cancelling request (message id={0}).", messageId);
-
-                        pendingResponse.Cancel();
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.Error(ex);
-                    }
-                }
-            }
-        }, _cancellationTokenSource.Token);
-    }
-
-    public void Dispose()
-    {
-        _cancellationTokenSource.Cancel();
-
-        _cleanPendingResponsesTask.Wait();
     }
 }

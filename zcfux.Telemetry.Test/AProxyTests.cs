@@ -191,7 +191,7 @@ public abstract class AProxyTests
     }
 
     [Test]
-    public async Task EmptyEventsWhenNotDisconnected()
+    public async Task EmptyEventsWhenDisconnected()
     {
         using (var proxyConnection = CreateProxyConnection())
         {

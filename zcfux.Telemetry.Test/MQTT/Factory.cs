@@ -45,7 +45,6 @@ public static class Factory
 
         var opts = new ConnectionOptionsBuilder()
             .WithClientOptions(new ClientOptionsBuilder()
-                .WithAddress("127.0.0.1")
                 .WithPort(port)
                 .WithSessionTimeout(5)
                 .WithLastWill(new LastWillOptionsBuilder()
@@ -68,7 +67,6 @@ public static class Factory
 
         var opts = new ConnectionOptionsBuilder()
             .WithClientOptions(new ClientOptionsBuilder()
-                .WithAddress("127.0.0.1")
                 .WithPort(port)
                 .WithSessionTimeout(5)
                 .Build())

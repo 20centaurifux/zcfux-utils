@@ -41,7 +41,7 @@ public abstract class AProxyTests
         Task<long> DoubleAsync(long number);
     }
 
-    public sealed class TestV1Impl : ITestApiV1
+    sealed class TestV1Impl : ITestApiV1
     {
         readonly Producer<long> _producer = new();
 
@@ -65,7 +65,7 @@ public abstract class AProxyTests
             => Task.FromResult(number * 2);
     }
 
-    public sealed class TestV1 : Device.Client
+    sealed class TestV1 : Device.Client
     {
         public ITestApiV1 V1 { get; } = new TestV1Impl();
 
@@ -81,13 +81,13 @@ public abstract class AProxyTests
         Task<long> IdentityAsync(long number);
     }
 
-    public sealed class TestV2Impl : ITestApiV2
+    sealed class TestV2Impl : ITestApiV2
     {
         public Task<long> IdentityAsync(long number)
             => Task.FromResult(number);
     }
 
-    public sealed class TestV2 : Device.Client
+    sealed class TestV2 : Device.Client
     {
         public ITestApiV2 V2 { get; } = new TestV2Impl();
 

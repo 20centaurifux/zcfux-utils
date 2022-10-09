@@ -25,7 +25,7 @@ namespace zcfux.Telemetry.Test;
 
 public abstract class AClientTests
 {
-    public class SimpleClient : Device.Client, IConnected, IDisconnected
+    sealed class  SimpleClient : Device.Client, IConnected, IDisconnected
     {
         const long Offline = 0;
         const long Online = 1;
@@ -46,8 +46,27 @@ public abstract class AClientTests
             => Interlocked.Exchange(ref _state, Offline);
     }
 
+    [Api(Topic = "useless", Version = "1.0")]
+    interface IOnlineApi
+    {
+        [Event(Topic = "online")]
+        IAsyncEnumerable<bool> Online { get; }
+    }
+    
+    sealed class OnlineImpl : IOnlineApi, IConnected, IDisconnected
+    {
+        readonly Producer<bool> _producer = new();
 
-    public sealed class OnlineClient : Device.Client
+        public IAsyncEnumerable<bool> Online => _producer;
+
+        public void Connected()
+            => _producer.Write(true);
+
+        public void Disconnected()
+            => _producer.Write(false);
+    }
+
+    sealed class OnlineClient : Device.Client
     {
         public IOnlineApi Api { get; } = new OnlineImpl();
 
@@ -56,6 +75,65 @@ public abstract class AClientTests
         }
     }
 
+    [Api(Topic = "power", Version = "1.0")]
+    interface IPowerApi
+    {
+        [Event(Topic = "on")]
+        IAsyncEnumerable<bool> On { get; }
+
+        [Command(Topic = "on")]
+        Task SetStateAsync(bool on);
+
+        [Command(Topic = "toggle", ResponseTimeout = 1)]
+        Task<bool> ToggleAsync();
+    }
+
+    sealed class PowerImpl : IPowerApi
+    {
+        readonly object _lock = new();
+        bool _value;
+
+        readonly Producer<bool> _producer = new();
+
+        public IAsyncEnumerable<bool> On => _producer;
+
+        public Task SetStateAsync(bool on)
+        {
+            lock (_lock)
+            {
+                _value = on;
+            }
+
+            _producer.Write(on);
+
+            return Task.CompletedTask;
+        }
+
+        public Task<bool> ToggleAsync()
+        {
+            bool newState;
+
+            lock (_lock)
+            {
+                newState = !_value;
+                _value = newState;
+            }
+
+            _producer.Write(newState);
+
+            return Task.FromResult(newState);
+        }
+    }
+
+    sealed class Bulb : Device.Client
+    {
+        public IPowerApi Power { get; } = new PowerImpl();
+
+        public Bulb(Device.Options options) : base(options)
+        {
+        }
+    }
+    
     [Test]
     public async Task ClientIsConnecting()
     {

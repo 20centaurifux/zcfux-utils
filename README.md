@@ -28,10 +28,10 @@ This is a collection of various utilities and abstractions I use in .NET project
 * Database abstractions.
 
 ## Data.LinqToDB
-* LinqToDB provider for zcfux.Data.
+* LinqToDB zcfux.Data provider.
 
 ## Data.Postgres
-* Npgsql provider for zcfux.Data.
+* Npgsql zcfux.Data provider.
 
 ## DI
 * Dependency injection wrapper.
@@ -63,7 +63,7 @@ This is a collection of various utilities and abstractions I use in .NET project
 * Logging abstractions.
 
 ## Logging.NLog
-* NLog provider for zcfux.Logging.
+* NLog for zcfux.Logging provider.
 
 ## Mail
 * Mail storage & transfer abstractions.
@@ -84,7 +84,7 @@ This is a collection of various utilities and abstractions I use in .NET project
 * Replication abstractions.
 
 ## Replication.CouchDb
-* CouchDB provider for zcfux.Replication.
+* CouchDB zcfux.Replication provider.
 
 ## Security
 * Password generator.
@@ -96,6 +96,12 @@ This is a collection of various utilities and abstractions I use in .NET project
 
 ## SqlMapper
 * Tiny object mapper for ADO.NET.
+
+## Telemetry
+* Telemetry abstractions.
+
+## Telemetry.MQTT
+* MQTT zcfux.Telemetry provider.
 
 ## Tracking
 * Track state changes to objects.

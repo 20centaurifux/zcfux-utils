@@ -19,47 +19,34 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using zcfux.Telemetry.Device;
+using MQTTnet.Server;
+using NUnit.Framework;
+using zcfux.Telemetry.MQTT;
 
-namespace zcfux.Telemetry.Discovery;
+namespace zcfux.Telemetry.Test.MQTT;
 
-public sealed class ApiRegistry
+public sealed class DisoveryTests : ADiscoveryTests
 {
-    sealed record Api(string Topic, int Major, int Minor, Type Type);
+    MqttServer _server = default!;
 
-    readonly object _lock = new();
-    readonly HashSet<Api> _apis = new();
-
-    public void Register<TApi>()
+    [SetUp]
+    public void Setup()
     {
-        var t = typeof(TApi);
+        _server = Factory.CreateServer();
 
-        var attr = t
-            .GetCustomAttributes(typeof(ApiAttribute), false)
-            .OfType<ApiAttribute>()
-            .Single();
-
-        var (major, minor) = Version.Parse(attr.Version);
-
-        lock (_lock)
-        {
-            _apis.Add(new Api(attr.Topic, major, minor, t));
-        }
+        _server.StartAsync().Wait();
     }
 
-    public Type Resolve(string topic, string version)
-    {
-        var (major, minor) = Version.Parse(version);
+    [TearDown]
+    public void Teardown()
+        => _server.StopAsync().Wait();
 
-        lock (_lock)
-        {
-            var api = _apis
-                .Where(api =>
-                    (api.Major == major) && (api.Minor <= minor))
-                .MinBy(api => api.Minor);
+    protected override IConnection CreateConnection()
+        => Factory.CreateConnection();
+    
+    protected override IConnection CreateDeviceConnection(DeviceDetails device)
+        => Factory.CreateDeviceConnection(device.Domain, device.Kind, device.Id);
 
-            return api?.Type
-                   ?? throw new ApiNotFoundException();
-        }
-    }
+    protected override ISerializer CreateSerializer()
+        => new Serializer();
 }

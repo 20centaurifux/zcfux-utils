@@ -49,7 +49,7 @@ public sealed class ProxyTests : AProxyTests
         => Factory.CreateDeviceConnection(device.Domain, device.Kind, device.Id);
 
     protected override IConnection CreateProxyConnection()
-        => Factory.CreateProxyConnection();
+        => Factory.CreateConnection();
 
     protected override ISerializer CreateSerializer()
         => new Serializer();

@@ -19,47 +19,30 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using zcfux.Telemetry.Device;
+namespace zcfux.Telemetry.Device;
 
-namespace zcfux.Telemetry.Discovery;
-
-public sealed class ApiRegistry
+internal static class Extensions
 {
-    sealed record Api(string Topic, int Major, int Minor, Type Type);
-
-    readonly object _lock = new();
-    readonly HashSet<Api> _apis = new();
-
-    public void Register<TApi>()
+    public static Type[] GetAllInterfaces(this Type type)
     {
-        var t = typeof(TApi);
+        var interfaces = new HashSet<Type>();
 
-        var attr = t
-            .GetCustomAttributes(typeof(ApiAttribute), false)
-            .OfType<ApiAttribute>()
-            .Single();
+        type.GetAllInterfaces(ref interfaces);
 
-        var (major, minor) = Version.Parse(attr.Version);
-
-        lock (_lock)
-        {
-            _apis.Add(new Api(attr.Topic, major, minor, t));
-        }
+        return interfaces.ToArray();
     }
-
-    public Type Resolve(string topic, string version)
+    
+    static void GetAllInterfaces(this Type type, ref HashSet<Type> interfaces)
     {
-        var (major, minor) = Version.Parse(version);
-
-        lock (_lock)
+        if (interfaces.Add(type))
         {
-            var api = _apis
-                .Where(api =>
-                    (api.Major == major) && (api.Minor <= minor))
-                .MinBy(api => api.Minor);
-
-            return api?.Type
-                   ?? throw new ApiNotFoundException();
+            foreach (var itf in type.GetInterfaces())
+            {
+                if (interfaces.Add(itf))
+                {
+                    GetAllInterfaces(itf, ref interfaces);
+                }
+            }
         }
     }
 }

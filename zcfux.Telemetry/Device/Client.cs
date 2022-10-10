@@ -26,7 +26,7 @@ namespace zcfux.Telemetry.Device;
 
 public class Client : IDisposable
 {
-    sealed record Api(Type Type, object Instance, string Topic, string Version);
+    sealed record Api(Type Type, object Instance, string Topic, string Version, Type[] Interfaces);
 
     sealed class MethodKey
     {
@@ -194,12 +194,13 @@ public class Client : IDisposable
                     prop.PropertyType.Name,
                     attr.Topic,
                     attr.Version);
-
+                
                 var api = new Api(
                     prop.PropertyType,
                     prop.GetValue(this)!,
                     attr.Topic,
-                    attr.Version);
+                    attr.Version,
+                    prop.PropertyType.GetAllInterfaces());
 
                 apis.Add(api);
 
@@ -343,34 +344,37 @@ public class Client : IDisposable
     {
         _logger?.Debug("Searching for methods (api=`{0}').", api.Topic);
 
-        var methods = api.Type.GetMethods(BindingFlags.Instance | BindingFlags.Public);
-
-        foreach (var method in methods)
+        foreach (var itf in api.Interfaces)
         {
-            if (method.GetCustomAttributes(typeof(CommandAttribute), false).SingleOrDefault() is CommandAttribute attr)
+            var methods = itf.GetMethods(BindingFlags.Instance | BindingFlags.Public);
+
+            foreach (var method in methods)
             {
-                var parameterType = method
-                                        .GetParameters()
-                                        .SingleOrDefault()
-                                        ?.ParameterType
-                                    ?? typeof(void);
+                if (method.GetCustomAttributes(typeof(CommandAttribute), false).SingleOrDefault() is CommandAttribute attr)
+                {
+                    var parameterType = method
+                                            .GetParameters()
+                                            .SingleOrDefault()
+                                            ?.ParameterType
+                                        ?? typeof(void);
 
-                var returnType = method
-                                     .ReturnType
-                                     .GetGenericArguments()
-                                     .SingleOrDefault()
-                                 ?? typeof(void);
+                    var returnType = method
+                                         .ReturnType
+                                         .GetGenericArguments()
+                                         .SingleOrDefault()
+                                     ?? typeof(void);
 
-                _logger?.Debug(
-                    "Found method {0}({1}) (api=`{2}', topic=`{3}').",
-                    method.Name,
-                    parameterType.Name,
-                    api.Topic,
-                    attr.Topic);
+                    _logger?.Debug(
+                        "Found method {0}({1}) (api=`{2}', topic=`{3}').",
+                        method.Name,
+                        parameterType.Name,
+                        api.Topic,
+                        attr.Topic);
 
-                yield return new KeyValuePair<MethodKey, Method>(
-                    new MethodKey(api.Topic, attr.Topic),
-                    new Method(api.Instance, method, parameterType, returnType));
+                    yield return new KeyValuePair<MethodKey, Method>(
+                        new MethodKey(api.Topic, attr.Topic),
+                        new Method(api.Instance, method, parameterType, returnType));
+                }
             }
         }
     }

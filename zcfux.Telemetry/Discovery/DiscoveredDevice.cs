@@ -30,7 +30,7 @@ internal sealed class DiscoveredDevice : IDiscoveredDevice
     public event EventHandler<RegistrationEventArgs>? Dropped;
 
     readonly DeviceDetails _device;
-    
+
     long _status;
 
     readonly object _proxiesLock = new();
@@ -72,7 +72,7 @@ internal sealed class DiscoveredDevice : IDiscoveredDevice
                 || !match.Version.Equals(version))
             {
                 var proxy = createProxy();
-                
+
                 registeredEventArgs = new RegistrationEventArgs(topic, version, proxy);
 
                 _proxies[topic] = new Proxy(proxy, version);
@@ -107,7 +107,7 @@ internal sealed class DiscoveredDevice : IDiscoveredDevice
         where TApi : class
     {
         TApi? api = null;
-        
+
         var t = typeof(TApi);
 
         var attr = t
@@ -117,10 +117,15 @@ internal sealed class DiscoveredDevice : IDiscoveredDevice
 
         lock (_proxiesLock)
         {
-            if (_proxies.TryGetValue(attr.Topic, out var proxy)
-                && (proxy.Version == attr.Version))
+            if (_proxies.TryGetValue(attr.Topic, out var proxy))
             {
-                api = proxy.Instance as TApi;
+                var (major1, minor1) = Version.Parse(attr.Version);
+                var (major2, minor2) = Version.Parse(proxy.Version);
+
+                if (major1 == major2 && minor1 <= minor2)
+                {
+                    api = proxy.Instance as TApi;
+                }
             }
         }
 

@@ -108,37 +108,40 @@ internal sealed class ApiInterceptor : IInterceptor
 
         var m = new Dictionary<string, Command>();
 
-        var methods = _apiType.GetMethods(BindingFlags.Instance | BindingFlags.Public);
-
-        foreach (var method in methods)
+        foreach (var itf in _apiType.GetAllInterfaces())
         {
-            if (method.GetCustomAttributes(typeof(CommandAttribute), false).SingleOrDefault() is CommandAttribute attr)
+            var methods = itf.GetMethods(BindingFlags.Instance | BindingFlags.Public);
+
+            foreach (var method in methods)
             {
-                if (method.ReturnType == typeof(void)
-                    || method.ReturnType == typeof(Task)
-                    || method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
+                if (method.GetCustomAttributes(typeof(CommandAttribute), false).SingleOrDefault() is CommandAttribute attr)
                 {
-                    var command = new Command(attr.Topic, attr.TimeToLive, attr.ResponseTimeout);
+                    if (method.ReturnType == typeof(void)
+                        || method.ReturnType == typeof(Task)
+                        || method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
+                    {
+                        var command = new Command(attr.Topic, attr.TimeToLive, attr.ResponseTimeout);
 
-                    var signature = MethodSignature(method);
+                        var signature = MethodSignature(method);
 
-                    _logger?.Debug(
-                        "Found command (client=`{0}', api=`{1}', topic=`{2}', signature=`{3}').",
-                        _connection.ClientId,
-                        _apiTopic,
-                        attr.Topic,
-                        signature);
+                        _logger?.Debug(
+                            "Found command (client=`{0}', api=`{1}', topic=`{2}', signature=`{3}').",
+                            _connection.ClientId,
+                            _apiTopic,
+                            attr.Topic,
+                            signature);
 
-                    m.Add(signature, command);
-                }
-                else
-                {
-                    _logger?.Debug(
-                        "Command (client=`{0}', api=`{1}', topic=`{2}') has unsupported return type ({3}).",
-                        _connection.ClientId,
-                        _apiTopic,
-                        attr.Topic,
-                        method.ReturnType);
+                        m.Add(signature, command);
+                    }
+                    else
+                    {
+                        _logger?.Debug(
+                            "Command (client=`{0}', api=`{1}', topic=`{2}') has unsupported return type ({3}).",
+                            _connection.ClientId,
+                            _apiTopic,
+                            attr.Topic,
+                            method.ReturnType);
+                    }
                 }
             }
         }
@@ -153,37 +156,40 @@ internal sealed class ApiInterceptor : IInterceptor
         var events = new Dictionary<string, Event>();
         var eventGetters = new Dictionary<string, Event>();
 
-        var props = _apiType.GetProperties(BindingFlags.Instance | BindingFlags.Public);
-
-        foreach (var prop in props)
+        foreach (var itf in _apiType.GetAllInterfaces())
         {
-            if (prop.GetCustomAttributes(typeof(EventAttribute), false).SingleOrDefault() is EventAttribute attr)
+            var props = itf.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+
+            foreach (var prop in props)
             {
-                if (prop.PropertyType.IsGenericType
-                    && prop.PropertyType.GetGenericTypeDefinition() == typeof(IAsyncEnumerable<>))
+                if (prop.GetCustomAttributes(typeof(EventAttribute), false).SingleOrDefault() is EventAttribute attr)
                 {
-                    var parameterType = prop
-                        .PropertyType
-                        .GetGenericArguments()
-                        .Single();
+                    if (prop.PropertyType.IsGenericType
+                        && prop.PropertyType.GetGenericTypeDefinition() == typeof(IAsyncEnumerable<>))
+                    {
+                        var parameterType = prop
+                            .PropertyType
+                            .GetGenericArguments()
+                            .Single();
 
-                    _logger?.Debug(
-                        "Found event (client=`{0}', api=`{1}', topic=`{2}', type={3}).",
-                        _connection.ClientId,
-                        _apiTopic,
-                        attr.Topic,
-                        parameterType);
+                        _logger?.Debug(
+                            "Found event (client=`{0}', api=`{1}', topic=`{2}', type={3}).",
+                            _connection.ClientId,
+                            _apiTopic,
+                            attr.Topic,
+                            parameterType);
 
-                    var ctor = typeof(Producer<>)
-                        .MakeGenericType(parameterType)
-                        .GetConstructor(new[] { typeof(bool) });
+                        var ctor = typeof(Producer<>)
+                            .MakeGenericType(parameterType)
+                            .GetConstructor(new[] { typeof(bool) });
 
-                    var producer = ctor!.Invoke(new object?[] { false }) as IProducer;
+                        var producer = ctor!.Invoke(new object?[] { false }) as IProducer;
 
-                    var ev = new Event(producer!, parameterType);
+                        var ev = new Event(producer!, parameterType);
 
-                    events.Add(attr.Topic, ev);
-                    eventGetters.Add(prop.Name, ev);
+                        events.Add(attr.Topic, ev);
+                        eventGetters.Add(prop.Name, ev);
+                    }
                 }
             }
         }
@@ -441,9 +447,8 @@ internal sealed class ApiInterceptor : IInterceptor
         }
         else
         {
-            returnValue = Task.FromException(
-                new ApplicationException(
-                    $"Method with signature `{signature}' not found."));
+            throw new ApplicationException(
+                $"Method with signature `{signature}' not found.");
         }
 
         if (invocation.Method.ReturnType == typeof(void))

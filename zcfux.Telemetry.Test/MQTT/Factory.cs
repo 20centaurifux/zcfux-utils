@@ -39,6 +39,21 @@ public static class Factory
         return new MqttFactory().CreateMqttServer(options);
     }
 
+    public static IConnection CreateConnection()
+    {
+        var port = GetPort();
+
+        var opts = new ConnectionOptionsBuilder()
+            .WithClientOptions(new ClientOptionsBuilder()
+                .WithPort(port)
+                .WithSessionTimeout(5)
+                .Build())
+            .WithMessageQueue(new MemoryMessageQueue(50))
+            .Build();
+
+        return new Connection(opts);
+    }
+
     public static IConnection CreateDeviceConnection(string domain, string kind, int id)
     {
         var port = GetPort();
@@ -56,21 +71,6 @@ public static class Factory
                 .Build())
             .WithMessageQueue(new MemoryMessageQueue(50))
             .WithCleanupRetainedMessages()
-            .Build();
-
-        return new Connection(opts);
-    }
-
-    public static IConnection CreateProxyConnection()
-    {
-        var port = GetPort();
-
-        var opts = new ConnectionOptionsBuilder()
-            .WithClientOptions(new ClientOptionsBuilder()
-                .WithPort(port)
-                .WithSessionTimeout(5)
-                .Build())
-            .WithMessageQueue(new MemoryMessageQueue(50))
             .Build();
 
         return new Connection(opts);

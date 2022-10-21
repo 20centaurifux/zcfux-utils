@@ -66,7 +66,7 @@ public sealed class Runner
 
             _token = _cancellationTokenSource.Token;
 
-            _task = Task.Run(() =>
+            _task = Task.Factory.StartNew(() =>
             {
                 Interlocked.Exchange(ref _state, Started);
 
@@ -87,7 +87,7 @@ public sealed class Runner
                         Error?.Invoke(this, new ErrorEventArgs(ex));
                     }
                 }
-            }, CancellationToken.None);
+            }, TaskCreationOptions.LongRunning);
         }
     }
 

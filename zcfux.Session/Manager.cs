@@ -94,7 +94,7 @@ public sealed class Manager<TStore> : IManager where TStore : AStore, new()
                         // session background worker cancelled
                     }
                 }
-            });
+            }, TaskCreationOptions.LongRunning);
         }
     }
 

@@ -24,6 +24,14 @@ namespace zcfux.Logging;
 internal sealed class BasicLogger : ILogger
 {
     readonly IWriter _writer;
+    long _verbosity = 1;
+
+    public ESeverity Verbosity
+    {
+        get => (ESeverity)Interlocked.Read(ref _verbosity);
+
+        set => Interlocked.Exchange(ref _verbosity, (long)value);
+    }
 
     public BasicLogger(IWriter writer)
         => _writer = writer;
@@ -84,10 +92,13 @@ internal sealed class BasicLogger : ILogger
 
     void Log(ESeverity severity, string message)
     {
-        Swallow(() =>
+        if (severity >= Verbosity)
         {
-            _writer.WriteMessage(severity, message);
-        });
+            Swallow(() =>
+            {
+                _writer.WriteMessage(severity, message);
+            });
+        }
     }
 
     void Log(ESeverity severity, string format, params object[] args)
@@ -102,13 +113,16 @@ internal sealed class BasicLogger : ILogger
 
     void Log(ESeverity severity, Exception exception)
     {
-        Swallow(() =>
+        if (severity >= Verbosity)
         {
-            _writer.WriteException(severity, exception);
-        });
+            Swallow(() =>
+            {
+                _writer.WriteException(severity, exception);
+            });
+        }
     }
 
-    void Swallow(Action fn)
+    static void Swallow(Action fn)
     {
         try
         {

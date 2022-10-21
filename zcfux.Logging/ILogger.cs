@@ -23,6 +23,8 @@ namespace zcfux.Logging;
 
 public interface ILogger
 {
+    ESeverity Verbosity { get; set; }
+
     void Trace(string message);
 
     void Trace(string format, params object[] args);

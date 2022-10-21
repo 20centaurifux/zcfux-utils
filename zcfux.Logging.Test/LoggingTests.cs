@@ -54,9 +54,45 @@ public sealed class LoggingTests
     public void Fatal()
         => Test(ESeverity.Fatal);
 
+    [Test]
+    public void Verbosity()
+    {
+        var logger = Factory.ByName("collect");
+
+        logger.Trace(TestContext.CurrentContext.Random.GetString());
+
+        Assert.IsEmpty(Writer.Collect.Messages);
+
+        logger.Verbosity = ESeverity.Info;
+
+        logger.Debug(TestContext.CurrentContext.Random.GetString());
+
+        Assert.IsEmpty(Writer.Collect.Messages);
+
+        logger.Verbosity = ESeverity.Warn;
+
+        logger.Info(TestContext.CurrentContext.Random.GetString());
+
+        Assert.IsEmpty(Writer.Collect.Messages);
+
+        logger.Verbosity = ESeverity.Error;
+
+        logger.Warn(TestContext.CurrentContext.Random.GetString());
+
+        Assert.IsEmpty(Writer.Collect.Messages);
+
+        logger.Verbosity = ESeverity.Fatal;
+
+        logger.Error(TestContext.CurrentContext.Random.GetString());
+
+        Assert.IsEmpty(Writer.Collect.Messages);
+    }
+
     static void Test(ESeverity severity)
     {
         var logger = Factory.ByName("collect");
+
+        logger.Verbosity = ESeverity.Trace;
 
         var methodName = severity.ToString();
 

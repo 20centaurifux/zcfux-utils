@@ -59,33 +59,43 @@ public sealed class LoggingTests
     {
         var logger = Factory.ByName("collect");
 
-        logger.Trace(TestContext.CurrentContext.Random.GetString());
+        logger.Trace(RandomString());
+        logger.Debug(RandomString());
 
-        Assert.IsEmpty(Writer.Collect.Messages);
+        Assert.IsFalse(Writer.Collect.Messages.ContainsKey(ESeverity.Trace));
+        Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Debug].Count);
 
         logger.Verbosity = ESeverity.Info;
-
-        logger.Debug(TestContext.CurrentContext.Random.GetString());
-
-        Assert.IsEmpty(Writer.Collect.Messages);
-
+        
+        logger.Debug(RandomString());
+        logger.Info(RandomString());
+        
+        Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Debug].Count);
+        Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Info].Count);
+        
         logger.Verbosity = ESeverity.Warn;
+        
+        logger.Info(RandomString());
+        logger.Warn(RandomString());
 
-        logger.Info(TestContext.CurrentContext.Random.GetString());
-
-        Assert.IsEmpty(Writer.Collect.Messages);
-
+        Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Info].Count);
+        Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Warn].Count);
+        
         logger.Verbosity = ESeverity.Error;
+        
+        logger.Warn(RandomString());
+        logger.Error(RandomString());
 
-        logger.Warn(TestContext.CurrentContext.Random.GetString());
-
-        Assert.IsEmpty(Writer.Collect.Messages);
-
+        Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Warn].Count);
+        Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Error].Count);
+        
         logger.Verbosity = ESeverity.Fatal;
+        
+        logger.Error(RandomString());
+        logger.Fatal(RandomString());
 
-        logger.Error(TestContext.CurrentContext.Random.GetString());
-
-        Assert.IsEmpty(Writer.Collect.Messages);
+        Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Error].Count);
+        Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Fatal].Count);
     }
 
     static void Test(ESeverity severity)

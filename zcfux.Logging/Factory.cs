@@ -32,6 +32,18 @@ public static class Factory
         return new BasicLogger(writer);
     }
 
+    public static ILogger ByName(params string[] names)
+    {
+        var chain = new Chain();
+
+        foreach (var name in names)
+        {
+            chain = chain.Append(CreateWriter(name));
+        }
+
+        return chain;
+    }
+
     public static ILogger FromAssembly(string assemblyName, string typeName)
     {
         try
@@ -39,6 +51,27 @@ public static class Factory
             var writer = Activator.CreateInstance(assemblyName, typeName)!.Unwrap();
 
             return new BasicLogger((writer as IWriter)!);
+        }
+        catch (Exception ex)
+        {
+            throw new FactoryException("Couldn't create writer.", ex);
+        }
+    }
+
+    public static ILogger FromAssembly(params (string, string)[] tuples)
+    {
+        var chain = new Chain();
+
+        try
+        {
+            foreach (var (assemblyName, typeName) in tuples)
+            {
+                var writer = Activator.CreateInstance(assemblyName, typeName)!.Unwrap();
+
+                chain = chain.Append((writer as IWriter)!);
+            }
+
+            return chain;
         }
         catch (Exception ex)
         {

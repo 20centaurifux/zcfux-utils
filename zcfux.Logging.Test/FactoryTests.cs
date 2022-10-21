@@ -33,6 +33,15 @@ public sealed class FactoryTests
         Assert.IsInstanceOf<ILogger>(logger);
         Assert.AreEqual(ESeverity.Debug, logger.Verbosity);
     }
+    
+    [Test]
+    public void CreateLoggerByNames()
+    {
+        var logger = Factory.ByName("void", "console");
+
+        Assert.IsInstanceOf<ILogger>(logger);
+        Assert.AreEqual(ESeverity.Debug, logger.Verbosity);
+    }
 
     [Test]
     public void CreateLoggerByUnknownName()
@@ -51,6 +60,17 @@ public sealed class FactoryTests
         Assert.AreEqual(ESeverity.Debug, logger.Verbosity);
     }
 
+    [Test]
+    public void CreateLoggerFromAssemblies()
+    {
+        var logger = Factory.FromAssembly(
+            ("zcfux.Logging", "zcfux.Logging.Console.Writer"),
+            ("zcfux.Logging.Test", "zcfux.Logging.Test.Writer.Collect"));
+
+        Assert.IsInstanceOf<ILogger>(logger);
+        Assert.AreEqual(ESeverity.Debug, logger.Verbosity);
+    }
+    
     [Test]
     public void CreateLoggerFromUnknownAssembly()
     {

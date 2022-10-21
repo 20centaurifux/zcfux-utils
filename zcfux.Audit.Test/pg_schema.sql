@@ -260,7 +260,7 @@ WITH RECURSIVE edge
 select *
 from edge;
 
-CREATE INDEX "ArchivedEdgeView_EventId_Idx" ON audit."ArchivedEdgeView" ("EventId");
+CREATE UNIQUE INDEX "ArchivedEdgeView_Uidx" ON audit."ArchivedEdgeView" ("EventId", "LeftTopicId", "Association", "RightTopicId");
 
 ALTER TABLE audit."ArchivedEdgeView"
     OWNER to test;
@@ -278,6 +278,8 @@ FROM audit."ArchivedEvent" e
          JOIN audit."EventKind" k ON k."Id" = e."KindId"
          LEFT JOIN audit."Topic" t ON t."Id" = e."TopicId";
 
+
+CREATE UNIQUE INDEX "ArchivedEventView_Uidx" ON audit."ArchivedEventView" ("KindId");
 CREATE INDEX "ArchivedEventView_KindId_Idx" ON audit."ArchivedEventView" ("KindId");
 CREATE INDEX "ArchivedEventView_TopicId_Idx" ON audit."ArchivedEventView" ("TopicId");
 CREATE INDEX "ArchivedEventView_Severity_Idx" ON audit."ArchivedEventView" ("Severity");

@@ -145,11 +145,11 @@ internal class ArchiveCatalogue : ICatalogue
         {
             cmd.Transaction = db.Transaction;
 
-            cmd.CommandText = @"REFRESH MATERIALIZED VIEW audit.""ArchivedEventView""";
+            cmd.CommandText = @"REFRESH MATERIALIZED VIEW CONCURRENTLY audit.""ArchivedEventView""";
 
             cmd.ExecuteNonQuery();
 
-            cmd.CommandText = @"REFRESH MATERIALIZED VIEW audit.""ArchivedEdgeView""";
+            cmd.CommandText = @"REFRESH MATERIALIZED VIEW CONCURRENTLY audit.""ArchivedEdgeView""";
 
             cmd.ExecuteNonQuery();
         }

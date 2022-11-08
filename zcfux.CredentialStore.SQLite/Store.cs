@@ -25,8 +25,8 @@ public sealed class Store : IStore
 {
     readonly Db _db;
 
-    public Store(string connectionString, string password)
-        => _db = new Db(connectionString, password);
+    public Store(string filename, string password)
+        => _db = new Db(filename, password);
 
     public void Setup()
         => _db.Setup();

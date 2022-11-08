@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable>
         <Authors>Sebastian Fedrau</Authors>
         <Company>Sebastian Fedrau</Company>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
     <ItemGroup>

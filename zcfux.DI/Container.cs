@@ -60,6 +60,13 @@ public sealed class Container : IRegistry, IResolver
         return _container!.Resolve<T>();
     }
 
+    public object Resolve(Type type) 
+    {
+        FailIfNotBuilt();
+
+        return _container!.Resolve(type);
+    }
+
     void FailIfBuilt()
     {
         if (Built)

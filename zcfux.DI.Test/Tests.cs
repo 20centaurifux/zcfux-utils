@@ -25,6 +25,31 @@ namespace zcfux.DI.Test;
 
 public sealed class Tests
 {
+    sealed class Foo { }
+
+    sealed class Bar { }
+
+    sealed class Baz { }
+
+    class Injectable
+    {
+        private Foo? PrivateFoo { get; set; }
+
+        protected Bar? ProtectedBar { get; set; }
+
+        public Foo? PublicFoo { get; set; }
+
+        public Baz? UnregisteredBaz { get; set; }
+
+        public void Test()
+        {
+            Assert.IsInstanceOf<Foo>(PublicFoo);
+            Assert.IsInstanceOf<Bar>(ProtectedBar);
+            Assert.IsInstanceOf<Foo>(PrivateFoo);
+            Assert.IsNull(UnregisteredBaz);
+        }
+    }
+
     [Test]
     public void BuildContainer()
     {
@@ -82,6 +107,22 @@ public sealed class Tests
     }
 
     [Test]
+    public void RegisterAndResolveClassWithType()
+    {
+        var container = new Container();
+
+        var a = TestContext.CurrentContext.Random.GetString();
+
+        container.Register(a);
+
+        container.Build();
+
+        var b = container.Resolve(typeof(string));
+
+        Assert.AreSame(a, b);
+    }
+
+    [Test]
     public void RegisterAndResolveFunction()
     {
         var container = new Container();
@@ -98,6 +139,23 @@ public sealed class Tests
     }
 
     [Test]
+    public void RegisterAndResolveFunctionWithType()
+    {
+        var container = new Container();
+
+        container.Register(() => TestContext.CurrentContext.Random.GetString());
+
+        container.Build();
+
+        var a = container.Resolve(typeof(string));
+        var b = container.Resolve(typeof(string));
+
+        Assert.AreNotSame(a, b);
+        Assert.AreNotEqual(a, b);
+    }
+
+
+    [Test]
     public void ResolveUnknown()
     {
         var container = new Container();
@@ -105,5 +163,33 @@ public sealed class Tests
         container.Build();
 
         Assert.That(() => container.Resolve<string>(), Throws.Exception);
+    }
+
+
+    [Test]
+    public void ResolveUnknownWithType()
+    {
+        var container = new Container();
+
+        container.Build();
+
+        Assert.That(() => container.Resolve(typeof(string)), Throws.Exception);
+    }
+
+    [Test]
+    public void Inject()
+    {
+        var container = new Container();
+
+        container.Register(new Foo());
+        container.Register(new Bar());
+
+        container.Build();
+
+        var injectable = new Injectable();
+
+        container.Inject(injectable);
+
+        injectable.Test();
     }
 }

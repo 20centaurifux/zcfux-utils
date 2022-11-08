@@ -26,4 +26,8 @@ public interface IResolver
     T Resolve<T>() where T : class;
 
     object Resolve(Type type);
+
+    bool IsRegistered<T>() where T : class;
+
+    bool IsRegistered(Type type);
 }

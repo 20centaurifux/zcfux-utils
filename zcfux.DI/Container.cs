@@ -25,7 +25,7 @@ namespace zcfux.DI;
 
 public sealed class Container : IRegistry, IResolver
 {
-    readonly ContainerBuilder _builder = new ContainerBuilder();
+    readonly ContainerBuilder _builder = new();
     IContainer? _container;
 
     public void Register<T>(T instance) where T : class
@@ -66,6 +66,12 @@ public sealed class Container : IRegistry, IResolver
 
         return _container!.Resolve(type);
     }
+
+    public bool IsRegistered<T>() where T : class
+        => _container!.IsRegistered<T>();
+
+    public bool IsRegistered(Type type)
+        => _container!.IsRegistered(type);
 
     void FailIfBuilt()
     {

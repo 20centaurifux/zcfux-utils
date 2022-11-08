@@ -27,15 +27,36 @@ public static class Extensions
 {
     public static void Inject<T>(this IResolver self, T obj)
     {
+        self.InjectProperties(obj);
+        self.InjectFields(obj);
+    }
+
+    static void InjectProperties<T>(this IResolver self, T obj)
+    {
         foreach (var prop in typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
         {
-            if (prop.CanWrite)
+            if (prop.CanWrite
+                && self.IsRegistered(prop.PropertyType))
             {
+                var value = self.Resolve(prop.PropertyType);
+
+                prop.SetValue(obj, value);
+            }
+        }
+    }
+
+    static void InjectFields<T>(this IResolver self, T obj)
+    {
+        foreach (var field in typeof(T).GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+        {
+            if (field.DeclaringType is { }
+                && self.IsRegistered(field.FieldType))
+            {
+                var value = self.Resolve(field.FieldType!);
+
                 try
                 {
-                    var value = self.Resolve(prop.PropertyType);
-
-                    prop.SetValue(obj, value);
+                    field.SetValue(obj, value);
                 }
                 catch
                 {

@@ -33,20 +33,31 @@ public sealed class Tests
 
     class Injectable
     {
-        private Foo? PrivateFoo { get; set; }
+        private Foo? _privateFooProp { get; set; }
 
-        protected Bar? ProtectedBar { get; set; }
+        protected Foo? ProtectedFooProp { get; set; }
 
-        public Foo? PublicFoo { get; set; }
+        public Foo? PublicFooProp { get; set; }
 
-        public Baz? UnregisteredBaz { get; set; }
+        private Bar? _privateBarField;
+
+        protected Bar? ProtectedBarField;
+
+        public Bar? PublicBarField;
+
+        public Baz? UnregisteredBazProp { get; set; }
 
         public void Test()
         {
-            Assert.IsInstanceOf<Foo>(PublicFoo);
-            Assert.IsInstanceOf<Bar>(ProtectedBar);
-            Assert.IsInstanceOf<Foo>(PrivateFoo);
-            Assert.IsNull(UnregisteredBaz);
+            Assert.IsInstanceOf<Foo>(PublicFooProp);
+            Assert.IsInstanceOf<Foo>(ProtectedFooProp);
+            Assert.IsInstanceOf<Foo>(_privateFooProp);
+
+            Assert.IsInstanceOf<Bar>(_privateBarField);
+            Assert.IsInstanceOf<Bar>(ProtectedBarField);
+            Assert.IsInstanceOf<Bar>(PublicBarField);
+
+            Assert.IsNull(UnregisteredBazProp);
         }
     }
 

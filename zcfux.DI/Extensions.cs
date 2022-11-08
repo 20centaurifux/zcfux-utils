@@ -25,15 +25,15 @@ namespace zcfux.DI;
 
 public static class Extensions
 {
-    public static void Inject<T>(this IResolver self, T obj)
+    public static void Inject(this IResolver self, object obj)
     {
         self.InjectProperties(obj);
         self.InjectFields(obj);
     }
 
-    static void InjectProperties<T>(this IResolver self, T obj)
+    static void InjectProperties(this IResolver self, object obj)
     {
-        foreach (var prop in typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+        foreach (var prop in GetProperties(obj))
         {
             if (prop.CanWrite
                 && self.IsRegistered(prop.PropertyType))
@@ -45,9 +45,24 @@ public static class Extensions
         }
     }
 
-    static void InjectFields<T>(this IResolver self, T obj)
+    static IEnumerable<PropertyInfo> GetProperties(object obj)
     {
-        foreach (var field in typeof(T).GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+        Type? type = obj.GetType();
+
+        while (type is { })
+        {
+            foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                yield return property;
+            }
+
+            type = type.BaseType;
+        }
+    }
+
+    static void InjectFields(this IResolver self, object obj)
+    {
+        foreach (var field in GetFields(obj))
         {
             if (field.DeclaringType is { }
                 && self.IsRegistered(field.FieldType))
@@ -62,6 +77,21 @@ public static class Extensions
                 {
                 }
             }
+        }
+    }
+
+    static IEnumerable<FieldInfo> GetFields(object obj)
+    {
+        Type? type = obj.GetType();
+
+        while (type is { })
+        {
+            foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                yield return field;
+            }
+
+            type = type.BaseType;
         }
     }
 }

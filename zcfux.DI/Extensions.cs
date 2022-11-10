@@ -51,7 +51,8 @@ public static class Extensions
 
         while (type is { })
         {
-            foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                .Where(p => p.GetCustomAttribute<InjectAttribute>() != null))
             {
                 yield return property;
             }
@@ -86,7 +87,8 @@ public static class Extensions
 
         while (type is { })
         {
-            foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                .Where(p => p.GetCustomAttribute<InjectAttribute>() != null))
             {
                 yield return field;
             }

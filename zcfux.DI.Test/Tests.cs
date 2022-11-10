@@ -33,18 +33,25 @@ public sealed class Tests
 
     class Injectable
     {
+        [Inject]
         private Foo? _privateFooProp { get; set; }
 
+        [Inject]
         protected Foo? ProtectedFooProp { get; set; }
 
+        [Inject]
         public Foo? PublicFooProp { get; set; }
 
+        [Inject]
         private Bar? _privateBarField;
 
+        [Inject]
         protected Bar? ProtectedBarField;
 
+        [Inject]
         public Bar? PublicBarField;
 
+        [Inject]
         public Baz? UnregisteredBazProp { get; set; }
 
         public void Test()

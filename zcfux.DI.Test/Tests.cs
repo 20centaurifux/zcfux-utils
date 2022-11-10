@@ -231,7 +231,7 @@ public sealed class Tests
         container.Build();
 
         var injectable = container.Inject<InjectableB>();
-
+         injectable = container.Inject<InjectableB>();
         Assert.IsInstanceOf<InjectableB>(injectable);
     }
 

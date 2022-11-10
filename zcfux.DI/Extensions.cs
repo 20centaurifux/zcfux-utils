@@ -19,12 +19,15 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using System.Collections.Concurrent;
 using System.Reflection;
 
 namespace zcfux.DI;
 
 public static class Extensions
 {
+    static readonly ConcurrentDictionary<IResolver, ConcurrentDictionary<Type, ConstructorInfo>> Cache = new();
+
     public static void Inject(this IResolver self, object obj)
     {
         self.InjectProperties(obj);
@@ -113,16 +116,38 @@ public static class Extensions
 
     static ConstructorInfo? FindConstructor<T>(this IResolver self)
     {
-        var ctors = typeof(T).GetConstructors(BindingFlags.Instance | BindingFlags.Public);
+        var cache = self.GetCachedConstructors();
 
-        var match = ctors
-            .SingleOrDefault(ctor =>
-                ctor
-                    .GetParameters()
-                    .Select(p => p.ParameterType)
-                    .All(t => self.IsRegistered(t)));
+        if (!cache.TryGetValue(typeof(T), out var match))
+        {
+            var ctors = typeof(T).GetConstructors(BindingFlags.Instance | BindingFlags.Public);
+
+            match = ctors
+                .SingleOrDefault(ctor =>
+                    ctor
+                        .GetParameters()
+                        .Select(p => p.ParameterType)
+                        .All(t => self.IsRegistered(t)));
+
+            if (match is { })
+            {
+                cache[typeof(T)] = match;
+            }
+        }
 
         return match;
+    }
+
+    static ConcurrentDictionary<Type, ConstructorInfo> GetCachedConstructors(this IResolver self)
+    {
+        if (!Cache.TryGetValue(self, out var ctors))
+        {
+            ctors = new ConcurrentDictionary<Type, ConstructorInfo>();
+
+            Cache[self] = ctors;
+        }
+
+        return ctors;
     }
 
     static IEnumerable<object> CreateParameters(this IResolver self, ConstructorInfo ctor)

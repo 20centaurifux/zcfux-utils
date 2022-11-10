@@ -65,10 +65,10 @@ public static class Extensions
     {
         foreach (var field in GetFields(obj))
         {
-            if (field.DeclaringType is { }
+            if (field.FieldType is { }
                 && self.IsRegistered(field.FieldType))
             {
-                var value = self.Resolve(field.FieldType!);
+                var value = self.Resolve(field.FieldType);
 
                 try
                 {
@@ -94,6 +94,42 @@ public static class Extensions
             }
 
             type = type.BaseType;
+        }
+    }
+
+
+    public static T Inject<T>(this IResolver self)
+        where T : class
+    {
+        var ctor = self.FindConstructor<T>()
+            ?? throw new ContainerException("No compatible constructor found.");
+
+        var parameters = self.CreateParameters(ctor).ToArray();
+
+        var instance = ctor.Invoke(parameters) as T;
+
+        return instance!;
+    }
+
+    static ConstructorInfo? FindConstructor<T>(this IResolver self)
+    {
+        var ctors = typeof(T).GetConstructors(BindingFlags.Instance | BindingFlags.Public);
+
+        var match = ctors
+            .SingleOrDefault(ctor =>
+                ctor
+                    .GetParameters()
+                    .Select(p => p.ParameterType)
+                    .All(t => self.IsRegistered(t)));
+
+        return match;
+    }
+
+    static IEnumerable<object> CreateParameters(this IResolver self, ConstructorInfo ctor)
+    {
+        foreach (var parameter in ctor.GetParameters())
+        {
+            yield return self.Resolve(parameter.ParameterType);
         }
     }
 }

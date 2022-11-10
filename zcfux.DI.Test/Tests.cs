@@ -31,7 +31,7 @@ public sealed class Tests
 
     sealed class Baz { }
 
-    class Injectable
+    sealed class InjectableA
     {
         [Inject]
         private Foo? _privateFooProp { get; set; }
@@ -65,6 +65,15 @@ public sealed class Tests
             Assert.IsInstanceOf<Bar>(PublicBarField);
 
             Assert.IsNull(UnregisteredBazProp);
+        }
+    }
+
+    sealed class InjectableB
+    {
+        public InjectableB(Foo foo, Bar bar)
+        {
+            Assert.IsInstanceOf<Foo>(foo);
+            Assert.IsInstanceOf<Bar>(bar);
         }
     }
 
@@ -195,7 +204,7 @@ public sealed class Tests
     }
 
     [Test]
-    public void Inject()
+    public void InjectInstance()
     {
         var container = new Container();
 
@@ -204,10 +213,40 @@ public sealed class Tests
 
         container.Build();
 
-        var injectable = new Injectable();
+        var injectable = new InjectableA();
 
         container.Inject(injectable);
 
         injectable.Test();
+    }
+
+    [Test]
+    public void CreateNewInjectable()
+    {
+        var container = new Container();
+
+        container.Register(new Foo());
+        container.Register(new Bar());
+
+        container.Build();
+
+        var injectable = container.Inject<InjectableB>();
+
+        Assert.IsInstanceOf<InjectableB>(injectable);
+    }
+
+    [Test]
+    public void CreateNewInjectableWithoutMatchingConstructor()
+    {
+        var container = new Container();
+
+        container.Register(new Foo());
+
+        container.Build();
+
+        Assert.Throws<ContainerException>(() =>
+        {
+            container.Inject<InjectableB>();
+        });
     }
 }

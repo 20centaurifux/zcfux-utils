@@ -23,6 +23,10 @@ namespace zcfux.Logging;
 
 public interface IWriter
 {
+    string Name { get; }
+
+    void Setup(string name);
+
     void WriteMessage(ESeverity severity, string message);
 
     void WriteException(ESeverity severity, Exception exception);

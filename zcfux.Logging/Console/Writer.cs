@@ -24,11 +24,19 @@ namespace zcfux.Logging.Console;
 [Logger("console")]
 internal sealed class Writer : IWriter
 {
+    string? _name;
+
+    public string Name => _name
+        ?? throw new InvalidOperationException();
+
+    public void Setup(string name)
+        => _name = name;
+
     public void WriteMessage(ESeverity severity, string message)
     {
         var now = DateTime.Now;
 
-        System.Console.WriteLine($"{now}.{now.Millisecond} {severity} {message}");
+        System.Console.WriteLine($"{now}.{now.Millisecond} [{_name}] {severity} {message}");
     }
 
     public void WriteException(ESeverity severity, Exception exception)

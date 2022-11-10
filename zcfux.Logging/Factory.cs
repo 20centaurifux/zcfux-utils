@@ -21,36 +21,49 @@
  ***************************************************************************/
 namespace zcfux.Logging;
 
-public static class Factory
+public sealed class Factory
 {
     static readonly Lazy<IDictionary<string, Type>> Types = new(TypeLoader.GetTypes());
 
-    public static ILogger ByName(string name)
+    static readonly Lazy<Factory> Default = new(() => new Factory(String.Empty));
+
+    readonly string _loggerName;
+
+    public Factory(string loggerName)
+        => _loggerName = loggerName;
+
+    public static Factory Instance { get => Default.Value; }
+
+    public ILogger FromName(string name)
     {
-        var writer = CreateWriter(name);
+        var writer = CreateAndSetupWriterFromName(name);
 
         return new BasicLogger(writer);
     }
 
-    public static ILogger ByName(params string[] names)
+    public ILogger FromName(params string[] names)
     {
         var chain = new Chain();
 
         foreach (var name in names)
         {
-            chain = chain.Append(CreateWriter(name));
+            var writer = CreateAndSetupWriterFromName(name);
+
+            chain = chain.Append(writer);
         }
 
         return chain;
     }
 
-    public static ILogger FromAssembly(string assemblyName, string typeName)
+    public ILogger FromAssembly(string assemblyName, string typeName)
     {
         try
         {
-            var writer = Activator.CreateInstance(assemblyName, typeName)!.Unwrap();
+            var writer = (Activator.CreateInstance(assemblyName, typeName)!.Unwrap() as IWriter)!;
 
-            return new BasicLogger((writer as IWriter)!);
+            writer.Setup(_loggerName);
+
+            return new BasicLogger(writer);
         }
         catch (Exception ex)
         {
@@ -58,7 +71,7 @@ public static class Factory
         }
     }
 
-    public static ILogger FromAssembly(params (string, string)[] tuples)
+    public ILogger FromAssembly(params (string, string)[] tuples)
     {
         var chain = new Chain();
 
@@ -66,9 +79,11 @@ public static class Factory
         {
             foreach (var (assemblyName, typeName) in tuples)
             {
-                var writer = Activator.CreateInstance(assemblyName, typeName)!.Unwrap();
+                var writer = (Activator.CreateInstance(assemblyName, typeName)!.Unwrap() as IWriter)!;
 
-                chain = chain.Append((writer as IWriter)!);
+                writer.Setup(_loggerName);
+
+                chain = chain.Append(writer);
             }
 
             return chain;
@@ -79,13 +94,15 @@ public static class Factory
         }
     }
 
-    static IWriter CreateWriter(string name)
+    IWriter CreateAndSetupWriterFromName(string name)
     {
         IWriter? writer = null;
 
         if (Types.Value.TryGetValue(name, out var t))
         {
             writer = Activator.CreateInstance(t) as IWriter;
+
+            writer?.Setup(_loggerName);
         }
 
         return writer ?? throw new FactoryException($"Writer `{name}' not found.");

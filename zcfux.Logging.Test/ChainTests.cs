@@ -32,7 +32,7 @@ public sealed class ChainTests
     [Test]
     public void WriteMessageToAllDestinations()
     {
-        var chain = Factory.ByName("collect", "collect");
+        var chain = Factory.Instance.FromName("collect", "collect");
 
         chain.Info(TestContext.CurrentContext.Random.GetString());
 

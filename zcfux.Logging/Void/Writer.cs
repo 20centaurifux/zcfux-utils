@@ -24,6 +24,14 @@ namespace zcfux.Logging.Void;
 [Logger("void")]
 public class Writer : IWriter
 {
+    string? _name;
+
+    public string Name => _name
+        ?? throw new InvalidOperationException();
+
+    public void Setup(string name)
+        => _name = name;
+
     public void WriteMessage(ESeverity severity, string message)
     {
     }

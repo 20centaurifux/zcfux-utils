@@ -26,35 +26,35 @@ namespace zcfux.Logging.Test;
 public sealed class FactoryTests
 {
     [Test]
-    public void CreateLoggerByName()
+    public void CreateLoggerFromName()
     {
-        var logger = Factory.ByName("void");
+        var logger = Factory.Instance.FromName("void");
 
         Assert.IsInstanceOf<ILogger>(logger);
         Assert.AreEqual(ESeverity.Debug, logger.Verbosity);
     }
     
     [Test]
-    public void CreateLoggerByNames()
+    public void CreateLoggerFromNames()
     {
-        var logger = Factory.ByName("void", "console");
+        var logger = Factory.Instance.FromName("void", "console");
 
         Assert.IsInstanceOf<ILogger>(logger);
         Assert.AreEqual(ESeverity.Debug, logger.Verbosity);
     }
 
     [Test]
-    public void CreateLoggerByUnknownName()
+    public void CreateLoggerFromUnknownName()
     {
         var loggerName = TestContext.CurrentContext.Random.GetString();
 
-        Assert.Throws<FactoryException>(() => Factory.ByName(loggerName));
+        Assert.Throws<FactoryException>(() => Factory.Instance.FromName(loggerName));
     }
 
     [Test]
     public void CreateLoggerFromAssembly()
     {
-        var logger = Factory.FromAssembly("zcfux.Logging", "zcfux.Logging.Console.Writer");
+        var logger = Factory.Instance.FromAssembly("zcfux.Logging", "zcfux.Logging.Console.Writer");
 
         Assert.IsInstanceOf<ILogger>(logger);
         Assert.AreEqual(ESeverity.Debug, logger.Verbosity);
@@ -63,7 +63,7 @@ public sealed class FactoryTests
     [Test]
     public void CreateLoggerFromAssemblies()
     {
-        var logger = Factory.FromAssembly(
+        var logger = Factory.Instance.FromAssembly(
             ("zcfux.Logging", "zcfux.Logging.Console.Writer"),
             ("zcfux.Logging.Test", "zcfux.Logging.Test.Writer.Collect"));
 
@@ -76,7 +76,7 @@ public sealed class FactoryTests
     {
         var assemblyName = TestContext.CurrentContext.Random.GetString();
 
-        Assert.Throws<FactoryException>(() => Factory.FromAssembly(assemblyName, "zcfux.Logging.Console.Writer"));
+        Assert.Throws<FactoryException>(() => Factory.Instance.FromAssembly(assemblyName, "zcfux.Logging.Console.Writer"));
     }
 
     [Test]
@@ -84,6 +84,6 @@ public sealed class FactoryTests
     {
         var writerName = TestContext.CurrentContext.Random.GetString();
 
-        Assert.Throws<FactoryException>(() => Factory.FromAssembly("zcfux.Logging", writerName));
+        Assert.Throws<FactoryException>(() => Factory.Instance.FromAssembly("zcfux.Logging", writerName));
     }
 }

@@ -24,7 +24,15 @@ namespace zcfux.Logging.Test.Writer;
 [Logger("collect")]
 public sealed class Collect : IWriter
 {
+    string? _name;
+
     public static readonly IDictionary<ESeverity, IList<string>> Messages = new Dictionary<ESeverity, IList<string>>();
+
+    public string Name => _name
+        ?? throw new InvalidOperationException();
+
+    public void Setup(string? name)
+        => _name = name;
 
     public void WriteMessage(ESeverity severity, string message)
         => Write(severity, message);

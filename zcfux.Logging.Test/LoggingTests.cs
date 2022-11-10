@@ -57,7 +57,7 @@ public sealed class LoggingTests
     [Test]
     public void Verbosity()
     {
-        var logger = Factory.ByName("collect");
+        var logger = Factory.Instance.FromName("collect");
 
         logger.Trace(RandomString());
         logger.Debug(RandomString());
@@ -100,7 +100,7 @@ public sealed class LoggingTests
 
     static void Test(ESeverity severity)
     {
-        var logger = Factory.ByName("collect");
+        var logger = Factory.Instance.FromName("collect");
 
         logger.Verbosity = ESeverity.Trace;
 

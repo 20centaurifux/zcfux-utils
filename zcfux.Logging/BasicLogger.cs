@@ -103,12 +103,15 @@ internal sealed class BasicLogger : ILogger
 
     void Log(ESeverity severity, string format, params object[] args)
     {
-        Swallow(() =>
+        if (severity >= Verbosity)
         {
-            var msg = string.Format(format, args);
+            Swallow(() =>
+            {
+                var msg = string.Format(format, args);
 
-            _writer.WriteMessage(severity, msg);
-        });
+                _writer.WriteMessage(severity, msg);
+            });
+        }
     }
 
     void Log(ESeverity severity, Exception exception)

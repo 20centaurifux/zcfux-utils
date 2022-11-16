@@ -23,7 +23,7 @@ using Autofac;
 
 namespace zcfux.DI;
 
-public sealed class Container : IRegistry, IResolver
+public sealed class Container : IRegistry, IResolver, IDisposable
 {
     readonly ContainerBuilder _builder = new();
     IContainer? _container;
@@ -88,4 +88,7 @@ public sealed class Container : IRegistry, IResolver
             throw new ContainerException("Container has not been built yet.");
         }
     }
+
+    public void Dispose()
+        => _container?.Dispose();
 }

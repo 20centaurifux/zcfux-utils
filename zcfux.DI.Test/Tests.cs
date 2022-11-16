@@ -77,6 +77,14 @@ public sealed class Tests
         }
     }
 
+    sealed class Disposable : IDisposable
+    {
+        public bool Disposed { get; private set; }
+
+        public void Dispose()
+            => Disposed = true;
+    }
+
     [Test]
     public void BuildContainer()
     {
@@ -248,5 +256,23 @@ public sealed class Tests
         {
             container.Inject<InjectableB>();
         });
+    }
+
+    [Test]
+    public void DisposeDependencies()
+    {
+        var container = new Container();
+
+        container.Register(new Disposable());
+
+        container.Build();
+
+        var disposable = container.Resolve<Disposable>();
+
+        Assert.IsFalse(disposable.Disposed);
+
+        container.Dispose();
+
+        Assert.IsTrue(disposable.Disposed);
     }
 }

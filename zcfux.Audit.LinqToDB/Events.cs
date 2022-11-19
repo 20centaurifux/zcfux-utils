@@ -19,45 +19,37 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using LinqToDB.Configuration;
-using LinqToDB.Data;
+using LinqToDB;
+using zcfux.Data.LinqToDB;
 
-namespace zcfux.Data.LinqToDB;
+namespace zcfux.Audit.LinqToDB;
 
-public class Engine : IEngine
+internal sealed class Events : IEvents
 {
-    public Engine(LinqToDBConnectionOptions options)
-        => Options = options;
+    public void InsertEventKind(object handle, IEventKind kind)
+        => handle.Db().Insert(new EventKindRelation(kind));
 
-    protected LinqToDBConnectionOptions Options { get; }
+    public IEventKind GetEventKind(object handle, int id)
+        => handle.Db()
+            .GetTable<EventKindRelation>()
+            .Single(kind => kind.Id == id);
 
-    public virtual void Setup()
+    public IEvent NewEvent(object handle, IEventKind kind, ESeverity severity, DateTime createdAt, ITopic? topic)
     {
-        DataConnection.TurnTraceSwitchOn();
+        var ev = new EventRelation(kind, severity, createdAt, topic);
 
-        DataConnection.WriteTraceLine = (s1, s2, l) =>
-        {
-            Console.WriteLine(s1, s2);
-        };
+        ev.Id = Convert.ToInt64(handle.Db().InsertWithIdentity(ev));
+
+        return ev;
     }
 
-    public Transaction NewTransaction()
-        => new(NewSession());
+    public ICatalogue CreateCatalogue(object handle, ECatalogue catalogue)
+        => new Catalogue(handle, catalogue);
 
-    Session NewSession()
-    {
-        var conn = new DataConnection(Options);
-
-        conn.InlineParameters = false;
-
-        PrepareDataConnection(conn);
-
-        var session = new Session(conn);
-
-        return session;
-    }
-
-    protected virtual void PrepareDataConnection(DataConnection connection)
-    {
-    }
+    public void ArchiveEvents(object handle, DateTime before)
+        => handle.Db()
+            .GetTable<EventRelation>()
+            .Where(ev => ev.CreatedAt <= before)
+            .Set(ev => ev.Archived, true)
+            .Update();
 }

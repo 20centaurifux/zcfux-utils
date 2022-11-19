@@ -5,8 +5,11 @@ This is a collection of various utilities and abstractions I use in .NET project
 ## Audit
 * Store and query activities.
 
+## Audit.LinqToDB
+* Data.LinqToDB Audit provider.
+
 ## Audit.LinqToPg
-* Data.LinqToDB Audit provider for Postgres.
+* Data.LinqToDB Audit provider optimized for Postgres.
 
 ## Byte
 * Exension methods to convert byte arrays to hex strings and back. 

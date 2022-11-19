@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,15 +19,36 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using LinqToDB.Data;
+using LinqToDB;
+using zcfux.Data.LinqToDB;
+using zcfux.Filter.Linq;
 
-namespace zcfux.Data.LinqToDB;
+namespace zcfux.Audit.LinqToDB;
 
-public static class Extensions
+internal sealed class Topics : ITopics
 {
-    public static DataConnection Db(this Transaction self)
-        => (self.Handle as Handle)!.Db();
-    
-    public static DataConnection Db(this object self)
-        => (self as Handle)!.Db();
+    public void InsertTopicKind(object handle, ITopicKind kind)
+        => handle.Db().Insert(new TopicKindRelation(kind));
+
+    public ITopicKind GetTopicKind(object handle, int id)
+        => handle.Db()
+            .GetTable<TopicKindRelation>()
+            .Single(kind => kind.Id == id);
+
+    public ITopic NewTopic(object handle, ITopicKind topicKind, string displayName)
+    {
+        var topic = new TopicRelation(topicKind, displayName);
+
+        topic.Id = Convert.ToInt64(handle.Db().InsertWithIdentity(topic));
+
+        return topic;
+    }
+
+    public IEnumerable<ITopic> QueryTopics(object handle, Filter.Query query)
+    {
+        return handle.Db()
+            .GetTable<TopicView>()
+            .Query(query)
+            .Select(t => t.ToTopic());
+    }
 }

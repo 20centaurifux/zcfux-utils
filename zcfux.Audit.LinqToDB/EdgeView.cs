@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,15 +19,31 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using LinqToDB.Data;
+namespace zcfux.Audit.LinqToDB;
 
-namespace zcfux.Data.LinqToDB;
-
-public static class Extensions
+#pragma warning disable CS8618
+internal sealed class EdgeView
 {
-    public static DataConnection Db(this Transaction self)
-        => (self.Handle as Handle)!.Db();
-    
-    public static DataConnection Db(this object self)
-        => (self as Handle)!.Db();
+    public long EventId { get; set; }
+
+    public long LeftTopicId { get; set; }
+
+    public string LeftTopic { get; set; }
+
+    public int LeftTopicKindId { get; set; }
+
+    public string LeftTopicKind { get; set; }
+
+    public int AssociationId { get; set; }
+
+    public string Association { get; set; }
+
+    public long RightTopicId { get; set; }
+
+    public string RightTopic { get; set; }
+
+    public int RightTopicKindId { get; set; }
+
+    public string RightTopicKind { get; set; }
 }
+#pragma warning restore CS8618

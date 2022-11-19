@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,15 +19,34 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using LinqToDB.Data;
+using LinqToDB.Mapping;
 
-namespace zcfux.Data.LinqToDB;
+namespace zcfux.Audit.LinqToDB;
 
-public static class Extensions
+#pragma warning disable CS8618
+[Table(Schema = "audit", Name = "TopicView")]
+internal sealed class TopicView
 {
-    public static DataConnection Db(this Transaction self)
-        => (self.Handle as Handle)!.Db();
-    
-    public static DataConnection Db(this object self)
-        => (self as Handle)!.Db();
+    [Column(Name = "Id")]
+    public long Id { get; set; }
+
+    [Column(Name = "KindId")]
+    public int KindId { get; set; }
+
+    [Column(Name = "Kind")]
+    public string Kind { get; set; }
+
+    [Column(Name = "DisplayName")]
+    public string DisplayName { get; set; }
+
+    public ITopic ToTopic()
+    {
+        return new Topic
+        {
+            Id = Id,
+            Kind = new TopicKind(KindId, Kind),
+            DisplayName = DisplayName
+        };
+    }
 }
+#pragma warning restore CS8618

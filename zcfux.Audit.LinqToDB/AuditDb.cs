@@ -19,15 +19,13 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using LinqToDB.Data;
+namespace zcfux.Audit.LinqToDB;
 
-namespace zcfux.Data.LinqToDB;
-
-public static class Extensions
+public sealed class AuditDb : IAuditDb
 {
-    public static DataConnection Db(this Transaction self)
-        => (self.Handle as Handle)!.Db();
-    
-    public static DataConnection Db(this object self)
-        => (self as Handle)!.Db();
+    public ITopics Topics => new Topics();
+
+    public IAssociations Associations => new Associations();
+
+    public IEvents Events => new Events();
 }

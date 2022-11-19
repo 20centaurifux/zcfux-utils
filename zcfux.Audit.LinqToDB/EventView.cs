@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,15 +19,42 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using LinqToDB.Data;
+using LinqToDB.Mapping;
 
-namespace zcfux.Data.LinqToDB;
+namespace zcfux.Audit.LinqToDB;
 
-public static class Extensions
+#pragma warning disable CS8618
+[Table(Schema = "audit", Name = "EventView")]
+internal sealed class EventView
 {
-    public static DataConnection Db(this Transaction self)
-        => (self.Handle as Handle)!.Db();
-    
-    public static DataConnection Db(this object self)
-        => (self as Handle)!.Db();
+    [Column(Name = "Id")]
+    public long Id { get; set; }
+
+    [Column(Name = "KindId")]
+    public int KindId { get; set; }
+
+    [Column(Name = "Kind")]
+    public string Kind { get; set; }
+
+    [Column(Name = "Severity")]
+    public ESeverity Severity { get; set; }
+
+    [Column(Name = "CreatedAt")]
+    public DateTime CreatedAt { get; set; }
+
+    [Column(Name = "TopicId")]
+    public long? TopicId { get; set; }
+
+    [Column(Name = "DisplayName")]
+    public string? DisplayName { get; set; }
+
+    [Column(Name = "Archived")]
+    public bool Archived { get; set; }
+
+    [Column(Name = "TopicKindId")]
+    public int TopicKindId { get; set; }
+
+    [Column(Name = "TopicKind")]
+    public string TopicKind { get; set; }
 }
+#pragma warning restore CS8618

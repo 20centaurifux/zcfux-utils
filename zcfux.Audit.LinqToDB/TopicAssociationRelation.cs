@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,15 +19,24 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using LinqToDB.Data;
+using LinqToDB.Mapping;
 
-namespace zcfux.Data.LinqToDB;
+namespace zcfux.Audit.LinqToDB;
 
-public static class Extensions
+#pragma warning disable CS8618
+[Table(Schema = "audit", Name = "TopicAssociation")]
+internal sealed class TopicAssociationRelation
 {
-    public static DataConnection Db(this Transaction self)
-        => (self.Handle as Handle)!.Db();
-    
-    public static DataConnection Db(this object self)
-        => (self as Handle)!.Db();
+    [Column(Name = "Id"), PrimaryKey, Identity]
+    public long Id { get; set; }
+
+    [Column(Name = "Topic1")]
+    public long Topic1 { get; set; }
+
+    [Column(Name = "AssociationId")]
+    public int AssociationId { get; set; }
+
+    [Column(Name = "Topic2")]
+    public long Topic2 { get; set; }
 }
+#pragma warning restore CS8618

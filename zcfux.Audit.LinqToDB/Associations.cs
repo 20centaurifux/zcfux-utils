@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,15 +19,40 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using LinqToDB.Data;
+using LinqToDB;
+using zcfux.Data.LinqToDB;
 
-namespace zcfux.Data.LinqToDB;
+namespace zcfux.Audit.LinqToDB;
 
-public static class Extensions
+internal sealed class Associations : IAssociations
 {
-    public static DataConnection Db(this Transaction self)
-        => (self.Handle as Handle)!.Db();
-    
-    public static DataConnection Db(this object self)
-        => (self as Handle)!.Db();
+    public void InsertAssociation(object handle, IAssociation association)
+        => handle.Db()
+            .Insert(new AssociationRelation(association));
+
+    public IAssociation GetAssociation(object handle, long id)
+        => handle.Db()
+            .GetTable<AssociationRelation>()
+            .Single(association => association.Id == id);
+
+    public IEdge Associate(object handle, ITopic first, IAssociation association, ITopic second)
+    {
+        var topicAssociation = new TopicAssociationRelation
+        {
+            Topic1 = first.Id,
+            AssociationId = association.Id,
+            Topic2 = second.Id
+        };
+
+        handle.Db().Insert(topicAssociation);
+
+        var edge = new Edge
+        {
+            Left = first,
+            Association = association,
+            Right = second
+        };
+
+        return edge;
+    }
 }

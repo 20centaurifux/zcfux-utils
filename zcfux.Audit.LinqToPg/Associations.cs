@@ -24,18 +24,18 @@ using zcfux.Data.LinqToDB;
 
 namespace zcfux.Audit.LinqToPg;
 
-internal sealed class Associations
+internal sealed class Associations : IAssociations
 {
-    public void InsertAssociation(Handle handle, IAssociation association)
+    public void InsertAssociation(object handle, IAssociation association)
         => handle.Db()
             .Insert(new AssociationRelation(association));
 
-    public IAssociation GetAssociation(Handle handle, long id)
+    public IAssociation GetAssociation(object handle, long id)
         => handle.Db()
             .GetTable<AssociationRelation>()
             .Single(association => association.Id == id);
 
-    public IEdge Associate(Handle handle, ITopic first, IAssociation association, ITopic second)
+    public IEdge Associate(object handle, ITopic first, IAssociation association, ITopic second)
     {
         var topicAssociation = new TopicAssociationRelation
         {

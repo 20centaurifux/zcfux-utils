@@ -30,5 +30,5 @@ internal sealed class UserDbTests : AUserDbTests
         => Factory.CreateAndSetupEngine();
 
     protected override IUserDb CreateUserDb()
-        => Data.Proxy.Factory.ConvertHandle<IUserDb, UserDb>();
+        => new UserDb();
 }

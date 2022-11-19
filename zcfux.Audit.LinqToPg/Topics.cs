@@ -25,17 +25,17 @@ using zcfux.Filter.Linq;
 
 namespace zcfux.Audit.LinqToPg;
 
-internal sealed class Topics
+internal sealed class Topics : ITopics
 {
-    public void InsertTopicKind(Handle handle, ITopicKind kind)
+    public void InsertTopicKind(object handle, ITopicKind kind)
         => handle.Db().Insert(new TopicKindRelation(kind));
 
-    public ITopicKind GetTopicKind(Handle handle, int id)
+    public ITopicKind GetTopicKind(object handle, int id)
         => handle.Db()
             .GetTable<TopicKindRelation>()
             .Single(kind => kind.Id == id);
 
-    public ITopic NewTopic(Handle handle, ITopicKind topicKind, string displayName)
+    public ITopic NewTopic(object handle, ITopicKind topicKind, string displayName)
     {
         var topic = new TopicRelation(topicKind, displayName);
 
@@ -44,7 +44,7 @@ internal sealed class Topics
         return topic;
     }
 
-    public IEnumerable<ITopic> QueryTopics(Handle handle, Filter.Query query)
+    public IEnumerable<ITopic> QueryTopics(object handle, Filter.Query query)
     {
         return handle.Db()
             .GetTable<TopicView>()

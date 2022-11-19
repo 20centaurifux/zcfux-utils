@@ -26,9 +26,9 @@ using zcfux.User.Password;
 
 namespace zcfux.User.LinqToDB.Password
 {
-    public sealed class PasswordDb
+    public sealed class PasswordDb : IPasswordDb
     {
-        public void Set(Handle handle, Guid guid, byte[] hash, byte[] salt, int format)
+        public void Set(object handle, Guid guid, byte[] hash, byte[] salt, int format)
         {
             if (!handle
                     .Db()
@@ -49,13 +49,13 @@ namespace zcfux.User.LinqToDB.Password
             handle.Db().InsertOrReplace(relation);
         }
 
-        public IPassword? TryGet(Handle handle, Guid guid)
+        public IPassword? TryGet(object handle, Guid guid)
             => handle
                 .Db()
                 .GetTable<PasswordRelation>()
                 .SingleOrDefault(p => p.User == guid);
 
-        public void Delete(Handle handle, Guid guid)
+        public void Delete(object handle, Guid guid)
         {
             var deleted = handle
                 .Db()

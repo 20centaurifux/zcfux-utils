@@ -32,8 +32,8 @@ internal sealed class PasswordDbTests : APasswordDbTests
         => Factory.CreateAndSetupEngine();
 
     protected override IUserDb CreateUserDb()
-        => Data.Proxy.Factory.ConvertHandle<IUserDb, UserDb>();
+        => new UserDb();
 
     protected override IPasswordDb CreatePasswordDb()
-        => Data.Proxy.Factory.ConvertHandle<IPasswordDb, PasswordDb>();
+        => new PasswordDb();
 }

@@ -35,13 +35,12 @@ internal sealed class GroupDbTests : AGroupDbTests
     protected override IGroupDb CreateGroupDb()
     {
         var siteDb = new ApplicationStore();
-        var groupDb = new GroupDb(siteDb);
-
-        return Data.Proxy.Factory.ConvertHandle<IGroupDb, GroupDb>(groupDb);
+        
+        return new GroupDb(siteDb);
     }
 
     protected override IUserDb CreateUserDb()
-        => Data.Proxy.Factory.ConvertHandle<IUserDb, UserDb>();
+        => new UserDb();
 
     protected override ISiteDb CreateSiteDb()
         => new ApplicationStore();

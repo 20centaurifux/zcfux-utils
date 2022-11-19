@@ -28,9 +28,9 @@ using zcfux.Mail.Queue;
 
 namespace zcfux.Mail.LinqToPg.Queue;
 
-internal sealed class QueueDb
+internal sealed class QueueDb : IQueueDb
 {
-    public IQueue NewQueue(Handle handle, string name)
+    public IQueue NewQueue(object handle, string name)
     {
         var queue = new QueueRelation
         {
@@ -42,7 +42,7 @@ internal sealed class QueueDb
         return queue;
     }
 
-    public void UpdateQueue(Handle handle, IQueue queue)
+    public void UpdateQueue(object handle, IQueue queue)
     {
         var updated = handle
             .Db()
@@ -57,7 +57,7 @@ internal sealed class QueueDb
         }
     }
 
-    public IQueue GetQueue(Handle handle, int id)
+    public IQueue GetQueue(object handle, int id)
     {
         var queue = handle
             .Db()
@@ -72,13 +72,13 @@ internal sealed class QueueDb
         return queue;
     }
 
-    public IEnumerable<IQueue> GetQueues(Handle handle)
+    public IEnumerable<IQueue> GetQueues(object handle)
         => handle
             .Db()
             .GetTable<QueueRelation>()
             .OrderBy(dir => dir.Name);
 
-    public void DeleteQueue(Handle handle, IQueue queue)
+    public void DeleteQueue(object handle, IQueue queue)
     {
         var deleted = handle
             .Db()
@@ -92,7 +92,7 @@ internal sealed class QueueDb
         }
     }
 
-    public IQueueItem NewQueueItem(Handle handle, IQueue queue, IMessage message, TimeSpan timeToLive, DateTime nextDue)
+    public IQueueItem NewQueueItem(object handle, IQueue queue, IMessage message, TimeSpan timeToLive, DateTime nextDue)
     {
         var queueItem = new QueueItemRelation(queue, message)
         {
@@ -107,7 +107,7 @@ internal sealed class QueueDb
         return queueItem;
     }
 
-    public void UpdateQueueItem(Handle handle, IQueueItem queueItem)
+    public void UpdateQueueItem(object handle, IQueueItem queueItem)
     {
         var updated = handle
             .Db()
@@ -125,7 +125,7 @@ internal sealed class QueueDb
         }
     }
 
-    public void DeleteQueueItem(Handle handle, IQueueItem queueItem)
+    public void DeleteQueueItem(object handle, IQueueItem queueItem)
     {
         var deleted = handle
             .Db()
@@ -139,7 +139,7 @@ internal sealed class QueueDb
         }
     }
 
-    public IEnumerable<IQueueItem> Query(Handle handle, Query query)
+    public IEnumerable<IQueueItem> Query(object handle, Query query)
     {
         var useFlatView = FlatMessageViewTest.UseFlatView(query);
 
@@ -148,7 +148,7 @@ internal sealed class QueueDb
             : QueryView(handle, query);
     }
 
-    static IEnumerable<IQueueItem> QueryView(Handle handle, Query query)
+    static IEnumerable<IQueueItem> QueryView(object handle, Query query)
     {
         var records = handle
             .Db()
@@ -158,7 +158,7 @@ internal sealed class QueueDb
         return records.Select(BuildQueueItem);
     }
 
-    static IEnumerable<IQueueItem> QueryFlatView(Handle handle, Query query)
+    static IEnumerable<IQueueItem> QueryFlatView(object handle, Query query)
     {
         var db = handle.Db();
 

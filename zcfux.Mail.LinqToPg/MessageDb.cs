@@ -26,10 +26,10 @@ using zcfux.Data.LinqToDB;
 
 namespace zcfux.Mail.LinqToPg;
 
-internal sealed class MessageDb
+internal sealed class MessageDb : IMessageDb
 {
     public IMessage NewMessage(
-        Handle handle,
+        object handle,
         Address from,
         IEnumerable<Address> to,
         IEnumerable<Address> cc,
@@ -54,7 +54,7 @@ internal sealed class MessageDb
         return message;
     }
 
-    public IMessage GetMessage(Handle handle, long id)
+    public IMessage GetMessage(object handle, long id)
     {
         var message = handle
             .Db()
@@ -69,7 +69,7 @@ internal sealed class MessageDb
         return message;
     }
 
-    public void DeleteMessage(Handle handle, IMessage message)
+    public void DeleteMessage(object handle, IMessage message)
     {
         var deleted = handle
             .Db()
@@ -83,7 +83,7 @@ internal sealed class MessageDb
         }
     }
 
-    public IAttachment NewAttachment(Handle handle, IMessage message, string filename, Stream stream)
+    public IAttachment NewAttachment(object handle, IMessage message, string filename, Stream stream)
     {
         var db = handle.Db();
 
@@ -110,13 +110,13 @@ internal sealed class MessageDb
         return attachment;
     }
 
-    public IEnumerable<IAttachment> GetAttachments(Handle handle, IMessage message)
+    public IEnumerable<IAttachment> GetAttachments(object handle, IMessage message)
         => handle
             .Db()
             .GetTable<AttachmentRelation>()
             .Where(attachment => attachment.MessageId == message.Id);
 
-    public Stream ReadAttachment(Handle handle, long id)
+    public Stream ReadAttachment(object handle, long id)
     {
         var db = handle.Db();
 
@@ -134,7 +134,7 @@ internal sealed class MessageDb
         return manager.OpenRead(relation.Oid);
     }
 
-    public void DeleteAttachment(Handle handle, IAttachment attachment)
+    public void DeleteAttachment(object handle, IAttachment attachment)
     {
         var deleted = handle
             .Db()

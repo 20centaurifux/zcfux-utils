@@ -29,9 +29,9 @@ using zcfux.Mail.Store;
 
 namespace zcfux.Mail.LinqToPg.Store;
 
-internal sealed class StoreDb
+internal sealed class StoreDb : IStoreDb
 {
-    public IDirectory NewDirectory(Handle handle, string name)
+    public IDirectory NewDirectory(object handle, string name)
     {
         var directory = new DirectoryRelation
         {
@@ -43,7 +43,7 @@ internal sealed class StoreDb
         return directory;
     }
 
-    public IDirectory NewDirectory(Handle handle, IDirectory parent, string name)
+    public IDirectory NewDirectory(object handle, IDirectory parent, string name)
     {
         var directory = new DirectoryRelation
         {
@@ -56,7 +56,7 @@ internal sealed class StoreDb
         return directory;
     }
 
-    public void UpdateDirectory(Handle handle, IDirectory directory)
+    public void UpdateDirectory(object handle, IDirectory directory)
     {
         var updated = handle
             .Db()
@@ -72,7 +72,7 @@ internal sealed class StoreDb
         }
     }
 
-    public IDirectory GetDirectory(Handle handle, int id)
+    public IDirectory GetDirectory(object handle, int id)
     {
         var directory = handle
             .Db()
@@ -87,21 +87,21 @@ internal sealed class StoreDb
         return directory;
     }
 
-    public IEnumerable<IDirectory> GetDirectories(Handle handle)
+    public IEnumerable<IDirectory> GetDirectories(object handle)
         => handle
             .Db()
             .GetTable<DirectoryRelation>()
             .Where(dir => !dir.ParentId.HasValue)
             .OrderBy(dir => dir.Name);
 
-    public IEnumerable<IDirectory> GetDirectories(Handle handle, IDirectory parent)
+    public IEnumerable<IDirectory> GetDirectories(object handle, IDirectory parent)
         => handle
             .Db()
             .GetTable<DirectoryRelation>()
             .Where(dir => dir.ParentId == parent.Id)
             .OrderBy(dir => dir.Name);
 
-    public void DeleteDirectory(Handle handle, IDirectory directory)
+    public void DeleteDirectory(object handle, IDirectory directory)
     {
         var deleted = handle
             .Db()
@@ -115,7 +115,7 @@ internal sealed class StoreDb
         }
     }
 
-    public IDirectoryEntry LinkMessage(Handle handle, IMessage message, IDirectory directory)
+    public IDirectoryEntry LinkMessage(object handle, IMessage message, IDirectory directory)
     {
         var db = handle.Db();
 
@@ -132,7 +132,7 @@ internal sealed class StoreDb
         return directoryEntry;
     }
 
-    public void UnlinkMessage(Handle handle, IDirectoryEntry directoryEntry)
+    public void UnlinkMessage(object handle, IDirectoryEntry directoryEntry)
     {
         var deleted = handle
             .Db()
@@ -146,7 +146,7 @@ internal sealed class StoreDb
         }
     }
 
-    public IDirectoryEntry MoveMessage(Handle handle, IMessage message, IDirectory from, IDirectory to)
+    public IDirectoryEntry MoveMessage(object handle, IMessage message, IDirectory from, IDirectory to)
     {
         var updated = handle
             .Db()
@@ -163,7 +163,7 @@ internal sealed class StoreDb
         return new DirectoryEntryRelation(message, to);
     }
 
-    public IEnumerable<IDirectoryEntry> QueryMessages(Handle handle, Query query)
+    public IEnumerable<IDirectoryEntry> QueryMessages(object handle, Query query)
     {
         var useFlatView = FlatMessageViewTest.UseFlatView(query);
 
@@ -172,7 +172,7 @@ internal sealed class StoreDb
             : QueryView(handle, query);
     }
 
-    static IEnumerable<IDirectoryEntry> QueryView(Handle handle, Query query)
+    static IEnumerable<IDirectoryEntry> QueryView(object handle, Query query)
     {
         var records = handle
             .Db()
@@ -187,7 +187,7 @@ internal sealed class StoreDb
         }
     }
 
-    static IEnumerable<IDirectoryEntry> QueryFlatView(Handle handle, Query query)
+    static IEnumerable<IDirectoryEntry> QueryFlatView(object handle, Query query)
     {
         var db = handle.Db();
 

@@ -28,9 +28,9 @@ using zcfux.Filter.Linq;
 
 namespace zcfux.User.LinqToDB;
 
-public sealed class UserDb
+public sealed class UserDb : IUserDb
 {
-    public void WriteOrigin(Handle handle, IOrigin origin)
+    public void WriteOrigin(object handle, IOrigin origin)
     {
         var db = handle.Db();
 
@@ -53,7 +53,7 @@ public sealed class UserDb
         }
     }
 
-    public void DeleteOrigin(Handle handle, int id)
+    public void DeleteOrigin(object handle, int id)
     {
         var deleted = handle
             .Db()
@@ -67,13 +67,13 @@ public sealed class UserDb
         }
     }
 
-    public IEnumerable<IOrigin> QueryOrigins(Handle handle, Query query)
+    public IEnumerable<IOrigin> QueryOrigins(object handle, Query query)
         => handle
             .Db()
             .GetTable<OriginRelation>()
             .Query(query);
 
-    public void WriteUser(Handle handle, IUser user)
+    public void WriteUser(object handle, IUser user)
     {
         var db = handle.Db();
 
@@ -108,7 +108,7 @@ public sealed class UserDb
         }
     }
 
-    public void DeleteUser(Handle handle, Guid guid)
+    public void DeleteUser(object handle, Guid guid)
     {
         var deleted = handle
             .Db()
@@ -122,7 +122,7 @@ public sealed class UserDb
         }
     }
 
-    public IEnumerable<IUser> QueryUsers(Handle handle, Query query)
+    public IEnumerable<IUser> QueryUsers(object handle, Query query)
         => handle
             .Db()
             .GetTable<UserView>()

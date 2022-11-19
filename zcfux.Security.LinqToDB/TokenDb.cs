@@ -28,9 +28,9 @@ using zcfux.Security.Token;
 
 namespace zcfux.Security.LinqToDB;
 
-public sealed class TokenDb
+public sealed class TokenDb : ITokenDb
 {
-    public void WriteKind(Handle handle, IKind kind)
+    public void WriteKind(object handle, IKind kind)
     {
         var db = handle.Db();
 
@@ -46,7 +46,7 @@ public sealed class TokenDb
         db.InsertOrReplace(relation);
     }
 
-    public void DeleteKind(Handle handle, int id)
+    public void DeleteKind(object handle, int id)
     {
         var deleted = handle
             .Db()
@@ -60,13 +60,13 @@ public sealed class TokenDb
         }
     }
 
-    public IEnumerable<IKind> QueryKinds(Handle handle, Query query)
+    public IEnumerable<IKind> QueryKinds(object handle, Query query)
         => handle
             .Db()
             .GetTable<TokenKindRelation>()
             .Query(query);
 
-    public void WriteToken(Handle handle, IToken token)
+    public void WriteToken(object handle, IToken token)
     {
         var db = handle.Db();
 
@@ -82,7 +82,7 @@ public sealed class TokenDb
         db.InsertOrReplace(relation);
     }
 
-    public void DeleteToken(Handle handle, int kindId, string value)
+    public void DeleteToken(object handle, int kindId, string value)
     {
         var deleted = handle
             .Db()
@@ -96,7 +96,7 @@ public sealed class TokenDb
         }
     }
 
-    public int DeleteTokens(Handle handle, INode filter)
+    public int DeleteTokens(object handle, INode filter)
     {
         var db = handle.Db();
 
@@ -114,7 +114,7 @@ public sealed class TokenDb
         return deleted;
     }
 
-    public IEnumerable<IToken> QueryTokens(Handle handle, Query query)
+    public IEnumerable<IToken> QueryTokens(object handle, Query query)
         => handle
             .Db()
             .GetTable<TokenView>()

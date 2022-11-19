@@ -36,17 +36,15 @@ internal sealed class PermissionDbTests : APermissionDbTests
     protected override IPermissionDb CreatePermissionDb()
     {
         var applicationDb = new ApplicationStore();
-        var permissionDb = new PermissionDb(applicationDb);
-
-        return Data.Proxy.Factory.ConvertHandle<IPermissionDb, PermissionDb>(permissionDb);
+        
+        return new PermissionDb(applicationDb);
     }
 
     protected override IGroupDb CreateGroupDb()
     {
         var siteDb = new ApplicationStore();
-        var groupDb = new GroupDb(siteDb);
-
-        return Data.Proxy.Factory.ConvertHandle<IGroupDb, GroupDb>(groupDb);
+        
+        return  new GroupDb(siteDb); ;
     }
 
     protected override IApplicationDb CreateApplicationDb()

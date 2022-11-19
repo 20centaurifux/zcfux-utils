@@ -30,7 +30,7 @@ using zcfux.Filter.Linq;
 
 namespace zcfux.User.LinqToDB;
 
-public sealed class PermissionDb
+public sealed class PermissionDb : IPermissionDb
 {
     readonly IApplicationDb _applicationDb;
 
@@ -45,7 +45,7 @@ public sealed class PermissionDb
 
     sealed record GrantedPermission(IGroup Group, IPermission Permission) : IGrantedPermission;
 
-    public void WritePermissionCategory(Handle handle, IPermissionCategory category)
+    public void WritePermissionCategory(object handle, IPermissionCategory category)
     {
         ThrowIfApplicationNotFound(handle, category.Application.Id);
 
@@ -66,7 +66,7 @@ public sealed class PermissionDb
         db.InsertOrReplace(relation);
     }
 
-    void ThrowIfApplicationNotFound(Handle handle, int id)
+    void ThrowIfApplicationNotFound(object handle, int id)
     {
         var qb = new QueryBuilder()
             .WithFilter(ApplicationFilters.Id.EqualTo(id));
@@ -77,7 +77,7 @@ public sealed class PermissionDb
         }
     }
 
-    public void DeletePermissionCategory(Handle handle, int id)
+    public void DeletePermissionCategory(object handle, int id)
     {
         var deleted = handle
             .Db()
@@ -91,14 +91,14 @@ public sealed class PermissionDb
         }
     }
 
-    public IEnumerable<IPermissionCategory> QueryPermissionCategories(Handle handle, Query query)
+    public IEnumerable<IPermissionCategory> QueryPermissionCategories(object handle, Query query)
         => handle
             .Db()
             .GetTable<PermissionCategoryView>()
             .Query(query)
             .Select(c => c.ToPermissionCategory());
 
-    public void WritePermission(Handle handle, IPermission permission)
+    public void WritePermission(object handle, IPermission permission)
     {
         var db = handle.Db();
 
@@ -145,7 +145,7 @@ public sealed class PermissionDb
         }
     }
 
-    public void DeletePermission(Handle handle, int id)
+    public void DeletePermission(object handle, int id)
     {
         var deleted = handle
             .Db()
@@ -159,7 +159,7 @@ public sealed class PermissionDb
         }
     }
 
-    public IEnumerable<IPermission> QueryPermissions(Handle handle, Query query)
+    public IEnumerable<IPermission> QueryPermissions(object handle, Query query)
     {
         var edges = GetEdges(handle.Db()).ToArray();
 
@@ -180,7 +180,7 @@ public sealed class PermissionDb
         }
     }
 
-    public void Grant(Handle handle, IPermission permission, IGroup group)
+    public void Grant(object handle, IPermission permission, IGroup group)
     {
         var db = handle.Db();
 
@@ -247,7 +247,7 @@ public sealed class PermissionDb
         return queryable;
     }
 
-    public void Revoke(Handle handle, IPermission permission, IGroup group)
+    public void Revoke(object handle, IPermission permission, IGroup group)
     {
         var db = handle.Db();
 
@@ -311,7 +311,7 @@ public sealed class PermissionDb
         return queryable;
     }
 
-    public IEnumerable<IGrantedPermission> QueryGrantedPermissions(Handle handle, Query query)
+    public IEnumerable<IGrantedPermission> QueryGrantedPermissions(object handle, Query query)
     {
         var groupCache = new Dictionary<Guid, Group>();
         var permissionCache = new Dictionary<int, Permission>();

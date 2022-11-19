@@ -25,19 +25,19 @@ using zcfux.Data.LinqToDB;
 
 namespace zcfux.Audit.LinqToPg;
 
-internal sealed class Events
+internal sealed class Events : IEvents
 {
     record Pair(long AssocId, long TopicId);
 
-    public void InsertEventKind(Handle handle, IEventKind kind)
+    public void InsertEventKind(object handle, IEventKind kind)
         => handle.Db().Insert(new EventKindRelation(kind));
 
-    public IEventKind GetEventKind(Handle handle, int id)
+    public IEventKind GetEventKind(object handle, int id)
         => handle.Db()
             .GetTable<EventKindRelation>()
             .Single(kind => kind.Id == id);
 
-    public IEvent NewEvent(Handle handle, IEventKind kind, ESeverity severity, DateTime createdAt, ITopic? topic)
+    public IEvent NewEvent(object handle, IEventKind kind, ESeverity severity, DateTime createdAt, ITopic? topic)
     {
         var ev = new EventRelation(kind, severity, createdAt, topic);
 
@@ -46,12 +46,12 @@ internal sealed class Events
         return ev;
     }
 
-    public ICatalogue CreateCatalogue(Handle handle, ECatalogue catalogue)
+    public ICatalogue CreateCatalogue(object handle, ECatalogue catalogue)
         => (catalogue == ECatalogue.Recent)
-            ? new RecentCatalogue(handle)
-            : new ArchiveCatalogue(handle);
+            ? new RecentCatalogue((handle as Handle)!)
+            : new ArchiveCatalogue((handle as Handle)!);
 
-    public void ArchiveEvents(Handle handle, DateTime before)
+    public void ArchiveEvents(object handle, DateTime before)
     {
         var db = handle.Db();
 

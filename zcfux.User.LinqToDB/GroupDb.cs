@@ -29,14 +29,14 @@ using zcfux.Filter.Linq;
 
 namespace zcfux.User.LinqToDB;
 
-public sealed class GroupDb
+public sealed class GroupDb : IGroupDb
 {
     readonly ISiteDb _siteDb;
 
     public GroupDb(ISiteDb siteDb)
         => _siteDb = siteDb;
 
-    public void WriteGroup(Handle handle, IGroup group)
+    public void WriteGroup(object handle, IGroup group)
     {
         var db = handle.Db();
 
@@ -52,13 +52,13 @@ public sealed class GroupDb
         db.InsertOrReplace(relation);
     }
 
-    public IEnumerable<IGroup> QueryGroups(Handle handle, Query query)
+    public IEnumerable<IGroup> QueryGroups(object handle, Query query)
         => handle
             .Db()
             .GetTable<GroupRelation>()
             .Query(query);
 
-    public void DeleteGroup(Handle handle, Guid guid)
+    public void DeleteGroup(object handle, Guid guid)
     {
         var deleted = handle
             .Db()
@@ -72,7 +72,7 @@ public sealed class GroupDb
         }
     }
 
-    public void AssignUser(Handle handle, ISite site, IGroup group, IUser user)
+    public void AssignUser(object handle, ISite site, IGroup group, IUser user)
     {
         ThrowIfSiteNotFound(handle, site.Guid);
 
@@ -102,7 +102,7 @@ public sealed class GroupDb
         db.Insert(relation);
     }
 
-    void ThrowIfSiteNotFound(Handle handle, Guid guid)
+    void ThrowIfSiteNotFound(object handle, Guid guid)
     {
         var qb = new QueryBuilder()
             .WithFilter(SiteFilters.Guid.EqualTo(guid));
@@ -146,7 +146,7 @@ public sealed class GroupDb
         }
     }
 
-    public void UnassignUser(Handle handle, ISite site, IGroup group, IUser user)
+    public void UnassignUser(object handle, ISite site, IGroup group, IUser user)
     {
         var deleted = handle
             .Db()
@@ -160,7 +160,7 @@ public sealed class GroupDb
         }
     }
 
-    public IEnumerable<IAssignedUser> QueryAssignedUsers(Handle handle, Query query)
+    public IEnumerable<IAssignedUser> QueryAssignedUsers(object handle, Query query)
         => handle
             .Db()
             .GetTable<AssignedUserView>()

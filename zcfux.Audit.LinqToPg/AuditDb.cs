@@ -23,18 +23,9 @@ namespace zcfux.Audit.LinqToPg;
 
 public sealed class AuditDb : IAuditDb
 {
-    static readonly Lazy<ITopics> TopicDb
-        = new(Data.Proxy.Factory.ConvertHandle<ITopics, Topics>);
+    public ITopics Topics => new Topics();
 
-    static readonly Lazy<IAssociations> AssociationDb
-        = new(Data.Proxy.Factory.ConvertHandle<IAssociations, Associations>);
+    public IAssociations Associations => new Associations();
 
-    static readonly Lazy<IEvents> EventDb
-        = new(Data.Proxy.Factory.ConvertHandle<IEvents, Events>);
-
-    public ITopics Topics => TopicDb.Value;
-
-    public IAssociations Associations => AssociationDb.Value;
-
-    public IEvents Events => EventDb.Value;
+    public IEvents Events => new Events();
 }

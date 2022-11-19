@@ -28,18 +28,9 @@ namespace zcfux.Mail.LinqToPg;
 
 public sealed class Db : IDb
 {
-    static readonly Lazy<IMessageDb> LazyMessageDb
-        = new(Data.Proxy.Factory.ConvertHandle<IMessageDb, MessageDb>);
+    public IMessageDb Messages => new MessageDb();
 
-    static readonly Lazy<IStoreDb> LazyStoreDb
-        = new(Data.Proxy.Factory.ConvertHandle<IStoreDb, StoreDb>);
+    public IStoreDb Store => new StoreDb();
 
-    static readonly Lazy<IQueueDb> LazyQueueDb
-        = new(Data.Proxy.Factory.ConvertHandle<IQueueDb, QueueDb>);
-
-    public IMessageDb Messages => LazyMessageDb.Value;
-
-    public IStoreDb Store => LazyStoreDb.Value;
-
-    public IQueueDb Queues => LazyQueueDb.Value;
+    public IQueueDb Queues => new QueueDb();
 }

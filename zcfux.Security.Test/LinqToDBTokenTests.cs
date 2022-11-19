@@ -31,5 +31,5 @@ public sealed class LinqToDBTokenTests : ATokenTests
         => LinqToDBFactory.CreateAndSetupEngine();
 
     protected override ITokenDb CreateTokenDb()
-        => Data.Proxy.Factory.ConvertHandle<ITokenDb, TokenDb>();
+        => new TokenDb();
 }

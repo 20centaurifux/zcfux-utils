@@ -28,7 +28,7 @@ public sealed class KeyNotFoundException : Exception
     public KeyNotFoundException(string key)
         : base($"Key `{key}' not found.")
         => Key = key;
-    
+
     public KeyNotFoundException(string key, Exception innerException)
         : base($"Key `{key}' not found.", innerException)
         => Key = key;

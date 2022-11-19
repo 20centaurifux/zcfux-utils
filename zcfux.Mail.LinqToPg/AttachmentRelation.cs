@@ -41,7 +41,7 @@ internal sealed class AttachmentRelation : IAttachment
 
     [Association(ThisKey = "MessageId", OtherKey = "Id")]
     public MessageRelation Message { get; set; }
-    
+
     IMessage IAttachment.Message => Message;
 
     [Column(Name = "Filename")]

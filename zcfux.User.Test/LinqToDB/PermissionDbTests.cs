@@ -36,15 +36,17 @@ internal sealed class PermissionDbTests : APermissionDbTests
     protected override IPermissionDb CreatePermissionDb()
     {
         var applicationDb = new ApplicationStore();
-        
+
         return new PermissionDb(applicationDb);
     }
 
     protected override IGroupDb CreateGroupDb()
     {
         var siteDb = new ApplicationStore();
-        
-        return  new GroupDb(siteDb); ;
+
+        return new GroupDb(siteDb);
+
+        ;
     }
 
     protected override IApplicationDb CreateApplicationDb()

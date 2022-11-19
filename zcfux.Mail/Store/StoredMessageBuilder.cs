@@ -177,7 +177,7 @@ public sealed class StoredMessageBuilder
 
             return new StoredMessage(_db, _handle, directoryEntry);
         }
-        catch(Data.NotFoundException)
+        catch (Data.NotFoundException)
         {
             throw new DirectoryNotFoundException();
         }

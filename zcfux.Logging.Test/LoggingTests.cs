@@ -66,31 +66,31 @@ public sealed class LoggingTests
         Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Debug].Count);
 
         logger.Verbosity = ESeverity.Info;
-        
+
         logger.Debug(RandomString());
         logger.Info(RandomString());
-        
+
         Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Debug].Count);
         Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Info].Count);
-        
+
         logger.Verbosity = ESeverity.Warn;
-        
+
         logger.Info(RandomString());
         logger.Warn(RandomString());
 
         Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Info].Count);
         Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Warn].Count);
-        
+
         logger.Verbosity = ESeverity.Error;
-        
+
         logger.Warn(RandomString());
         logger.Error(RandomString());
 
         Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Warn].Count);
         Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Error].Count);
-        
+
         logger.Verbosity = ESeverity.Fatal;
-        
+
         logger.Error(RandomString());
         logger.Fatal(RandomString());
 

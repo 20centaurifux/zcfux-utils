@@ -34,10 +34,10 @@ internal class FlatStoredMessageView
     public int DirectoryId { get; set; }
 
     [Column(Name = "Directory")]
-    public string Directory  { get; set; }
-    
+    public string Directory { get; set; }
+
     [Column(Name = "ParentId")]
-    public int? ParentId  { get; set; }
+    public int? ParentId { get; set; }
 
     [Column(Name = "Sender", CanBeNull = false)]
     public string From { get; set; }
@@ -59,7 +59,7 @@ internal class FlatStoredMessageView
 
     [Column(Name = "HtmlBody")]
     public string? HtmlBody { get; set; }
-    
+
     [Column(Name = "AttachmentId")]
     public long? AttachmentId { get; set; }
 

@@ -144,7 +144,7 @@ public sealed class SmtpOptionsBuilder
 
         return builder;
     }
-    
+
     public ISmtpOptions Build()
         => new SmtpOptions(
             _host,

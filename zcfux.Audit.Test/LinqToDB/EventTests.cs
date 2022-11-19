@@ -24,7 +24,7 @@ namespace zcfux.Audit.Test.LinqToDB;
 internal sealed class EventTests : AEventTests
 {
     string? _connectionString;
-    
+
     public override void Setup()
     {
         var testDb = new TestDb();
@@ -32,7 +32,7 @@ internal sealed class EventTests : AEventTests
         testDb.Create();
 
         _connectionString = testDb.ConnectionString;
-        
+
         base.Setup();
     }
 

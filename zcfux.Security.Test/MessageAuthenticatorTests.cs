@@ -36,14 +36,14 @@ public sealed class MessageAuthenticatorTests
         var message = TestContext.CurrentContext.Random.GetString();
 
         var hash = auth.ComputeHash(message);
-        
+
         Assert.AreEqual(hash.Algorithm, MessageAuthenticator.DefaultAlgorithm);
 
         Assert.AreEqual(hash.Digest, auth.ComputeHash(message.GetBytes()).Digest);
-        
+
         Assert.IsTrue(auth.Verify(message, hash.Digest));
         Assert.IsTrue(auth.Verify(message.GetBytes(), hash.Digest));
-        
+
         var newMessage = TestContext.CurrentContext.Random.GetString();
 
         Assert.IsFalse(auth.Verify(newMessage, hash.Digest));
@@ -72,7 +72,7 @@ public sealed class MessageAuthenticatorTests
 
         Assert.IsFalse(newAuth.Verify(message, hash.Digest));
     }
-    
+
     [Test]
     public void WrongAlgorithmTest()
     {

@@ -29,7 +29,7 @@ public sealed class Writer : IWriter
     global::NLog.ILogger? _logger;
 
     public string Name => _logger?.Name
-        ?? throw new InvalidOperationException();
+                          ?? throw new InvalidOperationException();
 
     public void Setup(string name)
         => _logger = global::NLog.LogManager.GetLogger(name ?? DefaultLoggerName);

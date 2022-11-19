@@ -128,7 +128,7 @@ public sealed class Pool<T> : IDisposable
 
     public T TakeOrCreate(Uri uri)
         => TryTake(uri)
-            ?? Create(uri);
+           ?? Create(uri);
 
     public void Dispose()
     {

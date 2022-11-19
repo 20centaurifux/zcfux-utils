@@ -32,21 +32,21 @@ public static class QueuedMessageFilters
     public static Column<string> Queue { get; } = Column<string>.FromMember();
 
     public static Column<string> From { get; } = Column<string>.FromMember();
-    
+
     public static Column<string> To { get; } = Column<string>.FromMember();
-    
+
     public static Column<string> Cc { get; } = Column<string>.FromMember();
-    
+
     public static Column<string> Bcc { get; } = Column<string>.FromMember();
-    
+
     public static Column<string> Subject { get; } = Column<string>.FromMember();
-    
+
     public static Column<string> TextBody { get; } = Column<string>.FromMember();
-    
+
     public static Column<string> HtmlBody { get; } = Column<string>.FromMember();
-    
+
     public static Column<long> AttachmentId { get; } = Column<long>.FromMember();
-    
+
     public static Column<string> Attachment { get; } = Column<string>.FromMember();
 
     public static Column<DateTime> Created { get; } = Column<DateTime>.FromMember();

@@ -40,14 +40,14 @@ public sealed class Builder
 
         public IReader CreateReader()
             => _reader
-                ?? throw new NotImplementedException();
+               ?? throw new NotImplementedException();
 
         public bool CanWrite
             => (_writer != null);
 
         public IWriter CreateWriter()
             => _writer
-                ?? throw new NotImplementedException();
+               ?? throw new NotImplementedException();
 
         public void Dispose()
         {

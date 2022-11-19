@@ -1589,7 +1589,7 @@ public abstract class AQueueTests
             CompareQueuedMessages(first, fetched[1]);
         }
     }
-    
+
     [Test]
     public void Query_EndOfLife()
     {
@@ -1668,7 +1668,7 @@ public abstract class AQueueTests
             CompareQueuedMessages(first, fetched[1]);
         }
     }
-    
+
     [Test]
     public void Query_NextDue()
     {
@@ -1772,7 +1772,7 @@ public abstract class AQueueTests
                 .Store();
 
             second.Fail(TimeSpan.FromMinutes(1));
-            
+
             var qb = new QueryBuilder()
                 .WithFilter(QueuedMessageFilters.Errors.EqualTo(1));
 
@@ -1798,7 +1798,9 @@ public abstract class AQueueTests
                 .WithTo("Bob", "bob@example.org")
                 .WithSubject("hello")
                 .WithTextBody("hello")
-                .Store(); ;
+                .Store();
+
+            ;
 
             var second = builder
                 .WithFrom("Bob", "bob@example.org")
@@ -1818,7 +1820,7 @@ public abstract class AQueueTests
             CompareQueuedMessages(first, fetched[1]);
         }
     }
-    
+
     void CompareQueuedMessages(QueuedMessage a, QueuedMessage b)
     {
         Assert.AreEqual(a.Id, b.Id);

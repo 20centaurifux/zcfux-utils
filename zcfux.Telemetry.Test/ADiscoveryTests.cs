@@ -362,7 +362,7 @@ public abstract class ADiscoveryTests
             var clientTask = StartClientAsync<ClientV2_0>(cancellationTokenSource.Token);
 
             var success = taskCompletionSource.Task.Wait(TimeSpan.FromSeconds(5));
-            
+
             Assert.IsFalse(success);
 
             cancellationTokenSource.Cancel();

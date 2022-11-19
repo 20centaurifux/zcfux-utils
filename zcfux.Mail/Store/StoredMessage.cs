@@ -108,7 +108,7 @@ public sealed class StoredMessage : IEmail
         {
             _db.Store.UnlinkMessage(_handle, _directoryEntry);
         }
-        catch(Data.NotFoundException)
+        catch (Data.NotFoundException)
         {
             throw new DirectoryEntryNotFoundException();
         }
@@ -117,7 +117,7 @@ public sealed class StoredMessage : IEmail
         {
             _db.Messages.DeleteMessage(_handle, _directoryEntry.Message);
         }
-        catch(Data.NotFoundException)
+        catch (Data.NotFoundException)
         {
             throw new MessageNotFoundException();
         }

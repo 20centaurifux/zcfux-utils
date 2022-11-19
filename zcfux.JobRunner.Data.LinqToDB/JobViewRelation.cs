@@ -1,5 +1,4 @@
-﻿
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -30,13 +29,13 @@ internal class JobViewRelation : IJobDetails
     public JobViewRelation()
     {
     }
-    
+
     [Column(Name = "Guid"), PrimaryKey]
     public Guid Guid { get; set; }
 
     [Column(Name = "Status")]
     public EStatus Status { get; set; }
-    
+
     [Column(Name = "Type")]
     public string Type { get; set; } = null!;
 
@@ -45,7 +44,7 @@ internal class JobViewRelation : IJobDetails
 
     [Column(Name = "InitParams")]
     public string[]? InitParams { get; set; } = Array.Empty<string>();
-    
+
     [Column(Name = "Args")]
     public string[]? Args { get; set; } = Array.Empty<string>();
 

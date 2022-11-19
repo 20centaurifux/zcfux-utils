@@ -75,7 +75,7 @@ internal sealed class PrependHandleInterceptor<TImpl>
         {
             invocation.ReturnValue = method!.Invoke(_impl, arguments.ToArray());
         }
-        catch(TargetInvocationException ex) when (ex.InnerException is { })
+        catch (TargetInvocationException ex) when (ex.InnerException is { })
         {
             throw ex.InnerException;
         }

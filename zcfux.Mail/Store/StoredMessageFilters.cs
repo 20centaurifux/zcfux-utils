@@ -32,20 +32,20 @@ public static class StoredMessageFilters
     public static Column<string> Directory { get; } = Column<string>.FromMember();
 
     public static Column<string> From { get; } = Column<string>.FromMember();
-    
+
     public static Column<string> To { get; } = Column<string>.FromMember();
-    
+
     public static Column<string> Cc { get; } = Column<string>.FromMember();
-    
+
     public static Column<string> Bcc { get; } = Column<string>.FromMember();
-    
+
     public static Column<string> Subject { get; } = Column<string>.FromMember();
-    
+
     public static Column<string> TextBody { get; } = Column<string>.FromMember();
-    
+
     public static Column<string> HtmlBody { get; } = Column<string>.FromMember();
-    
+
     public static Column<long> AttachmentId { get; } = Column<long>.FromMember();
-    
+
     public static Column<string> Attachment { get; } = Column<string>.FromMember();
 }

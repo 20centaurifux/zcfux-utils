@@ -28,7 +28,7 @@ public sealed class Store
     readonly IDb _db;
     readonly object _handle;
 
-    public  Store(IDb db, object handle)
+    public Store(IDb db, object handle)
         => (_db, _handle) = (db, handle);
 
     public Directory NewDirectory(string name)

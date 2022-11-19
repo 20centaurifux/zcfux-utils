@@ -30,7 +30,7 @@ public interface IPermissionDb
     void DeletePermissionCategory(object handle, int id);
 
     IEnumerable<IPermissionCategory> QueryPermissionCategories(object handle, Query query);
-    
+
     void WritePermission(object handle, IPermission permission);
 
     void DeletePermission(object handle, int id);

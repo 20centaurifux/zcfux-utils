@@ -32,7 +32,10 @@ public sealed class Factory
     public Factory(string loggerName)
         => _loggerName = loggerName;
 
-    public static Factory Instance { get => Default.Value; }
+    public static Factory Instance
+    {
+        get => Default.Value;
+    }
 
     public ILogger FromName(string name)
     {

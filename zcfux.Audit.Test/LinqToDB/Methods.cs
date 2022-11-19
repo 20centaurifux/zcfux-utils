@@ -41,10 +41,10 @@ internal sealed class Methods : IDbTestMethods
         builder.UseSQLite(_connectionString);
 
         var opts = builder.Build();
-        
+
         return new Engine(opts);
     }
-    
+
     public void DeleteAll(object handle)
     {
         var db = (handle as Handle)!.Db();

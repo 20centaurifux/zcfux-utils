@@ -95,7 +95,7 @@ internal sealed class TestDb
                         JOIN TopicKind k ON k.Id = t.KindId";
 
                 cmd.ExecuteNonQuery();
-                
+
                 cmd.CommandText = @"
                     CREATE TABLE Association
                     (
@@ -104,7 +104,7 @@ internal sealed class TestDb
                     );";
 
                 cmd.ExecuteNonQuery();
-                
+
                 cmd.CommandText = @"
                     CREATE TABLE TopicAssociation
                     (

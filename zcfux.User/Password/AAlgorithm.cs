@@ -36,5 +36,5 @@ public abstract class AAlgorithm
 
     protected bool Next(IPassword expected, string password)
         => (_next != null)
-            && _next.Test(expected, password);
+           && _next.Test(expected, password);
 }

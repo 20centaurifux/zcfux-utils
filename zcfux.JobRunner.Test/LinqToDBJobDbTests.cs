@@ -32,7 +32,7 @@ public sealed class LinqToDBJobDbTests : AJobDbTests
         = "User ID=test;Host=localhost;Port=5432;Database=test;";
 
     Engine _engine = null!;
-    
+
     protected override IEngine CreateAndSetupEngine()
     {
         var connectionString = Environment.GetEnvironmentVariable("PG_TEST_CONNECTIONSTRING")

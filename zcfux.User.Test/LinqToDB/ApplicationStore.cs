@@ -28,8 +28,7 @@ using zcfux.Filter.Linq;
 namespace zcfux.User.Test.LinqToDB;
 
 internal class ApplicationStore
-    : ISiteDb
-    , IApplicationDb
+    : ISiteDb, IApplicationDb
 {
     public void Write(object handle, ISite site)
     {
@@ -42,16 +41,16 @@ internal class ApplicationStore
 
     public void Delete(object handle, Guid guid)
         => (handle as Handle)!
-                .Db()
-                .GetTable<SiteRelation>()
-                .Where(s => s.Guid == guid)
-                .Delete();
+            .Db()
+            .GetTable<SiteRelation>()
+            .Where(s => s.Guid == guid)
+            .Delete();
 
     public IEnumerable<ISite> Query(object handle, Query query)
         => (handle as Handle)!
-                .Db()
-                .GetTable<SiteRelation>()
-                .Query(query);
+            .Db()
+            .GetTable<SiteRelation>()
+            .Query(query);
 
     public void Write(object handle, IApplication application)
     {
@@ -64,14 +63,14 @@ internal class ApplicationStore
 
     public void Delete(object handle, int id)
         => (handle as Handle)!
-                .Db()
-                .GetTable<ApplicationRelation>()
-                .Where(a => a.Id == id)
-                .Delete();
+            .Db()
+            .GetTable<ApplicationRelation>()
+            .Where(a => a.Id == id)
+            .Delete();
 
     IEnumerable<IApplication> IApplicationDb.Query(object handle, Query query)
         => (handle as Handle)!
-                .Db()
-                .GetTable<ApplicationRelation>()
-                .Query(query);
+            .Db()
+            .GetTable<ApplicationRelation>()
+            .Query(query);
 }

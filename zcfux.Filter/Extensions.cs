@@ -58,7 +58,7 @@ public static class Extensions
 
     public static INode GreaterThanOrEqualTo(this Column<DateTime> self, DateTime value)
         => new Function(">=", self, new Value(value));
-    
+
     public static INode GreaterThanOrEqualTo(this Column<DateTime?> self, DateTime value)
         => new Function(">=", self, new Value(value));
 
@@ -76,7 +76,7 @@ public static class Extensions
 
     public static INode LessThan(this Column<DateTime?> self, DateTime value)
         => new Function("<", self, new Value(value));
-    
+
     public static INode LessThanOrEqualTo(this Column<int> self, int value)
         => new Function("<=", self, new Value(value));
 
@@ -91,7 +91,7 @@ public static class Extensions
 
     public static INode LessThanOrEqualTo(this Column<DateTime?> self, DateTime value)
         => new Function("<=", self, new Value(value));
-    
+
     public static INode Between(this Column<int> self, int from, int to)
         => new Function("between", self, new Value(from), new Value(to));
 
@@ -106,7 +106,7 @@ public static class Extensions
 
     public static INode Between(this Column<DateTime?> self, DateTime from, DateTime to)
         => new Function("between", self, new Value(from), new Value(to));
-    
+
     public static INode In<T>(this Column<T> self, IEnumerable<T> values)
         => new Function("in", self, new Value(values.ToArray()));
 

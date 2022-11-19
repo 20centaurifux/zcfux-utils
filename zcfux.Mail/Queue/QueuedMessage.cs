@@ -86,7 +86,7 @@ public sealed class QueuedMessage : IEmail
             yield return new Attachment(_db, _handle, attachment);
         }
     }
-    
+
     public DateTime Created
         => _queueItem.Created;
 

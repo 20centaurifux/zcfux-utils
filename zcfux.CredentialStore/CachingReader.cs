@@ -78,7 +78,7 @@ public sealed class CachingReader : IReader
 
         return secret;
     }
-    
+
     void WriteCachedSecret_Locked(string path, Secret secret)
     {
         lock (_lock)
@@ -92,7 +92,7 @@ public sealed class CachingReader : IReader
         lock (_lock)
         {
             var now = Now();
-            
+
             var keysToRemove = _m
                 .Where(kv => (kv.Value.Lifetime > _options.MaxLifetime) || kv.Value.Secret.IsExpired(now))
                 .Select(kv => kv.Key).ToArray();
@@ -103,7 +103,7 @@ public sealed class CachingReader : IReader
             }
         }
     }
-    
+
     DateTime Now()
         => DateTime.UtcNow.Add(_options.ExpiryDateOffset);
 }

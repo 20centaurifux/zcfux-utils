@@ -46,7 +46,7 @@ public abstract class APasswordChanger
 
     public bool IsChangable(IUser user)
         => CanChangePassword(user)
-            || (_next != null && _next.IsChangable(user));
+           || (_next != null && _next.IsChangable(user));
 
     protected abstract bool CanChangePassword(IUser user);
 

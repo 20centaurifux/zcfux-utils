@@ -150,15 +150,15 @@ public sealed class Writer : AWriter
     static (Document<T>, string) GetDocument<T>(IMyCouchClient client, string id)
         where T : IEntity
     {
-            var response = client.Documents.GetAsync(id).Result;
+        var response = client.Documents.GetAsync(id).Result;
 
-            if (!response.IsSuccess)
-            {
-                throw new Exception(response.Reason);
-            }
+        if (!response.IsSuccess)
+        {
+            throw new Exception(response.Reason);
+        }
 
-            var doc = JsonConvert.DeserializeObject<Document<T>>(response.Content);
+        var doc = JsonConvert.DeserializeObject<Document<T>>(response.Content);
 
-            return (doc!, response.Rev);
+        return (doc!, response.Rev);
     }
 }

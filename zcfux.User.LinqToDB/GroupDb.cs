@@ -116,8 +116,8 @@ public sealed class GroupDb : IGroupDb
     static void ThrowIfGroupNotFound(DataConnection db, Guid guid)
     {
         if (!db
-            .GetTable<GroupRelation>()
-            .Any(g => g.Guid.Equals(guid)))
+                .GetTable<GroupRelation>()
+                .Any(g => g.Guid.Equals(guid)))
         {
             throw new NotFoundException("Group not found.");
         }
@@ -126,8 +126,8 @@ public sealed class GroupDb : IGroupDb
     static void ThrowIfUserNotFound(DataConnection db, Guid guid)
     {
         if (!db
-            .GetTable<UserRelation>()
-            .Any(u => u.Guid.Equals(guid)))
+                .GetTable<UserRelation>()
+                .Any(u => u.Guid.Equals(guid)))
         {
             throw new NotFoundException("User not found.");
         }
@@ -138,9 +138,9 @@ public sealed class GroupDb : IGroupDb
         if (db
             .GetTable<AssignedUserRelation>()
             .Any(a =>
-                    a.Site.Equals(site)
-                    && a.Group.Equals(group)
-                    && a.User.Equals(user)))
+                a.Site.Equals(site)
+                && a.Group.Equals(group)
+                && a.User.Equals(user)))
         {
             throw new ConflictException();
         }

@@ -25,7 +25,7 @@ namespace zcfux.Telemetry.Test;
 
 public abstract class AClientTests
 {
-    sealed class  SimpleClient : Device.Client, IConnected, IDisconnected
+    sealed class SimpleClient : Device.Client, IConnected, IDisconnected
     {
         const long Offline = 0;
         const long Online = 1;
@@ -52,7 +52,7 @@ public abstract class AClientTests
         [Event(Topic = "online")]
         IAsyncEnumerable<bool> Online { get; }
     }
-    
+
     sealed class OnlineImpl : IOnlineApi, IConnected, IDisconnected
     {
         readonly Producer<bool> _producer = new();
@@ -133,7 +133,7 @@ public abstract class AClientTests
         {
         }
     }
-    
+
     [Test]
     public async Task ClientIsConnecting()
     {

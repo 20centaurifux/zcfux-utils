@@ -33,6 +33,6 @@ internal sealed class Reader : IReader
         var secret = _db.TryRead(path);
 
         return secret
-            ?? throw new SecretNotFoundException($"Secret not found (path=`{path}').");
+               ?? throw new SecretNotFoundException($"Secret not found (path=`{path}').");
     }
 }

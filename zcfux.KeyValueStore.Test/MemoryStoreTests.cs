@@ -26,7 +26,7 @@ public sealed class MemoryStoreTests : ATests
     protected override IStore CreateAndSetupStore()
     {
         var store = new Memory.Store();
-        
+
         store.Setup();
 
         return store;

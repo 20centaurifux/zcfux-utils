@@ -27,5 +27,5 @@ public interface IDirectory
 
     string Name { get; }
 
-    int? ParentId { get;  }
+    int? ParentId { get; }
 }

@@ -27,7 +27,7 @@ public class Writer : IWriter
     string? _name;
 
     public string Name => _name
-        ?? throw new InvalidOperationException();
+                          ?? throw new InvalidOperationException();
 
     public void Setup(string name)
         => _name = name;

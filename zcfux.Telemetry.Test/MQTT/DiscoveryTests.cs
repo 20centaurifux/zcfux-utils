@@ -43,7 +43,7 @@ public sealed class DisoveryTests : ADiscoveryTests
 
     protected override IConnection CreateConnection()
         => Factory.CreateConnection();
-    
+
     protected override IConnection CreateDeviceConnection(DeviceDetails device)
         => Factory.CreateDeviceConnection(device.Domain, device.Kind, device.Id);
 

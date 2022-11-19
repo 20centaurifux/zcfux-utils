@@ -30,11 +30,11 @@ internal sealed class MetaData
 
     [JsonProperty("deletion_time")]
     public DateTime? ExpiryDate { get; set; }
-    
+
     [JsonProperty("custom_metadata")]
     public Dictionary<string, object>? Custom { get; set; }
-    
+
     public bool Destroyed { get; set; }
-    
+
     public int Version { get; set; }
 }

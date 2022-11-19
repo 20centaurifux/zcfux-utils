@@ -71,8 +71,8 @@ public sealed class TokenDb : ITokenDb
         var db = handle.Db();
 
         if (!db
-            .GetTable<TokenKindRelation>()
-            .Any(k => k.Id.Equals(token.Kind.Id)))
+                .GetTable<TokenKindRelation>()
+                .Any(k => k.Id.Equals(token.Kind.Id)))
         {
             throw new NotFoundException($"Kind (id={token.Kind.Id}) not found.");
         }
@@ -87,7 +87,7 @@ public sealed class TokenDb : ITokenDb
         var deleted = handle
             .Db()
             .GetTable<TokenRelation>()
-            .Where(t => (t.KindId == kindId) &&  (t.Value == value))
+            .Where(t => (t.KindId == kindId) && (t.Value == value))
             .Delete();
 
         if (deleted == 0)

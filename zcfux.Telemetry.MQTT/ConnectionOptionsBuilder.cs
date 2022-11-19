@@ -31,6 +31,7 @@ public sealed class ConnectionOptionsBuilder
     ILogger? _logger;
     bool _cleanupRetainedMessages;
     TimeSpan? _reconnect;
+
     ConnectionOptionsBuilder Clone()
     {
         var builder = new ConnectionOptionsBuilder
@@ -63,7 +64,7 @@ public sealed class ConnectionOptionsBuilder
 
         return builder;
     }
-    
+
     public ConnectionOptionsBuilder WithRetrySendingInterval(TimeSpan interval)
     {
         var builder = Clone();
@@ -90,6 +91,7 @@ public sealed class ConnectionOptionsBuilder
 
         return builder;
     }
+
     public ConnectionOptionsBuilder WithReconnect(TimeSpan? reconnect)
     {
         var builder = Clone();

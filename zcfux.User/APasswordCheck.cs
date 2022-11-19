@@ -43,5 +43,5 @@ public abstract class APasswordCheck
 
     bool Next(IUser user, string password)
         => (_next != null)
-            && _next.Check(user, password);
+           && _next.Check(user, password);
 }

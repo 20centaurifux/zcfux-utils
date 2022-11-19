@@ -29,7 +29,7 @@ internal sealed class Event : IEvent
     public IEventKind Kind { get; set; }
 
     public DateTime CreatedAt { get; set; }
-    
+
     public ESeverity Severity { get; set; }
 
     public ITopic? Topic { get; set; }

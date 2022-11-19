@@ -33,7 +33,7 @@ public sealed record ApiFilter(
         : this(device.Domain, device.Kind, device.Id.ToString(), api)
     {
     }
-    
+
     public ApiFilter(DeviceFilter filter, string api)
         : this(filter.Domain, filter.Kind, filter.Id, api)
     {

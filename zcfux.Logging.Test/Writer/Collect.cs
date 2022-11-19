@@ -29,7 +29,7 @@ public sealed class Collect : IWriter
     public static readonly IDictionary<ESeverity, IList<string>> Messages = new Dictionary<ESeverity, IList<string>>();
 
     public string Name => _name
-        ?? throw new InvalidOperationException();
+                          ?? throw new InvalidOperationException();
 
     public void Setup(string? name)
         => _name = name;

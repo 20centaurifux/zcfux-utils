@@ -33,7 +33,7 @@ public sealed class FactoryTests
         Assert.IsInstanceOf<ILogger>(logger);
         Assert.AreEqual(ESeverity.Debug, logger.Verbosity);
     }
-    
+
     [Test]
     public void CreateLoggerFromNames()
     {
@@ -70,7 +70,7 @@ public sealed class FactoryTests
         Assert.IsInstanceOf<ILogger>(logger);
         Assert.AreEqual(ESeverity.Debug, logger.Verbosity);
     }
-    
+
     [Test]
     public void CreateLoggerFromUnknownAssembly()
     {

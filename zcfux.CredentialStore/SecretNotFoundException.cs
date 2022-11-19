@@ -29,7 +29,7 @@ public class SecretNotFoundException : Exception
     }
 
     public SecretNotFoundException(string message, Exception innerException)
-    : base(message, innerException)
+        : base(message, innerException)
     {
     }
 }

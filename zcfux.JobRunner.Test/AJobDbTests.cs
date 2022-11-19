@@ -692,7 +692,7 @@ public abstract class AJobDbTests
         {
             queue.Create<Jobs.Simple>();
             queue.Create<Jobs.Simple>();
-            
+
             var jobDb = CreateJobDb();
 
             jobDb.Delete(t.Handle);
@@ -712,7 +712,7 @@ public abstract class AJobDbTests
         using (var t = _engine.NewTransaction())
         {
             var jobDb = CreateJobDb();
-            
+
             jobDb.Delete(t.Handle, Filters.Guid.EqualTo(first.Guid));
 
             var fetched = jobDb.Query(t.Handle, QueryBuilder.All()).Single();
@@ -733,7 +733,7 @@ public abstract class AJobDbTests
         using (var t = _engine.NewTransaction())
         {
             var jobDb = CreateJobDb();
-            
+
             jobDb.Delete(t.Handle, Filters.Type.EqualTo(typeof(Jobs.Fail).FullName!));
 
             var fetched = jobDb.Query(t.Handle, QueryBuilder.All()).Single();
@@ -760,7 +760,7 @@ public abstract class AJobDbTests
         using (var t = _engine.NewTransaction())
         {
             var jobDb = CreateJobDb();
-            
+
             jobDb.Delete(t.Handle, Filters.Created.EqualTo(first.Created));
 
             var fetched = jobDb.Query(t.Handle, QueryBuilder.All()).Single();
@@ -791,9 +791,9 @@ public abstract class AJobDbTests
         using (var t = _engine.NewTransaction())
         {
             var active = queue.Create<Jobs.Simple>();
-            
+
             var jobDb = CreateJobDb();
-            
+
             jobDb.Delete(t.Handle, Filters.Status.EqualTo(EStatus.Done));
 
             var fetched = jobDb.Query(t.Handle, QueryBuilder.All()).Single();
@@ -826,7 +826,7 @@ public abstract class AJobDbTests
         using (var t = _engine.NewTransaction())
         {
             var jobDb = CreateJobDb();
-            
+
             jobDb.Delete(t.Handle, Filters.Errors.GreaterThan(0));
 
             var fetched = jobDb.Query(t.Handle, QueryBuilder.All()).Single();
@@ -847,7 +847,7 @@ public abstract class AJobDbTests
         using (var t = _engine.NewTransaction())
         {
             var jobDb = CreateJobDb();
-            
+
             jobDb.Delete(t.Handle, Filters.NextDue.GreaterThan(DateTime.UtcNow));
 
             var fetched = jobDb.Query(t.Handle, QueryBuilder.All()).Single();
@@ -880,7 +880,7 @@ public abstract class AJobDbTests
         using (var t = _engine.NewTransaction())
         {
             var jobDb = CreateJobDb();
-            
+
             jobDb.Delete(t.Handle, Logical.Not(Filters.LastDone.IsNull()));
 
             var fetched = jobDb.Query(t.Handle, QueryBuilder.All()).Single();

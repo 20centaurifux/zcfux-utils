@@ -24,7 +24,7 @@ namespace zcfux.Audit.Test.LinqToDB;
 public sealed class RecentEventQueryTests : ACatalogueTests
 {
     string? _connectionString;
-    
+
     public override void Setup()
     {
         var testDb = new TestDb();
@@ -32,10 +32,10 @@ public sealed class RecentEventQueryTests : ACatalogueTests
         testDb.Create();
 
         _connectionString = testDb.ConnectionString;
-        
+
         base.Setup();
     }
-    
+
     protected override IDbTestMethods Methods => new Methods(_connectionString!);
 
     protected override ECatalogue Catalogue => ECatalogue.Recent;

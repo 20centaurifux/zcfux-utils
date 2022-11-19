@@ -31,7 +31,8 @@ public class Version<T> : IVersion<T>, IVersion
         => (Entity, Revision, Side, Modified, IsDeleted) = (other.Entity, other.Revision, other.Side, other.Modified, other.IsDeleted);
 
     public Version(IVersion other)
-        => (Entity, Revision, Side, Modified, IsDeleted) = ((T)other.Entity, other.Revision, other.Side, other.Modified, other.IsDeleted);
+        => (Entity, Revision, Side, Modified, IsDeleted) =
+            ((T)other.Entity, other.Revision, other.Side, other.Modified, other.IsDeleted);
 
     public T Entity { get; }
 

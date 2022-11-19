@@ -43,7 +43,7 @@ public sealed class PersistentStoreDbTests : ATests
         var opts = new Store.Options(storagePath, 512);
 
         var store = new Store(opts);
-        
+
         store.Setup();
 
         return store;
@@ -76,7 +76,7 @@ public sealed class PersistentStoreDbTests : ATests
 
         // overwrite first blob's contents:
         var storagePath = BuildStoragePath();
-        
+
         var connectionString = Db.BuildConnectionString(storagePath);
 
         using (var connection = new SqliteConnection(connectionString))
@@ -86,9 +86,9 @@ public sealed class PersistentStoreDbTests : ATests
             using (var cmd = connection.CreateCommand())
             {
                 var bytes = new byte[20];
-                
+
                 TestContext.CurrentContext.Random.NextBytes(bytes);
-                
+
                 cmd.CommandText = "UPDATE Blob SET Contents=@blob WHERE Hash=@hash";
 
                 cmd.Parameters.AddWithValue("@blob", bytes);
@@ -111,38 +111,38 @@ public sealed class PersistentStoreDbTests : ATests
         fsck.Corrupted += (_, e) =>
         {
             Assert.AreEqual(ELocation.Database, e.Location);
-            
+
             corrupted.Add(e);
         };
 
         fsck.Missing += (_, e) => missing.Add(e);
-        
+
         fsck.Deleted += (_, e) =>
         {
             Assert.IsTrue(e.Location is ELocation.Index or ELocation.Database);
-            
+
             deleted.Add(e);
         };
-        
+
         fsck.CheckDatabase();
-        
+
         Assert.AreEqual(1, corrupted.Count);
         Assert.AreEqual(firstHash, corrupted.First().Hash);
 
         Assert.AreEqual(0, missing.Count);
-        
+
         Assert.AreEqual(0, deleted.Count);
 
         // delete corrupted blobs:
         corrupted.Clear();
 
         fsck.Dry = false;
-        
+
         fsck.CheckDatabase();
-        
+
         Assert.AreEqual(1, corrupted.Count);
         Assert.AreEqual(firstHash, corrupted.First().Hash);
-        
+
         Assert.AreEqual(0, missing.Count);
 
         Assert.AreEqual(2, deleted.Count);
@@ -150,7 +150,7 @@ public sealed class PersistentStoreDbTests : ATests
         Assert.AreEqual(firstHash, deleted.ElementAt(1).Hash);
         Assert.IsTrue(deleted.ElementAt(0).Location != deleted.ElementAt(1).Location);
     }
-    
+
     static string BuildStoragePath()
         => Path.Combine(Path.GetTempPath(), typeof(PersistentStoreDbTests).FullName!);
 }

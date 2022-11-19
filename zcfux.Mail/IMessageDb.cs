@@ -22,6 +22,7 @@
 using zcfux.Filter;
 
 namespace zcfux.Mail;
+
 public interface IMessageDb
 {
     IMessage NewMessage(
@@ -37,7 +38,7 @@ public interface IMessageDb
     IMessage GetMessage(
         object handle,
         long id);
-    
+
     void DeleteMessage(
         object handle,
         IMessage message);

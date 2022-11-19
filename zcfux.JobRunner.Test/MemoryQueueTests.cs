@@ -34,7 +34,7 @@ public sealed class MemoryQueueTests
         queue.Create<Jobs.Simple>();
 
         // Start runner with a new queue & wait for job.
-        var newQueue =  new Memory.JobQueue();
+        var newQueue = new Memory.JobQueue();
 
         var runner = new Runner(newQueue, new(MaxJobs: 2, MaxErrors: 2, RetrySecs: 1));
 

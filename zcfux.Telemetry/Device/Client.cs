@@ -194,7 +194,7 @@ public class Client : IDisposable
                     prop.PropertyType.Name,
                     attr.Topic,
                     attr.Version);
-                
+
                 var api = new Api(
                     prop.PropertyType,
                     prop.GetValue(this)!,

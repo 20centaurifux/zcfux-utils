@@ -204,7 +204,7 @@ public sealed class QueuedMessageBuilder
 
             return new QueuedMessage(_db, _handle, queuedItem);
         }
-        catch(Data.NotFoundException)
+        catch (Data.NotFoundException)
         {
             throw new QueueNotFoundException();
         }

@@ -35,7 +35,7 @@ public sealed class ArchivedCatalogueTests : ACatalogueTests
 
         base.Setup();
     }
-    
+
     protected override IDbTestMethods Methods => new Methods(_connectionString!);
 
     protected override void MoveEvents()

@@ -280,6 +280,7 @@ public abstract class ATokenTests
     {
         var kind = Kind.Random();
         var first = Token.Random(kind);
+
         var second = new Token(
             first.Value,
             kind,
@@ -404,6 +405,7 @@ public abstract class ATokenTests
     public void DeleteTokens_Counter()
     {
         var kind = Kind.Random();
+
         var token = new Token(
             TestContext.CurrentContext.Random.GetString(),
             kind,
@@ -426,6 +428,7 @@ public abstract class ATokenTests
     public void DeleteTokens_EndOfLife()
     {
         var kind = Kind.Random();
+
         var token = new Token(
             TestContext.CurrentContext.Random.GetString(),
             kind,
@@ -508,6 +511,7 @@ public abstract class ATokenTests
     public void Query_Token_Counter()
     {
         var kind = Kind.Random();
+
         var token = new Token(
             TestContext.CurrentContext.Random.GetString(),
             kind,
@@ -532,6 +536,7 @@ public abstract class ATokenTests
     public void Query_Token_EndOfLife()
     {
         var kind = Kind.Random();
+
         var token = new Token(
             TestContext.CurrentContext.Random.GetString(),
             kind,

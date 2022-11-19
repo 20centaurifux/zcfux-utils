@@ -19,10 +19,10 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
- namespace zcfux.Replication.CouchDb;
+namespace zcfux.Replication.CouchDb;
 
- public class StreamReaderOptions
- {
+public class StreamReaderOptions
+{
     public StreamReaderOptions(string url, TimeSpan? heartbeat = null)
     {
         Url = url;
@@ -33,7 +33,7 @@
         }
     }
 
-     public string Url { get; set; }
+    public string Url { get; set; }
 
-     public TimeSpan Heartbeat { get; set; } = TimeSpan.FromSeconds(60);
- }
+    public TimeSpan Heartbeat { get; set; } = TimeSpan.FromSeconds(60);
+}

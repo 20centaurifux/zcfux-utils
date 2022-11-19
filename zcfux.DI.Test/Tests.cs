@@ -25,11 +25,17 @@ namespace zcfux.DI.Test;
 
 public sealed class Tests
 {
-    sealed class Foo { }
+    sealed class Foo
+    {
+    }
 
-    sealed class Bar { }
+    sealed class Bar
+    {
+    }
 
-    sealed class Baz { }
+    sealed class Baz
+    {
+    }
 
     sealed class InjectableA
     {
@@ -239,7 +245,7 @@ public sealed class Tests
         container.Build();
 
         var injectable = container.Inject<InjectableB>();
-         injectable = container.Inject<InjectableB>();
+        injectable = container.Inject<InjectableB>();
         Assert.IsInstanceOf<InjectableB>(injectable);
     }
 

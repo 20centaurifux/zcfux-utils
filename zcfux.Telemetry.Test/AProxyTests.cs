@@ -119,7 +119,7 @@ public abstract class AProxyTests
         using (var proxyConnection = CreateProxyConnection())
         {
             await proxyConnection.ConnectAsync();
-            
+
             var device = new DeviceDetails("d", "test", 1);
 
             var proxyOpts = CreateDeviceOptions(device, proxyConnection);
@@ -204,12 +204,12 @@ public abstract class AProxyTests
             await using (var reader = proxy.Number.GetAsyncEnumerator())
             {
                 var success = await reader.MoveNextAsync();
-                
+
                 Assert.IsFalse(success);
             }
         }
     }
-    
+
     [Test]
     public async Task EventsStopWhenConnectionIsClosed()
     {
@@ -241,7 +241,7 @@ public abstract class AProxyTests
             }
         }
     }
-    
+
     [Test]
     public async Task EmptyEventsWhenOnlyProxyIsConnected()
     {
@@ -250,7 +250,7 @@ public abstract class AProxyTests
             await proxyConnection.ConnectAsync();
 
             var device = new DeviceDetails("d", "test", TestContext.CurrentContext.Random.Next());
-            
+
             var proxyOpts = CreateDeviceOptions(device, proxyConnection);
 
             var proxy = Device.ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
@@ -258,7 +258,7 @@ public abstract class AProxyTests
             await using (var reader = proxy.Number.GetAsyncEnumerator())
             {
                 var success = await reader.MoveNextAsync();
-                
+
                 Assert.IsFalse(success);
             }
         }
@@ -287,7 +287,7 @@ public abstract class AProxyTests
                 await using (var reader = proxy.Number.GetAsyncEnumerator())
                 {
                     var success = await reader.MoveNextAsync();
-                
+
                     Assert.IsFalse(success);
                 }
             }

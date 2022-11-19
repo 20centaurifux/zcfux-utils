@@ -27,7 +27,7 @@ using zcfux.Filter;
 namespace zcfux.User.Test;
 
 public abstract class APermissionDbTests
-{   
+{
     IEngine _engine = null!;
     IPermissionDb _permissionDb = null!;
     IGroupDb _groupDb = null!;

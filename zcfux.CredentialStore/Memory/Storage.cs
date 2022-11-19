@@ -42,7 +42,7 @@ internal sealed class Storage
             }
         }
     }
-    
+
     public void Write(string path, Secret secret)
     {
         lock (_lock)
@@ -68,7 +68,7 @@ internal sealed class Storage
 
         return secret;
     }
-    
+
     public bool TryRemove(string path)
     {
         var removed = false;

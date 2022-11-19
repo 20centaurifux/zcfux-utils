@@ -28,8 +28,8 @@ public static class PermissionCategoryFilters
     public static Column<int> Id { get; } = Column<int>.FromMember();
 
     public static Column<string> Name { get; } = Column<string>.FromMember();
-    
+
     public static Column<int> ApplicationId { get; } = Column<int>.FromMember();
-    
+
     public static Column<string> Application { get; } = Column<string>.FromMember();
 }

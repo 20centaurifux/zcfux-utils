@@ -31,7 +31,7 @@ internal static class Extensions
 
         return interfaces.ToArray();
     }
-    
+
     static void GetAllInterfaces(this Type type, ref HashSet<Type> interfaces)
     {
         if (interfaces.Add(type))

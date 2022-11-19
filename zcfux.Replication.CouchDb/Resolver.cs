@@ -103,7 +103,7 @@ public sealed class Resolver : AResolver
             }
         }
     }
-    
+
     DocumentResponse ReceiveDocumentWithConflicts(IMyCouchClient client, string id)
     {
         var req = new GetDocumentRequest(id)

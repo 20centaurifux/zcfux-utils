@@ -29,16 +29,16 @@ public class AddressTests
     public void ParseAddressWithDisplayName()
     {
         var address = Address.FromString("Alice <alice@example.org>");
-        
+
         Assert.AreEqual("Alice", address.DisplayName);
         Assert.AreEqual("alice@example.org", address.MailAddress);
     }
-    
+
     [Test]
     public void ParseAddressWithoutDisplayName()
     {
         var address = Address.FromString("alice@example.org");
-        
+
         Assert.IsNull(address.DisplayName);
         Assert.AreEqual("alice@example.org", address.MailAddress);
     }

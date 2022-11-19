@@ -145,6 +145,7 @@ public sealed class ClientOptionsBuilder
 
         return builder;
     }
+
     public ClientOptionsBuilder WithCredentials(string username, string password)
         => WithCredentials(new Credentials(username, password));
 

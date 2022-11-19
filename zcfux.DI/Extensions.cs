@@ -55,7 +55,7 @@ public static class Extensions
         while (type is { })
         {
             foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                .Where(p => p.GetCustomAttribute<InjectAttribute>() != null))
+                         .Where(p => p.GetCustomAttribute<InjectAttribute>() != null))
             {
                 yield return property;
             }
@@ -91,7 +91,7 @@ public static class Extensions
         while (type is { })
         {
             foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                .Where(p => p.GetCustomAttribute<InjectAttribute>() != null))
+                         .Where(p => p.GetCustomAttribute<InjectAttribute>() != null))
             {
                 yield return field;
             }
@@ -105,7 +105,7 @@ public static class Extensions
         where T : class
     {
         var ctor = self.FindConstructor<T>()
-            ?? throw new ContainerException("No compatible constructor found.");
+                   ?? throw new ContainerException("No compatible constructor found.");
 
         var parameters = self.CreateParameters(ctor).ToArray();
 

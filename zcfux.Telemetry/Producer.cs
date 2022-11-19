@@ -72,7 +72,7 @@ public sealed class Producer<T> : IAsyncEnumerable<T>, IProducer
                     success = false;
                 }
             }
-            
+
             _externalCancellactionToken.ThrowIfCancellationRequested();
 
             if (success)

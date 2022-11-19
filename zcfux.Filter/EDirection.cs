@@ -21,8 +21,8 @@
  ***************************************************************************/
 namespace zcfux.Filter;
 
- public enum EDirection
- {
-     Ascending,
-     Descending
- }
+public enum EDirection
+{
+    Ascending,
+    Descending
+}

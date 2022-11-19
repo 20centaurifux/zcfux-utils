@@ -26,7 +26,7 @@ public sealed class RegistrationEventArgs : EventArgs
     public string Api { get; }
 
     public string Version { get; }
-    
+
     public object Proxy { get; }
 
     public RegistrationEventArgs(string api, string version, object proxy)

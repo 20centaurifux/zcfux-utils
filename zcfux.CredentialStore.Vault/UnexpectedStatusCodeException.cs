@@ -26,7 +26,7 @@ namespace zcfux.CredentialStore.Vault;
 public sealed class UnexpectedStatusCodeException : Exception
 {
     public HttpStatusCode StatusCode { get; }
-    
+
     public UnexpectedStatusCodeException(HttpStatusCode statusCode)
         : base("Unexpected status code.")
         => StatusCode = statusCode;

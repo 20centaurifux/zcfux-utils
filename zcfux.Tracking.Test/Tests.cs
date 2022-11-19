@@ -335,18 +335,18 @@ public sealed class Tests
         Assert.AreEqual("redrum", @new);
     }
 
-     [Test]
-     public void Anonymize()
-     {
-         var model = new I
-         {
-             Value = "hello world"
-         };
+    [Test]
+    public void Anonymize()
+    {
+        var model = new I
+        {
+            Value = "hello world"
+        };
 
-         var proxy = Factory.CreateProxy(model);
+        var proxy = Factory.CreateProxy(model);
 
-         var (_, value) = proxy!.GetInitialProperties().First();
+        var (_, value) = proxy!.GetInitialProperties().First();
 
-         Assert.AreEqual("###########", value);
-     }
+        Assert.AreEqual("###########", value);
+    }
 }

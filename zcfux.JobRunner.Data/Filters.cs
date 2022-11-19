@@ -26,16 +26,16 @@ namespace zcfux.JobRunner.Data;
 public static class Filters
 {
     public static Column<Guid> Guid { get; } = Column<Guid>.FromMember();
-    
+
     public static Column<string> Type { get; } = Column<string>.FromMember();
-    
+
     public static Column<EStatus> Status { get; } = Column<EStatus>.FromMember();
-    
+
     public static Column<DateTime> Created { get; } = Column<DateTime>.FromMember();
-    
+
     public static Column<DateTime?> NextDue { get; } = Column<DateTime?>.FromMember();
-    
+
     public static Column<DateTime?> LastDone { get; } = Column<DateTime?>.FromMember();
-    
+
     public static Column<int> Errors { get; } = Column<int>.FromMember();
 }

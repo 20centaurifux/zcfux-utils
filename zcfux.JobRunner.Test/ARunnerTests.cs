@@ -129,7 +129,7 @@ public abstract class ARunnerTests
         var source = new TaskCompletionSource();
 
         var moments = new List<DateTime>();
-        
+
         _runner.Done += (s, e) =>
         {
             moments.Add(DateTime.UtcNow);
@@ -139,7 +139,7 @@ public abstract class ARunnerTests
                 source.SetResult();
             }
         };
-        
+
         _queue.CreateCronJob<Jobs.Cron>("*/2 * * * * *");
 
         source.Task.Wait();
@@ -147,7 +147,7 @@ public abstract class ARunnerTests
         for (var i = 1; i < 5; ++i)
         {
             var diff = Convert.ToInt32((moments[i] - moments[i - 1]).TotalSeconds);
-            
+
             Assert.AreEqual(2, diff);
         }
     }

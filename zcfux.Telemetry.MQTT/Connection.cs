@@ -278,7 +278,7 @@ public sealed class Connection : IConnection
                 catch (Exception ex)
                 {
                     _logger?.Warn(ex);
-                    
+
                     await Task.Delay(_retrySendingInterval, _cancellationTokenSource.Token);
                 }
             }

@@ -65,7 +65,7 @@ public sealed class Queue : IQueue
 
             return builder.WithQueue(queue);
         }
-        catch(Data.NotFoundException)
+        catch (Data.NotFoundException)
         {
             throw new QueueNotFoundException();
         }

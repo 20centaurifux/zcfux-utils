@@ -66,7 +66,7 @@ internal sealed class SmtpServer
                          ?? "smtp4dev";
 
         var args = BuildArgs(secureSocketOptions, port);
-        
+
         _process.StartInfo.FileName = executable;
         _process.StartInfo.WorkingDirectory = TempDir;
         _process.StartInfo.RedirectStandardOutput = true;

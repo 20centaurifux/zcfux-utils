@@ -35,7 +35,7 @@ internal sealed class GroupDbTests : AGroupDbTests
     protected override IGroupDb CreateGroupDb()
     {
         var siteDb = new ApplicationStore();
-        
+
         return new GroupDb(siteDb);
     }
 

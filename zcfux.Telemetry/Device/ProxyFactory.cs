@@ -36,7 +36,7 @@ public static class ProxyFactory
 
         return proxy!;
     }
-    
+
     public static object CreateApiProxy(Type type, Options options)
     {
         var interceptor = new ApiInterceptor(type, options);

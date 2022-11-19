@@ -34,7 +34,7 @@ public static class Password
     public const int DefaultSaltSize = 8;
 
     public static PasswordHash ComputeHash(string secret)
-    => ComputeHash(DefaultAlgorithm, secret, SecureRandom.GetBytes(DefaultSaltSize), DefaultArgs);
+        => ComputeHash(DefaultAlgorithm, secret, SecureRandom.GetBytes(DefaultSaltSize), DefaultArgs);
 
     public static PasswordHash ComputeHash(string secret, byte[] salt)
         => ComputeHash(DefaultAlgorithm, secret, salt, DefaultArgs);

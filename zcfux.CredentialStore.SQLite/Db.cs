@@ -161,7 +161,7 @@ internal sealed class Db : IDisposable
                                     Value VARCHAR(64) NOT NULL)";
 
             cmd.ExecuteNonQuery();
-            
+
             cmd.CommandText = "INSERT INTO Application (Key, Value) VALUES ('Revision', '1')";
             cmd.ExecuteNonQuery();
 

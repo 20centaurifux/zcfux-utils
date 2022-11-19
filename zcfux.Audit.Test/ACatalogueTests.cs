@@ -235,7 +235,7 @@ public abstract class ACatalogueTests : ADbTest
 
         var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
 
-        catalogue.Delete( EventFilters.Id.EqualTo(first.Id));
+        catalogue.Delete(EventFilters.Id.EqualTo(first.Id));
 
         TestSingleLoginEventQuery(catalogue, QueryBuilder.All(), second, "::1", "Bob", "world");
     }
@@ -250,7 +250,7 @@ public abstract class ACatalogueTests : ADbTest
 
         var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
 
-        catalogue.Delete( EventFilters.Severity.EqualTo(ESeverity.Critical));
+        catalogue.Delete(EventFilters.Severity.EqualTo(ESeverity.Critical));
 
         TestSingleLoginEventQuery(catalogue, QueryBuilder.All(), first, "::1", "Alice", "hello world");
     }
@@ -265,7 +265,7 @@ public abstract class ACatalogueTests : ADbTest
 
         var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
 
-        catalogue.Delete( EventFilters.CreatedAt.EqualTo(first.CreatedAt));
+        catalogue.Delete(EventFilters.CreatedAt.EqualTo(first.CreatedAt));
 
         TestSingleLoginEventQuery(catalogue, QueryBuilder.All(), second, "::1", "Bob", "world");
     }
@@ -280,7 +280,7 @@ public abstract class ACatalogueTests : ADbTest
 
         var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
 
-        catalogue.Delete( EventFilters.KindId.EqualTo(second.Kind.Id));
+        catalogue.Delete(EventFilters.KindId.EqualTo(second.Kind.Id));
 
         TestSingleLoginEventQuery(catalogue, QueryBuilder.All(), first, "::1", "Alice", "hello world");
     }
@@ -295,7 +295,7 @@ public abstract class ACatalogueTests : ADbTest
 
         var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
 
-        catalogue.Delete( EventFilters.Kind.EqualTo(second.Kind.Name));
+        catalogue.Delete(EventFilters.Kind.EqualTo(second.Kind.Name));
 
         TestSingleLoginEventQuery(catalogue, QueryBuilder.All(), first, "::1", "Alice", "hello world");
     }
@@ -310,7 +310,7 @@ public abstract class ACatalogueTests : ADbTest
 
         var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
 
-        catalogue.Delete( EventFilters.DisplayName.EqualTo(second.Topic!.DisplayName));
+        catalogue.Delete(EventFilters.DisplayName.EqualTo(second.Topic!.DisplayName));
 
         TestSingleLoginEventQuery(catalogue, QueryBuilder.All(), first, "::1", "Alice", "hello world");
     }
@@ -324,7 +324,7 @@ public abstract class ACatalogueTests : ADbTest
 
         var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
 
-        catalogue.Delete( EventFilters.Id.EqualTo(ev.Id));
+        catalogue.Delete(EventFilters.Id.EqualTo(ev.Id));
 
         var qb = new QueryBuilder()
             .WithFilter(TopicFilters.Id.EqualTo(topic.Id));
@@ -355,7 +355,7 @@ public abstract class ACatalogueTests : ADbTest
 
         var catalogue = _db.Events.CreateCatalogue(_handle!, Catalogue);
 
-        catalogue.Delete( EventFilters.Id.EqualTo(firstEvent.Id));
+        catalogue.Delete(EventFilters.Id.EqualTo(firstEvent.Id));
 
         var qb = new QueryBuilder()
             .WithFilter(TopicFilters.Id.EqualTo(alice.Id));

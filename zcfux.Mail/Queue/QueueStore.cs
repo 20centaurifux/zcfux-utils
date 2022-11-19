@@ -46,11 +46,11 @@ public sealed class QueueStore
 
             return new Queue(_db, _handle, queue);
         }
-        catch(Data.NotFoundException)
+        catch (Data.NotFoundException)
         {
             throw new QueueNotFoundException();
         }
-    } 
+    }
 
     public IEnumerable<Queue> GetQueues()
         => _db.Queues.GetQueues(_handle)

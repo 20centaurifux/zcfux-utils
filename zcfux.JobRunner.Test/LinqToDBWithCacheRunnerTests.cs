@@ -24,5 +24,5 @@ namespace zcfux.JobRunner.Test;
 public sealed class LinqToDBWithCacheRunnerTests : ALinqToDBRunnerTests
 {
     protected override Data.LinqToDB.Options CreateOptions()
-        => new (TimeSpan.FromMinutes(1));
+        => new(TimeSpan.FromMinutes(1));
 }

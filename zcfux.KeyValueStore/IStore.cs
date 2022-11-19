@@ -28,7 +28,7 @@ public interface IStore : IDisposable
     IEnumerable<string> GetKeys();
 
     void Put(string key, Stream stream);
-    
+
     Stream Fetch(string key);
 
     void Remove(string key);

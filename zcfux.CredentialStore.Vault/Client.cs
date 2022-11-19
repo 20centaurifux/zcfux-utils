@@ -88,7 +88,7 @@ internal sealed class Client
 
         return result;
     }
-    
+
     public void PostMetadata(string path, IDictionary<string, object> metaData)
     {
         var request = BuildPostRequest(
@@ -102,7 +102,7 @@ internal sealed class Client
             throw new UnexpectedStatusCodeException(response.StatusCode);
         }
     }
-    
+
     public void PostSecret(string path, IDictionary<string, object> data)
     {
         var body = new
@@ -137,15 +137,15 @@ internal sealed class Client
 
         return request;
     }
-    
+
     public bool DeleteSecret(string path)
     {
         var request = BuildDeleteRequest($"/v1/{_options.MountPoint}/metadata/{path.Trim('/')}");
 
         var response = _client.Send(request);
-        
-        var deleted =response.IsSuccessStatusCode; 
-        
+
+        var deleted = response.IsSuccessStatusCode;
+
         if (!response.IsSuccessStatusCode
             && response.StatusCode != HttpStatusCode.NotFound)
         {
@@ -154,7 +154,7 @@ internal sealed class Client
 
         return deleted;
     }
-    
+
     HttpRequestMessage BuildDeleteRequest(string path)
     {
         var request = new HttpRequestMessage(HttpMethod.Delete, _options.Url + path);

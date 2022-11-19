@@ -27,7 +27,7 @@ public static class Extensions
 {
     public static DataConnection Db(this Transaction self)
         => (self.Handle as Handle)!.Db();
-    
+
     public static DataConnection Db(this object self)
         => (self as Handle)!.Db();
 }

@@ -10,6 +10,7 @@
         <AssemblyName>zcfux.Mail.LinqToPg</AssemblyName>
         <RootNamespace>zcfux.Mail.LinqToPg</RootNamespace>
         <PackageId>zcfux.Mail.LinqToPg</PackageId>
+        <PackageVersion>1.2.0</PackageVersion>
     </PropertyGroup>
 
     <ItemGroup>

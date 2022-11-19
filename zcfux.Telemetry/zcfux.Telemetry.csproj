@@ -7,6 +7,7 @@
     <Authors>Sebastian Fedrau</Authors>
     <Company>Sebastian Fedrau</Company>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageVersion>1.2.0</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>

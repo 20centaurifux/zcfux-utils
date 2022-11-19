@@ -24,7 +24,7 @@ using LinqToDB.Mapping;
 
 namespace zcfux.Data.Test.LinqToDB;
 
-public class Engine : zcfux.Data.LinqToDB.Engine
+public class Engine : Data.LinqToDB.Engine
 {
     public Engine(LinqToDBConnectionOptions opts)
         : base(opts)

@@ -21,8 +21,8 @@
  ***************************************************************************/
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using Castle.DynamicProxy;
 using System.Reflection;
+using Castle.DynamicProxy;
 using zcfux.Logging;
 
 namespace zcfux.Telemetry.Device;

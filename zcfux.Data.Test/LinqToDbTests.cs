@@ -20,6 +20,7 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using LinqToDB.Configuration;
+using zcfux.Data.Test.LinqToDB;
 
 namespace zcfux.Data.Test;
 
@@ -39,9 +40,9 @@ public sealed class LinqToDbTests : APureTests
 
         var opts = builder.Build();
 
-        return new LinqToDB.Engine(opts);
+        return new Engine(opts);
     }
 
     protected override IPure NewDb()
-        => new LinqToDB.Pure();
+        => new Pure();
 }

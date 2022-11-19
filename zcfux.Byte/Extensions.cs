@@ -19,6 +19,7 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using System.Globalization;
 using System.Text;
 
 namespace zcfux.Byte;
@@ -58,7 +59,7 @@ public static class Extensions
         {
             var substr = self.Substring(i, 2);
 
-            bytes[i / 2] = byte.Parse(substr, System.Globalization.NumberStyles.HexNumber);
+            bytes[i / 2] = byte.Parse(substr, NumberStyles.HexNumber);
         }
 
         return bytes;

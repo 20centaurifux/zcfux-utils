@@ -19,7 +19,7 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using NUnit.Framework;
+using zcfux.CredentialStore.Vault;
 
 namespace zcfux.CredentialStore.Test;
 
@@ -50,8 +50,8 @@ public sealed class VaultReaderWriterTests : AReaderWriterTests
         var client = new HttpClient();
 
         var store = new Builder()
-            .WithReader(new Vault.Reader(options, client))
-            .WithWriter(new Vault.Writer(options, client))
+            .WithReader(new Reader(options, client))
+            .WithWriter(new Writer(options, client))
             .Build();
 
         store.Setup();
@@ -59,12 +59,12 @@ public sealed class VaultReaderWriterTests : AReaderWriterTests
         return store;
     }
 
-    static Vault.Options BuildOptions()
+    static Options BuildOptions()
     {
         var url = Environment.GetEnvironmentVariable("VAULT_TEST_URL")
                   ?? "http://127.0.0.1:8200";
 
-        var options = new Vault.Options(url, "root");
+        var options = new Options(url, "root");
 
         return options;
     }

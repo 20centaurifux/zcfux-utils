@@ -20,6 +20,7 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using NUnit.Framework;
+using zcfux.Logging.Test.Writer;
 
 namespace zcfux.Logging.Test;
 
@@ -27,7 +28,7 @@ public sealed class ChainTests
 {
     [SetUp]
     public void Setup()
-        => Writer.Collect.Messages.Clear();
+        => Collect.Messages.Clear();
 
     [Test]
     public void WriteMessageToAllDestinations()
@@ -36,6 +37,6 @@ public sealed class ChainTests
 
         chain.Info(TestContext.CurrentContext.Random.GetString());
 
-        Assert.AreEqual(2, Writer.Collect.Messages[ESeverity.Info].Count);
+        Assert.AreEqual(2, Collect.Messages[ESeverity.Info].Count);
     }
 }

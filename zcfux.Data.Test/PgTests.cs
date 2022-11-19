@@ -19,6 +19,9 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using zcfux.Data.Postgres;
+using zcfux.Data.Test.Pg;
+
 namespace zcfux.Data.Test;
 
 public sealed class PgTests : APureTests
@@ -31,9 +34,9 @@ public sealed class PgTests : APureTests
         var connectionString = Environment.GetEnvironmentVariable("PG_TEST_CONNECTIONSTRING")
                                ?? DefaultConnectionString;
 
-        return new Postgres.Engine(connectionString);
+        return new Engine(connectionString);
     }
 
     protected override IPure NewDb()
-        => new Pg.Pure();
+        => new Pure();
 }

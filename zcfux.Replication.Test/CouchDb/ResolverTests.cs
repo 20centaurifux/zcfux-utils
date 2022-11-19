@@ -20,6 +20,7 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using zcfux.Replication.CouchDb;
+using StreamReader = zcfux.Replication.CouchDb.StreamReader;
 
 namespace zcfux.Replication.Test.CouchDb;
 
@@ -59,7 +60,7 @@ public sealed class ResolverTests : AResolverTests
         var url = UrlBuilder.BuildServerUrl();
         var opts = new StreamReaderOptions(url, TimeSpan.FromSeconds(1));
 
-        return new global::zcfux.Replication.CouchDb.StreamReader(side, opts);
+        return new StreamReader(side, opts);
     }
 
     protected override AResolver CreateResolver(string side)

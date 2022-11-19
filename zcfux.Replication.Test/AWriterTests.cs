@@ -20,6 +20,7 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using NUnit.Framework;
+using zcfux.Replication.Merge;
 
 namespace zcfux.Replication.Test
 {
@@ -131,7 +132,7 @@ namespace zcfux.Replication.Test
                 model,
                 first!.Revision!,
                 now,
-                new Merge.LastWriteWins());
+                new LastWriteWins());
 
             Assert.AreEqual(model.Guid, second.Entity.Guid);
             Assert.AreEqual(model.Text, second.Entity.Text);
@@ -162,7 +163,7 @@ namespace zcfux.Replication.Test
                 model,
                 first!.Revision!,
                 now,
-                new Merge.LastWriteWins());
+                new LastWriteWins());
 
             Assert.AreEqual(first.IsNew, second.IsNew);
             Assert.AreEqual(first.IsDeleted, second.IsDeleted);
@@ -196,7 +197,7 @@ namespace zcfux.Replication.Test
                 model,
                 first!.Revision!,
                 now,
-                new Merge.LastWriteWins());
+                new LastWriteWins());
 
             model = new Model
             {
@@ -208,7 +209,7 @@ namespace zcfux.Replication.Test
                 model,
                 first.Revision!,
                 now.AddMinutes(-1),
-                new Merge.LastWriteWins());
+                new LastWriteWins());
 
             Assert.AreEqual(third.IsNew, second.IsNew);
             Assert.AreEqual(third.IsDeleted, second.IsDeleted);

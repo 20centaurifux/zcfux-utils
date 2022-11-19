@@ -19,8 +19,8 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using CommandLine;
 using System.Security.Cryptography;
+using CommandLine;
 using zcfux.Byte;
 
 namespace zcfux.Security;

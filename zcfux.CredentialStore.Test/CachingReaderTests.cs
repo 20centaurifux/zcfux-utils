@@ -20,6 +20,7 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using NUnit.Framework;
+using zcfux.CredentialStore.Memory;
 
 namespace zcfux.CredentialStore.Test;
 
@@ -27,7 +28,7 @@ public sealed class CachingReaderWriterTests : AReaderWriterTests
 {
     protected override IStore CreateAndSetupStore()
     {
-        var memoryStore = new Memory.Store();
+        var memoryStore = new Store();
 
         memoryStore.Setup();
 

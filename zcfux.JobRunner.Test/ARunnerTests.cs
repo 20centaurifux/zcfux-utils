@@ -20,6 +20,7 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using NUnit.Framework;
+using zcfux.JobRunner.Test.Jobs;
 
 namespace zcfux.JobRunner.Test;
 
@@ -53,7 +54,7 @@ public abstract class ARunnerTests
 
         _runner.Done += (s, e) => source.TrySetResult(e.Job.Guid);
 
-        var job = _queue.Create<Jobs.Simple>();
+        var job = _queue.Create<Simple>();
 
         Assert.AreEqual(job.Guid, source.Task.Result);
     }
@@ -69,9 +70,9 @@ public abstract class ARunnerTests
 
         _runner.Done += (s, e) => doneSource.TrySetResult(e.Job.Guid);
 
-        Jobs.Fail.Fails = 1;
+        Fail.Fails = 1;
 
-        var job = _queue.Create<Jobs.Fail>();
+        var job = _queue.Create<Fail>();
 
         Assert.AreEqual(job.Guid, failedSource.Task.Result);
         Assert.AreEqual(job.Guid, doneSource.Task.Result);
@@ -88,9 +89,9 @@ public abstract class ARunnerTests
 
         _runner.Done += (s, e) => doneSource.SetResult(e.Job.Guid);
 
-        Jobs.Fail.Fails = 3;
+        Fail.Fails = 3;
 
-        var job = _queue.Create<Jobs.Fail>();
+        var job = _queue.Create<Fail>();
 
         Assert.AreEqual(job.Guid, abortSource.Task.Result);
 
@@ -114,7 +115,7 @@ public abstract class ARunnerTests
             }
         };
 
-        _queue.Create<Jobs.Twice>();
+        _queue.Create<Twice>();
 
         source.Task.Wait();
 
@@ -140,7 +141,7 @@ public abstract class ARunnerTests
             }
         };
 
-        _queue.CreateCronJob<Jobs.Cron>("*/2 * * * * *");
+        _queue.CreateCronJob<Cron>("*/2 * * * * *");
 
         source.Task.Wait();
 
@@ -169,8 +170,8 @@ public abstract class ARunnerTests
             }
         };
 
-        _queue.Create<Jobs.Simple>();
-        _queue.Create<Jobs.Simple>();
+        _queue.Create<Simple>();
+        _queue.Create<Simple>();
 
         source.Task.Wait();
 
@@ -184,7 +185,7 @@ public abstract class ARunnerTests
 
         _runner.Done += (s, e) => source.TrySetResult(e.Job.Args);
 
-        var job = _queue.Create<Jobs.Simple>(new[] { "hello", "world" });
+        var job = _queue.Create<Simple>(new[] { "hello", "world" });
 
         var result = source.Task.Result;
 

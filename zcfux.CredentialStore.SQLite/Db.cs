@@ -19,9 +19,10 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using Microsoft.Data.Sqlite;
 using System.Security.Cryptography;
+using Microsoft.Data.Sqlite;
 using zcfux.Byte;
+using zcfux.Security;
 
 namespace zcfux.CredentialStore.SQLite;
 
@@ -60,7 +61,7 @@ internal sealed class Db : IDisposable
 
     static byte[] PasswordToSecret(string password)
     {
-        var sha256 = Security.Factory.CreateHashAlgorithm("SHA-256");
+        var sha256 = Factory.CreateHashAlgorithm("SHA-256");
 
         var passwordBytes = password.GetBytes();
 
@@ -219,7 +220,7 @@ internal sealed class Db : IDisposable
     {
         var guid = Guid.NewGuid();
 
-        var hmac = Security.Factory.CreateKeyedHashAlgorithm("HMAC-SHA-256", _secret);
+        var hmac = Factory.CreateKeyedHashAlgorithm("HMAC-SHA-256", _secret);
 
         var hash = hmac.ComputeHash(guid.ToByteArray());
 
@@ -253,7 +254,7 @@ internal sealed class Db : IDisposable
 
                 if (guid.HasValue && signature != null)
                 {
-                    var hmac = Security.Factory.CreateKeyedHashAlgorithm("HMAC-SHA-256", _secret);
+                    var hmac = Factory.CreateKeyedHashAlgorithm("HMAC-SHA-256", _secret);
 
                     var hash = hmac.ComputeHash(guid.Value.ToByteArray());
 

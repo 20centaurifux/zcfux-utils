@@ -21,6 +21,7 @@
  ***************************************************************************/
 using System.Reflection;
 using NUnit.Framework;
+using zcfux.Logging.Test.Writer;
 
 namespace zcfux.Logging.Test;
 
@@ -28,7 +29,7 @@ public sealed class LoggingTests
 {
     [SetUp]
     public void Setup()
-        => Writer.Collect.Messages.Clear();
+        => Collect.Messages.Clear();
 
     [Test]
     public void Trace()
@@ -62,40 +63,40 @@ public sealed class LoggingTests
         logger.Trace(RandomString());
         logger.Debug(RandomString());
 
-        Assert.IsFalse(Writer.Collect.Messages.ContainsKey(ESeverity.Trace));
-        Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Debug].Count);
+        Assert.IsFalse(Collect.Messages.ContainsKey(ESeverity.Trace));
+        Assert.AreEqual(1, Collect.Messages[ESeverity.Debug].Count);
 
         logger.Verbosity = ESeverity.Info;
 
         logger.Debug(RandomString());
         logger.Info(RandomString());
 
-        Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Debug].Count);
-        Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Info].Count);
+        Assert.AreEqual(1, Collect.Messages[ESeverity.Debug].Count);
+        Assert.AreEqual(1, Collect.Messages[ESeverity.Info].Count);
 
         logger.Verbosity = ESeverity.Warn;
 
         logger.Info(RandomString());
         logger.Warn(RandomString());
 
-        Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Info].Count);
-        Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Warn].Count);
+        Assert.AreEqual(1, Collect.Messages[ESeverity.Info].Count);
+        Assert.AreEqual(1, Collect.Messages[ESeverity.Warn].Count);
 
         logger.Verbosity = ESeverity.Error;
 
         logger.Warn(RandomString());
         logger.Error(RandomString());
 
-        Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Warn].Count);
-        Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Error].Count);
+        Assert.AreEqual(1, Collect.Messages[ESeverity.Warn].Count);
+        Assert.AreEqual(1, Collect.Messages[ESeverity.Error].Count);
 
         logger.Verbosity = ESeverity.Fatal;
 
         logger.Error(RandomString());
         logger.Fatal(RandomString());
 
-        Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Error].Count);
-        Assert.AreEqual(1, Writer.Collect.Messages[ESeverity.Fatal].Count);
+        Assert.AreEqual(1, Collect.Messages[ESeverity.Error].Count);
+        Assert.AreEqual(1, Collect.Messages[ESeverity.Fatal].Count);
     }
 
     static void Test(ESeverity severity)
@@ -136,11 +137,11 @@ public sealed class LoggingTests
         {
             if (s == severity)
             {
-                Assert.AreEqual(3, Writer.Collect.Messages[s].Count);
+                Assert.AreEqual(3, Collect.Messages[s].Count);
             }
             else
             {
-                Assert.IsFalse(Writer.Collect.Messages.ContainsKey(s));
+                Assert.IsFalse(Collect.Messages.ContainsKey(s));
             }
         }
     }

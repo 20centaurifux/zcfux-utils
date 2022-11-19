@@ -19,6 +19,9 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using NLog;
+using NLog_ILogger = NLog.ILogger;
+
 namespace zcfux.Logging.NLog;
 
 [Logger("nlog")]
@@ -26,13 +29,13 @@ public sealed class Writer : IWriter
 {
     const string DefaultLoggerName = "Log";
 
-    global::NLog.ILogger? _logger;
+    NLog_ILogger? _logger;
 
     public string Name => _logger?.Name
                           ?? throw new InvalidOperationException();
 
     public void Setup(string name)
-        => _logger = global::NLog.LogManager.GetLogger(name ?? DefaultLoggerName);
+        => _logger = LogManager.GetLogger(name ?? DefaultLoggerName);
 
     public void WriteMessage(ESeverity severity, string message)
         => _logger!.Log(Mapper.Map(severity), message);

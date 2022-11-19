@@ -19,10 +19,12 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using System.Security.Cryptography;
+
 namespace zcfux.Security;
 
 public static class SecureRandom
 {
     public static byte[] GetBytes(int length)
-        => System.Security.Cryptography.RandomNumberGenerator.GetBytes(length);
+        => RandomNumberGenerator.GetBytes(length);
 }

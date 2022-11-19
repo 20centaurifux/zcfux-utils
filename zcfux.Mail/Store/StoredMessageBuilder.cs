@@ -19,6 +19,8 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using zcfux.Data;
+
 namespace zcfux.Mail.Store;
 
 public sealed class StoredMessageBuilder
@@ -177,7 +179,7 @@ public sealed class StoredMessageBuilder
 
             return new StoredMessage(_db, _handle, directoryEntry);
         }
-        catch (Data.NotFoundException)
+        catch (NotFoundException)
         {
             throw new DirectoryNotFoundException();
         }

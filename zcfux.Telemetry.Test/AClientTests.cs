@@ -20,12 +20,13 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using NUnit.Framework;
+using zcfux.Telemetry.Device;
 
 namespace zcfux.Telemetry.Test;
 
 public abstract class AClientTests
 {
-    sealed class SimpleClient : Device.Client, IConnected, IDisconnected
+    sealed class SimpleClient : Client, IConnected, IDisconnected
     {
         const long Offline = 0;
         const long Online = 1;
@@ -35,7 +36,7 @@ public abstract class AClientTests
         public bool IsOnline
             => Interlocked.Read(ref _state) == Online;
 
-        public SimpleClient(Device.Options options) : base(options)
+        public SimpleClient(Options options) : base(options)
         {
         }
 
@@ -66,11 +67,11 @@ public abstract class AClientTests
             => _producer.Write(false);
     }
 
-    sealed class OnlineClient : Device.Client
+    sealed class OnlineClient : Client
     {
         public IOnlineApi Api { get; } = new OnlineImpl();
 
-        public OnlineClient(Device.Options options) : base(options)
+        public OnlineClient(Options options) : base(options)
         {
         }
     }
@@ -125,11 +126,11 @@ public abstract class AClientTests
         }
     }
 
-    sealed class Bulb : Device.Client
+    sealed class Bulb : Client
     {
         public IPowerApi Power { get; } = new PowerImpl();
 
-        public Bulb(Device.Options options) : base(options)
+        public Bulb(Options options) : base(options)
         {
         }
     }
@@ -258,9 +259,9 @@ public abstract class AClientTests
         }
     }
 
-    Device.Options CreateDeviceOptions(DeviceDetails device, IConnection connection)
+    Options CreateDeviceOptions(DeviceDetails device, IConnection connection)
     {
-        var opts = new Device.OptionsBuilder()
+        var opts = new OptionsBuilder()
             .WithConnection(connection)
             .WithDevice(device)
             .WithSerializer(CreateSerializer())

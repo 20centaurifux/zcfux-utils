@@ -19,6 +19,7 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using zcfux.Data;
 using zcfux.Filter;
 
 namespace zcfux.Mail.Queue;
@@ -46,7 +47,7 @@ public sealed class QueueStore
 
             return new Queue(_db, _handle, queue);
         }
-        catch (Data.NotFoundException)
+        catch (NotFoundException)
         {
             throw new QueueNotFoundException();
         }

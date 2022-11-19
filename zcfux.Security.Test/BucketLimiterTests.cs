@@ -20,6 +20,7 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using NUnit.Framework;
+using zcfux.Security.RateLimit;
 
 namespace zcfux.Security.Test;
 
@@ -28,7 +29,7 @@ public sealed class BucketLimiterTests
     [Test]
     public void LimiterTest()
     {
-        var limiter = new RateLimit.BucketLimiter<string>(capacity: 2, leakRate: TimeSpan.FromMilliseconds(500));
+        var limiter = new BucketLimiter<string>(capacity: 2, leakRate: TimeSpan.FromMilliseconds(500));
 
         Assert.IsFalse(limiter.Throttle("a"));
 

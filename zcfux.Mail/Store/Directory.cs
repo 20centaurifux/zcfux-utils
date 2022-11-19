@@ -19,6 +19,7 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using zcfux.Data;
 using zcfux.Filter;
 
 namespace zcfux.Mail.Store;
@@ -94,7 +95,7 @@ public class Directory : IDirectory
         {
             _db.Store.UpdateDirectory(_handle, this);
         }
-        catch (Data.NotFoundException)
+        catch (NotFoundException)
         {
             throw new DirectoryNotFoundException();
         }
@@ -110,7 +111,7 @@ public class Directory : IDirectory
         {
             _db.Store.DeleteDirectory(_handle, this);
         }
-        catch (Data.NotFoundException)
+        catch (NotFoundException)
         {
             throw new DirectoryNotFoundException();
         }
@@ -130,7 +131,7 @@ public class Directory : IDirectory
             {
                 _db.Store.UpdateDirectory(_handle, this);
             }
-            catch (Data.NotFoundException)
+            catch (NotFoundException)
             {
                 throw new DirectoryNotFoundException();
             }
@@ -227,7 +228,7 @@ public class Directory : IDirectory
         {
             _db.Store.GetDirectory(_handle, directory.Id);
         }
-        catch (Data.NotFoundException)
+        catch (NotFoundException)
         {
             throw new DirectoryNotFoundException($"Directory `{directory.Name}' (id={directory.Id}) not found.");
         }

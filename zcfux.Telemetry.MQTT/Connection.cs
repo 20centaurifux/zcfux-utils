@@ -19,12 +19,13 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using MQTTnet;
-using MQTTnet.Client;
-using MQTTnet.Protocol;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using MQTTnet;
+using MQTTnet.Client;
+using MQTTnet.Formatter;
+using MQTTnet.Protocol;
 using zcfux.Logging;
 
 namespace zcfux.Telemetry.MQTT;
@@ -116,7 +117,7 @@ public sealed class Connection : IConnection
             .WithTcpServer(options.Address, options.Port)
             .WithTimeout(options.Timeout)
             .WithKeepAlivePeriod(options.KeepAlive)
-            .WithProtocolVersion(MQTTnet.Formatter.MqttProtocolVersion.V500)
+            .WithProtocolVersion(MqttProtocolVersion.V500)
             .WithClientId(options.ClientId)
             .WithSessionExpiryInterval(options.SessionTimeout)
             .WithCleanSession(false)

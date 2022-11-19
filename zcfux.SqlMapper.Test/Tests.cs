@@ -22,6 +22,7 @@
 using System.Data;
 using Microsoft.Data.Sqlite;
 using NUnit.Framework;
+using zcfux.SqlMapper.Test.Model;
 
 namespace zcfux.SqlMapper.Test;
 
@@ -77,7 +78,7 @@ public sealed class Tests
             {
                 r.Read();
 
-                var obj = r.ToObject<Model.Foo>();
+                var obj = r.ToObject<Foo>();
 
                 Assert.AreEqual(id, obj.ID);
                 Assert.AreEqual(a, obj.A);
@@ -103,7 +104,7 @@ public sealed class Tests
             {
                 r.Read();
 
-                var obj = r.ToObject<Model.Bar>();
+                var obj = r.ToObject<Bar>();
 
                 Assert.AreEqual(id, obj.Identifier);
                 Assert.AreEqual(a, obj.First);
@@ -127,13 +128,13 @@ public sealed class Tests
 
             using (var r = cmd.ExecuteReader())
             {
-                var obj = r.ReadAndMap<Model.Foo>();
+                var obj = r.ReadAndMap<Foo>();
 
                 Assert.AreEqual(id, obj!.ID);
                 Assert.AreEqual(a, obj.A);
                 Assert.AreEqual(b, obj.B);
 
-                obj = r.ReadAndMap<Model.Foo>();
+                obj = r.ReadAndMap<Foo>();
 
                 Assert.IsNull(obj);
             }
@@ -153,7 +154,7 @@ public sealed class Tests
         {
             cmd.CommandText = "SELECT * FROM T";
 
-            var obj = cmd.FetchOne<Model.Foo>();
+            var obj = cmd.FetchOne<Foo>();
 
             Assert.AreEqual(id, obj!.ID);
             Assert.AreEqual(a, obj.A);
@@ -179,7 +180,7 @@ public sealed class Tests
         {
             cmd.CommandText = "SELECT * FROM T";
 
-            var entries = cmd.FetchLazy<Model.Foo>().ToArray();
+            var entries = cmd.FetchLazy<Foo>().ToArray();
 
             Assert.AreEqual(2, entries.Length);
 
@@ -231,7 +232,7 @@ public sealed class Tests
     [Test]
     public void AssignObject()
     {
-        var obj = new Model.Foo()
+        var obj = new Foo()
         {
             ID = TestContext.CurrentContext.Random.Next(),
             A = TestContext.CurrentContext.Random.GetString(),
@@ -251,7 +252,7 @@ public sealed class Tests
         {
             cmd.CommandText = "SELECT * FROM T";
 
-            var fetched = cmd.FetchOne<Model.Foo>();
+            var fetched = cmd.FetchOne<Foo>();
 
             Assert.AreEqual(obj.ID, fetched!.ID);
             Assert.AreEqual(obj.A, fetched.A);
@@ -262,7 +263,7 @@ public sealed class Tests
     [Test]
     public void AssignModel()
     {
-        var obj = new Model.Bar()
+        var obj = new Bar()
         {
             Identifier = TestContext.CurrentContext.Random.Next(),
             First = TestContext.CurrentContext.Random.GetString(),
@@ -282,7 +283,7 @@ public sealed class Tests
         {
             cmd.CommandText = "SELECT * FROM T";
 
-            var fetched = cmd.FetchOne<Model.Bar>();
+            var fetched = cmd.FetchOne<Bar>();
 
             Assert.AreEqual(obj.Identifier, fetched!.Identifier);
             Assert.AreEqual(obj.First, fetched.First);
@@ -293,7 +294,7 @@ public sealed class Tests
     [Test]
     public void AssignObjectWithCustomKeyFn()
     {
-        var obj = new Model.Foo()
+        var obj = new Foo()
         {
             ID = TestContext.CurrentContext.Random.Next(),
             A = TestContext.CurrentContext.Random.GetString(),
@@ -313,7 +314,7 @@ public sealed class Tests
         {
             cmd.CommandText = "SELECT * FROM T";
 
-            var fetched = cmd.FetchOne<Model.Foo>();
+            var fetched = cmd.FetchOne<Foo>();
 
             Assert.AreEqual(obj.ID, fetched!.ID);
             Assert.AreEqual(obj.A, fetched.A);

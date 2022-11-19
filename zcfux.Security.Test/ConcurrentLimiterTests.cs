@@ -20,6 +20,7 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using NUnit.Framework;
+using zcfux.Security.RateLimit;
 
 namespace zcfux.Security.Test;
 
@@ -28,8 +29,8 @@ public sealed class ConcurrentLimiterTests
     [Test]
     public void LimiterTest()
     {
-        var child = new RateLimit.BucketLimiter<string>(capacity: 2, leakRate: TimeSpan.FromMilliseconds(500));
-        var parent = new RateLimit.ConcurrentRateLimiter<string>(child);
+        var child = new BucketLimiter<string>(capacity: 2, leakRate: TimeSpan.FromMilliseconds(500));
+        var parent = new ConcurrentRateLimiter<string>(child);
 
         var t1 = Task.Factory.StartNew(() => parent.Throttle("a"));
         var t2 = Task.Factory.StartNew(() => parent.Throttle("a"));

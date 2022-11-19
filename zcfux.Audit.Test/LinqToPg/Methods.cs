@@ -21,6 +21,7 @@
  ***************************************************************************/
 using LinqToDB;
 using LinqToDB.Configuration;
+using zcfux.Audit.LinqToPg;
 using zcfux.Data;
 using zcfux.Data.LinqToDB;
 
@@ -49,15 +50,15 @@ internal class Methods : IDbTestMethods
     {
         var db = (handle as Handle)!.Db();
 
-        db.GetTable<zcfux.Audit.LinqToPg.EventRelation>().Delete();
-        db.GetTable<zcfux.Audit.LinqToPg.TopicAssociationRelation>().Delete();
-        db.GetTable<zcfux.Audit.LinqToPg.TopicRelation>().Delete();
-        db.GetTable<zcfux.Audit.LinqToPg.TopicKindRelation>().Delete();
-        db.GetTable<zcfux.Audit.LinqToPg.AssociationRelation>().Delete();
-        db.GetTable<zcfux.Audit.LinqToPg.EventRelation>().Delete();
-        db.GetTable<zcfux.Audit.LinqToPg.EventKindRelation>().Delete();
+        db.GetTable<EventRelation>().Delete();
+        db.GetTable<TopicAssociationRelation>().Delete();
+        db.GetTable<TopicRelation>().Delete();
+        db.GetTable<TopicKindRelation>().Delete();
+        db.GetTable<AssociationRelation>().Delete();
+        db.GetTable<EventRelation>().Delete();
+        db.GetTable<EventKindRelation>().Delete();
     }
 
     public IAuditDb CreateDb()
-        => new Audit.LinqToPg.AuditDb();
+        => new AuditDb();
 }

@@ -49,10 +49,10 @@ internal sealed class Methods : IDbTestMethods
     {
         var db = (handle as Handle)!.Db();
 
-        db.GetTable<zcfux.Audit.LinqToDB.TopicRelation>().Delete();
-        db.GetTable<zcfux.Audit.LinqToDB.TopicKindRelation>().Delete();
-        db.GetTable<zcfux.Audit.LinqToDB.AssociationRelation>().Delete();
-        db.GetTable<zcfux.Audit.LinqToDB.TopicAssociationRelation>().Delete();
+        db.GetTable<TopicRelation>().Delete();
+        db.GetTable<TopicKindRelation>().Delete();
+        db.GetTable<AssociationRelation>().Delete();
+        db.GetTable<TopicAssociationRelation>().Delete();
     }
 
     public IAuditDb CreateDb()

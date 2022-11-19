@@ -52,56 +52,56 @@ internal sealed class Utility
 
     public IEvent InsertLoginEvent(DateTime at, string endpoint, string username, string session)
     {
-        var eventTopic = _db!.Topics.NewTopic(_handle!, Event.TopicKinds.Event, "Login");
+        var eventTopic = _db!.Topics.NewTopic(_handle!, TopicKinds.Event, "Login");
 
-        var ev = _db.Events.NewEvent(_handle!, Event.EventKinds.Security, ESeverity.Low, at, eventTopic);
+        var ev = _db.Events.NewEvent(_handle!, EventKinds.Security, ESeverity.Low, at, eventTopic);
 
-        var endpointTopic = _db.Topics.NewTopic(_handle!, Event.TopicKinds.Endpoint, endpoint);
+        var endpointTopic = _db.Topics.NewTopic(_handle!, TopicKinds.Endpoint, endpoint);
 
-        _db.Associations.Associate(_handle!, eventTopic, Event.Associations.ConnectedFrom, endpointTopic);
+        _db.Associations.Associate(_handle!, eventTopic, Associations.ConnectedFrom, endpointTopic);
 
-        var userTopic = _db.Topics.NewTopic(_handle!, Event.TopicKinds.User, username);
+        var userTopic = _db.Topics.NewTopic(_handle!, TopicKinds.User, username);
 
-        _db.Associations.Associate(_handle!, eventTopic, Event.Associations.AuthenticatedAs, userTopic);
+        _db.Associations.Associate(_handle!, eventTopic, Associations.AuthenticatedAs, userTopic);
 
-        var sessionTopic = _db.Topics.NewTopic(_handle!, Event.TopicKinds.Session, session);
+        var sessionTopic = _db.Topics.NewTopic(_handle!, TopicKinds.Session, session);
 
-        _db.Associations.Associate(_handle!, userTopic, Event.Associations.CreatedSession, sessionTopic);
+        _db.Associations.Associate(_handle!, userTopic, Associations.CreatedSession, sessionTopic);
 
         return ev;
     }
 
     public IEvent InsertFailedLoginEvent(DateTime at, string endpoint, string username)
     {
-        var eventTopic = _db!.Topics.NewTopic(_handle!, Event.TopicKinds.Event, "Login failed");
+        var eventTopic = _db!.Topics.NewTopic(_handle!, TopicKinds.Event, "Login failed");
 
-        var ev = _db.Events.NewEvent(_handle!, Event.EventKinds.Security, ESeverity.Critical, at, eventTopic);
+        var ev = _db.Events.NewEvent(_handle!, EventKinds.Security, ESeverity.Critical, at, eventTopic);
 
-        var endpointTopic = _db.Topics.NewTopic(_handle!, Event.TopicKinds.Endpoint, endpoint);
+        var endpointTopic = _db.Topics.NewTopic(_handle!, TopicKinds.Endpoint, endpoint);
 
-        _db.Associations.Associate(_handle!, eventTopic, Event.Associations.ConnectedFrom, endpointTopic);
+        _db.Associations.Associate(_handle!, eventTopic, Associations.ConnectedFrom, endpointTopic);
 
-        var userTopic = _db.Topics.NewTopic(_handle!, Event.TopicKinds.User, username);
+        var userTopic = _db.Topics.NewTopic(_handle!, TopicKinds.User, username);
 
-        _db.Associations.Associate(_handle!, eventTopic, Event.Associations.LoginFailed, userTopic);
+        _db.Associations.Associate(_handle!, eventTopic, Associations.LoginFailed, userTopic);
 
         return ev;
     }
 
     public IEvent InsertServiceEvent(DateTime at, bool started, string serviceName)
     {
-        var eventTopic = _db!.Topics.NewTopic(_handle!, Event.TopicKinds.Event, "Service status changed");
+        var eventTopic = _db!.Topics.NewTopic(_handle!, TopicKinds.Event, "Service status changed");
 
-        var ev = _db.Events.NewEvent(_handle!, Event.EventKinds.Service, ESeverity.Medium, at, eventTopic);
+        var ev = _db.Events.NewEvent(_handle!, EventKinds.Service, ESeverity.Medium, at, eventTopic);
 
-        var serviceTopic = _db.Topics.NewTopic(_handle!, Event.TopicKinds.Service, serviceName);
+        var serviceTopic = _db.Topics.NewTopic(_handle!, TopicKinds.Service, serviceName);
 
         _db.Associations.Associate(
             _handle!,
             eventTopic,
             started
-                ? Event.Associations.Started
-                : Event.Associations.Stopped,
+                ? Associations.Started
+                : Associations.Stopped,
             serviceTopic);
 
         return ev;
@@ -109,26 +109,26 @@ internal sealed class Utility
 
     public (IEvent, ITopic) InsertUserCreatedEvent(DateTime at, string username)
     {
-        var eventTopic = _db!.Topics.NewTopic(_handle!, Event.TopicKinds.Event, "User created");
+        var eventTopic = _db!.Topics.NewTopic(_handle!, TopicKinds.Event, "User created");
 
-        var ev = _db.Events.NewEvent(_handle!, Event.EventKinds.Security, ESeverity.Medium, at, eventTopic);
+        var ev = _db.Events.NewEvent(_handle!, EventKinds.Security, ESeverity.Medium, at, eventTopic);
 
-        var userTopic = _db.Topics.NewTopic(_handle!, Event.TopicKinds.User, username);
+        var userTopic = _db.Topics.NewTopic(_handle!, TopicKinds.User, username);
 
-        _db.Associations.Associate(_handle!, eventTopic, Event.Associations.Created, userTopic);
+        _db.Associations.Associate(_handle!, eventTopic, Associations.Created, userTopic);
 
         return (ev, userTopic);
     }
 
     public (IEvent, ITopic) InsertUserDeletedEvent(DateTime at, string username)
     {
-        var eventTopic = _db!.Topics.NewTopic(_handle!, Event.TopicKinds.Event, "User deleted");
+        var eventTopic = _db!.Topics.NewTopic(_handle!, TopicKinds.Event, "User deleted");
 
-        var ev = _db.Events.NewEvent(_handle!, Event.EventKinds.Security, ESeverity.Critical, at, eventTopic);
+        var ev = _db.Events.NewEvent(_handle!, EventKinds.Security, ESeverity.Critical, at, eventTopic);
 
-        var userTopic = _db.Topics.NewTopic(_handle!, Event.TopicKinds.User, username);
+        var userTopic = _db.Topics.NewTopic(_handle!, TopicKinds.User, username);
 
-        _db.Associations.Associate(_handle!, eventTopic, Event.Associations.Deleted, userTopic);
+        _db.Associations.Associate(_handle!, eventTopic, Associations.Deleted, userTopic);
 
         return (ev, userTopic);
     }

@@ -24,7 +24,7 @@ using LinqToDB.Data;
 
 namespace zcfux.Audit.Test.LinqToPg;
 
-public class Engine : zcfux.Data.LinqToDB.Engine
+public class Engine : Data.LinqToDB.Engine
 {
     public Engine(LinqToDBConnectionOptions options) : base(options)
     {

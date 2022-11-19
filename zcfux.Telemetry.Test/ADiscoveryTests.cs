@@ -20,14 +20,18 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using NUnit.Framework;
+using zcfux.Telemetry.Device;
+using zcfux.Telemetry.Discovery;
+using Options = zcfux.Telemetry.Device.Options;
+using OptionsBuilder = zcfux.Telemetry.Discovery.OptionsBuilder;
 
 namespace zcfux.Telemetry.Test;
 
 public abstract class ADiscoveryTests
 {
-    sealed class SimpleClient : Device.Client
+    sealed class SimpleClient : Client
     {
-        public SimpleClient(Device.Options options) : base(options)
+        public SimpleClient(Options options) : base(options)
         {
         }
     }
@@ -45,11 +49,11 @@ public abstract class ADiscoveryTests
             => Task.FromResult(numbers.Item1 + numbers.Item2);
     }
 
-    sealed class ClientV1_0 : Device.Client
+    sealed class ClientV1_0 : Client
     {
         public ITestApiV1_0 Math { get; } = new TestApiV1_0_Impl();
 
-        public ClientV1_0(Device.Options options) : base(options)
+        public ClientV1_0(Options options) : base(options)
         {
         }
     }
@@ -70,11 +74,11 @@ public abstract class ADiscoveryTests
             => Task.FromResult(numbers.Item1 - numbers.Item2);
     }
 
-    sealed class ClientV1_1 : Device.Client
+    sealed class ClientV1_1 : Client
     {
         public ITestApiV1_1 Math { get; } = new TestApiV1_1_Impl();
 
-        public ClientV1_1(Device.Options options) : base(options)
+        public ClientV1_1(Options options) : base(options)
         {
         }
     }
@@ -106,11 +110,11 @@ public abstract class ADiscoveryTests
                 });
     }
 
-    sealed class ClientV2_0 : Device.Client
+    sealed class ClientV2_0 : Client
     {
         public ITestApiV2_0 Math { get; } = new TestApiV2_0_Impl();
 
-        public ClientV2_0(Device.Options options) : base(options)
+        public ClientV2_0(Options options) : base(options)
         {
         }
     }
@@ -120,14 +124,14 @@ public abstract class ADiscoveryTests
     {
         using (var connection = CreateConnection())
         {
-            var opts = new Discovery.OptionsBuilder()
+            var opts = new OptionsBuilder()
                 .WithConnection(connection)
                 .WithFilter(new DeviceFilter(DeviceFilter.All, DeviceFilter.All, DeviceFilter.All))
                 .WithSerializer(CreateSerializer())
-                .WithApiRegistry(new Discovery.ApiRegistry())
+                .WithApiRegistry(new ApiRegistry())
                 .Build();
 
-            var discoverer = new Discovery.Discoverer(opts);
+            var discoverer = new Discoverer(opts);
 
             var taskCompletionSource = new TaskCompletionSource<bool>();
 
@@ -149,14 +153,14 @@ public abstract class ADiscoveryTests
     {
         using (var connection = CreateConnection())
         {
-            var opts = new Discovery.OptionsBuilder()
+            var opts = new OptionsBuilder()
                 .WithConnection(connection)
                 .WithFilter(new DeviceFilter(DeviceFilter.All, DeviceFilter.All, DeviceFilter.All))
                 .WithSerializer(CreateSerializer())
-                .WithApiRegistry(new Discovery.ApiRegistry())
+                .WithApiRegistry(new ApiRegistry())
                 .Build();
 
-            var discoverer = new Discovery.Discoverer(opts);
+            var discoverer = new Discoverer(opts);
 
             var taskCompletionSource = new TaskCompletionSource<bool>();
 
@@ -180,16 +184,16 @@ public abstract class ADiscoveryTests
     {
         using (var connection = CreateConnection())
         {
-            var opts = new Discovery.OptionsBuilder()
+            var opts = new OptionsBuilder()
                 .WithConnection(connection)
                 .WithFilter(new DeviceFilter(DeviceFilter.All, DeviceFilter.All, DeviceFilter.All))
                 .WithSerializer(CreateSerializer())
-                .WithApiRegistry(new Discovery.ApiRegistry())
+                .WithApiRegistry(new ApiRegistry())
                 .Build();
 
-            var discoverer = new Discovery.Discoverer(opts);
+            var discoverer = new Discoverer(opts);
 
-            var taskCompletionSource = new TaskCompletionSource<Discovery.IDiscoveredDevice>();
+            var taskCompletionSource = new TaskCompletionSource<IDiscoveredDevice>();
 
             discoverer.Discovered += (_, e) =>
             {
@@ -228,20 +232,20 @@ public abstract class ADiscoveryTests
     {
         using (var connection = CreateConnection())
         {
-            var registry = new Discovery.ApiRegistry();
+            var registry = new ApiRegistry();
 
             registry.Register<ITestApiV1_0>();
 
-            var opts = new Discovery.OptionsBuilder()
+            var opts = new OptionsBuilder()
                 .WithConnection(connection)
                 .WithFilter(new DeviceFilter(DeviceFilter.All, DeviceFilter.All, DeviceFilter.All))
                 .WithSerializer(CreateSerializer())
                 .WithApiRegistry(registry)
                 .Build();
 
-            var discoverer = new Discovery.Discoverer(opts);
+            var discoverer = new Discoverer(opts);
 
-            var taskCompletionSource = new TaskCompletionSource<Discovery.IDiscoveredDevice>();
+            var taskCompletionSource = new TaskCompletionSource<IDiscoveredDevice>();
 
             discoverer.Discovered += (_, e1) =>
             {
@@ -280,20 +284,20 @@ public abstract class ADiscoveryTests
     {
         using (var connection = CreateConnection())
         {
-            var registry = new Discovery.ApiRegistry();
+            var registry = new ApiRegistry();
 
             registry.Register<ITestApiV1_0>();
 
-            var opts = new Discovery.OptionsBuilder()
+            var opts = new OptionsBuilder()
                 .WithConnection(connection)
                 .WithFilter(new DeviceFilter(DeviceFilter.All, DeviceFilter.All, DeviceFilter.All))
                 .WithSerializer(CreateSerializer())
                 .WithApiRegistry(registry)
                 .Build();
 
-            var discoverer = new Discovery.Discoverer(opts);
+            var discoverer = new Discoverer(opts);
 
-            var taskCompletionSource = new TaskCompletionSource<Discovery.IDiscoveredDevice>();
+            var taskCompletionSource = new TaskCompletionSource<IDiscoveredDevice>();
 
             discoverer.Discovered += (_, e1) =>
             {
@@ -332,20 +336,20 @@ public abstract class ADiscoveryTests
     {
         using (var connection = CreateConnection())
         {
-            var registry = new Discovery.ApiRegistry();
+            var registry = new ApiRegistry();
 
             registry.Register<ITestApiV1_1>();
 
-            var opts = new Discovery.OptionsBuilder()
+            var opts = new OptionsBuilder()
                 .WithConnection(connection)
                 .WithFilter(new DeviceFilter(DeviceFilter.All, DeviceFilter.All, DeviceFilter.All))
                 .WithSerializer(CreateSerializer())
                 .WithApiRegistry(registry)
                 .Build();
 
-            var discoverer = new Discovery.Discoverer(opts);
+            var discoverer = new Discoverer(opts);
 
-            var taskCompletionSource = new TaskCompletionSource<Discovery.IDiscoveredDevice>();
+            var taskCompletionSource = new TaskCompletionSource<IDiscoveredDevice>();
 
             discoverer.Discovered += (_, e1) =>
             {
@@ -372,7 +376,7 @@ public abstract class ADiscoveryTests
     }
 
     Task StartClientAsync<T>(CancellationToken cancellationToken)
-        where T : Device.Client
+        where T : Client
     {
         return Task.Factory.StartNew(async () =>
         {

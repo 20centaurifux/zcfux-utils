@@ -43,7 +43,7 @@ sealed class FlatMessageViewTest : IVisitor
             useView = visitor.RequiresView;
         }
 
-        if (query.Order.Any(t => FlatMessageViewTest.ColumnRequiresFlatView(t.Item1)))
+        if (query.Order.Any(t => ColumnRequiresFlatView(t.Item1)))
         {
             useView = true;
         }

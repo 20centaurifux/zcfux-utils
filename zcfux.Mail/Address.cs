@@ -19,13 +19,15 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using System.Net.Mail;
+
 namespace zcfux.Mail;
 
 public sealed record Address(string? DisplayName, string MailAddress)
 {
     public static Address FromString(string address)
     {
-        var mailAddress = new System.Net.Mail.MailAddress(address);
+        var mailAddress = new MailAddress(address);
 
         var displayName = string.IsNullOrEmpty(mailAddress.DisplayName)
             ? null

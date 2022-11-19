@@ -19,6 +19,7 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using System.Diagnostics;
 using MyCouch;
 using MyCouch.Requests;
 using MyCouch.Responses;
@@ -105,7 +106,7 @@ public sealed class StreamReader : AStreamReader
     {
         if (Interlocked.CompareExchange(ref _state, Stopping, Running) == Running)
         {
-            var watch = System.Diagnostics.Stopwatch.StartNew();
+            var watch = Stopwatch.StartNew();
 
             try
             {

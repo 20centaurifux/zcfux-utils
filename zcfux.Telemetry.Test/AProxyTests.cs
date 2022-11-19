@@ -20,6 +20,7 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using NUnit.Framework;
+using zcfux.Telemetry.Device;
 
 namespace zcfux.Telemetry.Test;
 
@@ -65,11 +66,11 @@ public abstract class AProxyTests
             => Task.FromResult(number * 2);
     }
 
-    sealed class TestV1 : Device.Client
+    sealed class TestV1 : Client
     {
         public ITestApiV1 V1 { get; } = new TestV1Impl();
 
-        public TestV1(Device.Options options) : base(options)
+        public TestV1(Options options) : base(options)
         {
         }
     }
@@ -87,11 +88,11 @@ public abstract class AProxyTests
             => Task.FromResult(number);
     }
 
-    sealed class TestV2 : Device.Client
+    sealed class TestV2 : Client
     {
         public ITestApiV2 V2 { get; } = new TestV2Impl();
 
-        public TestV2(Device.Options options) : base(options)
+        public TestV2(Options options) : base(options)
         {
         }
     }
@@ -105,7 +106,7 @@ public abstract class AProxyTests
 
             var proxyOpts = CreateDeviceOptions(device, proxyConnection);
 
-            var proxy = Device.ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
+            var proxy = ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
 
             var task = await Task.WhenAny(proxy.SendNumberAsync(TestContext.CurrentContext.Random.Next()));
 
@@ -124,7 +125,7 @@ public abstract class AProxyTests
 
             var proxyOpts = CreateDeviceOptions(device, proxyConnection);
 
-            var proxy = Device.ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
+            var proxy = ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
 
             var task = await Task.WhenAny(proxy.SendNumberAsync(TestContext.CurrentContext.Random.Next()));
 
@@ -150,7 +151,7 @@ public abstract class AProxyTests
             {
                 var proxyOpts = CreateDeviceOptions(device, proxyConnection);
 
-                var proxy = Device.ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
+                var proxy = ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
 
                 var value = TestContext.CurrentContext.Random.Next();
 
@@ -179,7 +180,7 @@ public abstract class AProxyTests
             {
                 var proxyOpts = CreateDeviceOptions(device, proxyConnection);
 
-                var proxy = Device.ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
+                var proxy = ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
 
                 var value = TestContext.CurrentContext.Random.Next();
 
@@ -199,7 +200,7 @@ public abstract class AProxyTests
 
             var proxyOpts = CreateDeviceOptions(device, proxyConnection);
 
-            var proxy = Device.ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
+            var proxy = ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
 
             await using (var reader = proxy.Number.GetAsyncEnumerator())
             {
@@ -228,7 +229,7 @@ public abstract class AProxyTests
             {
                 var proxyOpts = CreateDeviceOptions(device, proxyConnection);
 
-                var proxy = Device.ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
+                var proxy = ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
 
                 await using (var reader = proxy.Number.GetAsyncEnumerator())
                 {
@@ -253,7 +254,7 @@ public abstract class AProxyTests
 
             var proxyOpts = CreateDeviceOptions(device, proxyConnection);
 
-            var proxy = Device.ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
+            var proxy = ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
 
             await using (var reader = proxy.Number.GetAsyncEnumerator())
             {
@@ -282,7 +283,7 @@ public abstract class AProxyTests
             {
                 var proxyOpts = CreateDeviceOptions(device, proxyConnection);
 
-                var proxy = Device.ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
+                var proxy = ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
 
                 await using (var reader = proxy.Number.GetAsyncEnumerator())
                 {
@@ -312,7 +313,7 @@ public abstract class AProxyTests
             {
                 var proxyOpts = CreateDeviceOptions(device, proxyConnection);
 
-                var proxy = Device.ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
+                var proxy = ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
 
                 await using (var reader = proxy.Number.GetAsyncEnumerator())
                 {
@@ -338,7 +339,7 @@ public abstract class AProxyTests
 
             var proxyOpts = CreateDeviceOptions(device, proxyConnection);
 
-            var proxy = Device.ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
+            var proxy = ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
 
             var task = await Task.WhenAny(proxy.DoubleAsync(TestContext.CurrentContext.Random.Next()));
 
@@ -357,7 +358,7 @@ public abstract class AProxyTests
 
             var proxyOpts = CreateDeviceOptions(device, proxyConnection);
 
-            var proxy = Device.ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
+            var proxy = ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
 
             var task = await Task.WhenAny(proxy.DoubleAsync(TestContext.CurrentContext.Random.Next()));
 
@@ -383,7 +384,7 @@ public abstract class AProxyTests
             {
                 var proxyOpts = CreateDeviceOptions(device, proxyConnection);
 
-                var proxy = Device.ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
+                var proxy = ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
 
                 var value = TestContext.CurrentContext.Random.Next();
 
@@ -412,7 +413,7 @@ public abstract class AProxyTests
             {
                 var proxyOpts = CreateDeviceOptions(device, proxyConnection);
 
-                var proxy = Device.ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
+                var proxy = ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
 
                 long n1 = TestContext.CurrentContext.Random.Next();
 
@@ -441,7 +442,7 @@ public abstract class AProxyTests
             {
                 var proxyOpts = CreateDeviceOptions(device, proxyConnection);
 
-                var proxy = Device.ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
+                var proxy = ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
 
                 var task = proxy.ExpireAsync();
 
@@ -452,9 +453,9 @@ public abstract class AProxyTests
         }
     }
 
-    Device.Options CreateDeviceOptions(DeviceDetails device, IConnection connection)
+    Options CreateDeviceOptions(DeviceDetails device, IConnection connection)
     {
-        var opts = new Device.OptionsBuilder()
+        var opts = new OptionsBuilder()
             .WithConnection(connection)
             .WithDevice(device)
             .WithSerializer(CreateSerializer())

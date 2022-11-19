@@ -21,6 +21,7 @@
  ***************************************************************************/
 using LinqToDB;
 using zcfux.Data.LinqToDB;
+using zcfux.Filter;
 using zcfux.Filter.Linq;
 
 namespace zcfux.Audit.LinqToDB;
@@ -44,7 +45,7 @@ internal sealed class Topics : ITopics
         return topic;
     }
 
-    public IEnumerable<ITopic> QueryTopics(object handle, Filter.Query query)
+    public IEnumerable<ITopic> QueryTopics(object handle, Query query)
     {
         return handle.Db()
             .GetTable<TopicView>()

@@ -20,6 +20,7 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using NUnit.Framework;
+using zcfux.Audit.Test.Event;
 using zcfux.Filter;
 
 namespace zcfux.Audit.Test;
@@ -124,7 +125,7 @@ public abstract class AEventTests : ADbTest
         {
             Assert.That(() =>
             {
-                _db.Events.NewEvent(_handle!, Event.EventKinds.Security, (ESeverity)severity, createdAt, topic);
+                _db.Events.NewEvent(_handle!, EventKinds.Security, (ESeverity)severity, createdAt, topic);
             }, Throws.Exception);
         }
     }
@@ -189,7 +190,7 @@ public abstract class AEventTests : ADbTest
     [Test]
     public void ArchiveWithTopics()
     {
-        var utility = new Event.Utility(_db!, _handle!);
+        var utility = new Utility(_db!, _handle!);
 
         utility.InsertDefaultEntries();
 

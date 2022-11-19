@@ -20,6 +20,8 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using NUnit.Framework;
+using zcfux.JobRunner.Memory;
+using zcfux.JobRunner.Test.Jobs;
 
 namespace zcfux.JobRunner.Test;
 
@@ -29,12 +31,12 @@ public sealed class MemoryQueueTests
     public void QueueIsNotPersistent()
     {
         // Create queue & insert job.
-        var queue = new Memory.JobQueue();
+        var queue = new JobQueue();
 
-        queue.Create<Jobs.Simple>();
+        queue.Create<Simple>();
 
         // Start runner with a new queue & wait for job.
-        var newQueue = new Memory.JobQueue();
+        var newQueue = new JobQueue();
 
         var runner = new Runner(newQueue, new(MaxJobs: 2, MaxErrors: 2, RetrySecs: 1));
 

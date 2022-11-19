@@ -21,6 +21,8 @@
  ***************************************************************************/
 using LinqToDB.Configuration;
 using NUnit.Framework;
+using zcfux.Data.Proxy;
+using zcfux.Data.Test.LinqToDB;
 
 namespace zcfux.Data.Test;
 
@@ -45,7 +47,7 @@ public sealed class StatefulProxyTests
 
         using (var t = engine.NewTransaction())
         {
-            var db = Proxy.Factory.PrependHandle<IStateful, LinqToDB.Stateful>(t.Handle);
+            var db = Factory.PrependHandle<IStateful, Stateful>(t.Handle);
 
             db.DeleteAll();
 
@@ -62,11 +64,11 @@ public sealed class StatefulProxyTests
 
         using (var t = engine.NewTransaction())
         {
-            var first = Proxy.Factory.PrependHandle<IStateful, LinqToDB.Stateful>(t.Handle);
+            var first = Factory.PrependHandle<IStateful, Stateful>(t.Handle);
 
             Assert.IsInstanceOf<IStateful>(first);
 
-            var second = Proxy.Factory.PrependHandle<IStateful, LinqToDB.Stateful>(new LinqToDB.Stateful(), t.Handle);
+            var second = Factory.PrependHandle<IStateful, Stateful>(new Stateful(), t.Handle);
 
             Assert.IsInstanceOf<IStateful>(second);
         }
@@ -81,7 +83,7 @@ public sealed class StatefulProxyTests
 
         using (var t = engine.NewTransaction())
         {
-            var db = Proxy.Factory.PrependHandle<IStateful, LinqToDB.Stateful>(t.Handle);
+            var db = Factory.PrependHandle<IStateful, Stateful>(t.Handle);
 
             var model = db.Insert(1, "hello world");
 
@@ -105,7 +107,7 @@ public sealed class StatefulProxyTests
 
         using (var t = engine.NewTransaction())
         {
-            var db = Proxy.Factory.PrependHandle<IStateful, LinqToDB.Stateful>(t.Handle);
+            var db = Factory.PrependHandle<IStateful, Stateful>(t.Handle);
 
             var first = db.Insert(1, "hello");
 
@@ -128,7 +130,7 @@ public sealed class StatefulProxyTests
 
         using (var t = engine.NewTransaction())
         {
-            var db = Proxy.Factory.PrependHandle<IStateful, LinqToDB.Stateful>(t.Handle);
+            var db = Factory.PrependHandle<IStateful, Stateful>(t.Handle);
 
             Assert.That(() => db.NotImplemented(), Throws.Exception);
         }
@@ -145,6 +147,6 @@ public sealed class StatefulProxyTests
 
         var opts = builder.Build();
 
-        return new LinqToDB.Engine(opts);
+        return new Engine(opts);
     }
 }

@@ -19,6 +19,8 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using zcfux.Filter;
+
 namespace zcfux.Audit;
 
 public interface ITopics
@@ -29,5 +31,5 @@ public interface ITopics
 
     ITopic NewTopic(object handle, ITopicKind topicKind, string displayName);
 
-    IEnumerable<ITopic> QueryTopics(object handle, Filter.Query query);
+    IEnumerable<ITopic> QueryTopics(object handle, Query query);
 }

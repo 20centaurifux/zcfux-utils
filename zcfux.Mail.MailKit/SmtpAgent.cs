@@ -20,21 +20,21 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using System.Security.Cryptography.X509Certificates;
-using zcfux.Mail.Transfer;
-using Smtp = MailKit.Net.Smtp;
-using Security = MailKit.Security;
+using MailKit.Net.Smtp;
+using MailKit.Security;
 using MimeKit;
+using zcfux.Mail.Transfer;
 
 namespace zcfux.Mail.MailKit;
 
 public sealed class SmtpAgent : ASmtpAgent
 {
-    readonly Smtp.ISmtpClient _client;
+    readonly ISmtpClient _client;
 
     public SmtpAgent(ISmtpOptions options)
         : base(options)
     {
-        _client = new Smtp.SmtpClient();
+        _client = new SmtpClient();
 
         if (options.ClientCertificates.Any())
         {
@@ -89,12 +89,12 @@ public sealed class SmtpAgent : ASmtpAgent
         }
     }
 
-    static Security.SecureSocketOptions MapSecureSocketOptions(ESecureSocketOptions options)
+    static SecureSocketOptions MapSecureSocketOptions(ESecureSocketOptions options)
         => options switch
         {
-            ESecureSocketOptions.ImplicitTls => Security.SecureSocketOptions.SslOnConnect,
-            ESecureSocketOptions.StartTls => Security.SecureSocketOptions.StartTls,
-            _ => Security.SecureSocketOptions.None
+            ESecureSocketOptions.ImplicitTls => SecureSocketOptions.SslOnConnect,
+            ESecureSocketOptions.StartTls => SecureSocketOptions.StartTls,
+            _ => SecureSocketOptions.None
         };
 
     protected override void Send(IEmail email)

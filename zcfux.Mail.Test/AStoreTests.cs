@@ -23,6 +23,8 @@ using NUnit.Framework;
 using zcfux.Data;
 using zcfux.Filter;
 using zcfux.Mail.Store;
+using Directory = System.IO.Directory;
+using DirectoryNotFoundException = zcfux.Mail.Store.DirectoryNotFoundException;
 
 namespace zcfux.Mail.Test;
 
@@ -39,12 +41,12 @@ public abstract class AStoreTests
     {
         _engine = CreateAndSetupEngine();
 
-        System.IO.Directory.CreateDirectory(TempDir);
+        Directory.CreateDirectory(TempDir);
     }
 
     [TearDown]
     public void Teardown()
-        => System.IO.Directory.Delete(TempDir, recursive: true);
+        => Directory.Delete(TempDir, recursive: true);
 
     protected abstract IEngine CreateAndSetupEngine();
 
@@ -146,7 +148,7 @@ public abstract class AStoreTests
 
             directory.Delete();
 
-            Assert.Throws<Store.DirectoryNotFoundException>(() =>
+            Assert.Throws<DirectoryNotFoundException>(() =>
             {
                 directory.Rename(name);
             });
@@ -212,7 +214,7 @@ public abstract class AStoreTests
 
             directory.Delete();
 
-            Assert.Throws<Store.DirectoryNotFoundException>(() =>
+            Assert.Throws<DirectoryNotFoundException>(() =>
             {
                 directory.Delete();
             });
@@ -289,7 +291,7 @@ public abstract class AStoreTests
 
             parent.Delete();
 
-            Assert.Throws<Store.DirectoryNotFoundException>(() =>
+            Assert.Throws<DirectoryNotFoundException>(() =>
             {
                 parent.NewChild(childName);
             });
@@ -340,7 +342,7 @@ public abstract class AStoreTests
 
             parent.Delete();
 
-            Assert.Throws<Store.DirectoryNotFoundException>(() =>
+            Assert.Throws<DirectoryNotFoundException>(() =>
             {
                 parent.GetChildren();
             });
@@ -487,7 +489,7 @@ public abstract class AStoreTests
 
             child.Delete();
 
-            Assert.Throws<Store.DirectoryNotFoundException>(() =>
+            Assert.Throws<DirectoryNotFoundException>(() =>
             {
                 child.MoveToRoot();
             });
@@ -595,7 +597,7 @@ public abstract class AStoreTests
             var b = store.NewDirectory("b");
             var c = b.NewChild("c");
 
-            Assert.Throws<Store.DirectoryNotFoundException>(() =>
+            Assert.Throws<DirectoryNotFoundException>(() =>
             {
                 c.Move(a);
             });
@@ -615,7 +617,7 @@ public abstract class AStoreTests
 
             c.Delete();
 
-            Assert.Throws<Store.DirectoryNotFoundException>(() =>
+            Assert.Throws<DirectoryNotFoundException>(() =>
             {
                 c.Move(a);
             });
@@ -728,7 +730,7 @@ public abstract class AStoreTests
 
             directory.Delete();
 
-            Assert.Throws<Store.DirectoryNotFoundException>(() =>
+            Assert.Throws<DirectoryNotFoundException>(() =>
             {
                 directory.CreateMessageBuilder();
             });
@@ -752,7 +754,7 @@ public abstract class AStoreTests
 
             directory.Delete();
 
-            Assert.Throws<Store.DirectoryNotFoundException>(() =>
+            Assert.Throws<DirectoryNotFoundException>(() =>
             {
                 builder.Store();
             });
@@ -826,7 +828,7 @@ public abstract class AStoreTests
 
             directory.Delete();
 
-            Assert.Throws<Store.DirectoryNotFoundException>(() =>
+            Assert.Throws<DirectoryNotFoundException>(() =>
             {
                 directory.GetMessages().ToArray();
             });
@@ -997,7 +999,7 @@ public abstract class AStoreTests
                 .WithTextBody("hello world")
                 .Store();
 
-            Assert.Throws<Store.DirectoryNotFoundException>(() =>
+            Assert.Throws<DirectoryNotFoundException>(() =>
             {
                 message.Move(secondDirectory);
             });

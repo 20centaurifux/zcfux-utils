@@ -19,6 +19,9 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using zcfux.Data;
+using Directory = zcfux.Mail.Store.Directory;
+
 namespace zcfux.Mail.Queue;
 
 public sealed class QueuedMessage : IEmail
@@ -108,7 +111,7 @@ public sealed class QueuedMessage : IEmail
         {
             _db.Queues.UpdateQueueItem(_handle, _queueItem);
         }
-        catch (Data.NotFoundException)
+        catch (NotFoundException)
         {
             throw new QueueItemNotFoundException();
         }
@@ -120,7 +123,7 @@ public sealed class QueuedMessage : IEmail
         {
             _db.Queues.DeleteQueueItem(_handle, _queueItem);
         }
-        catch (Data.NotFoundException)
+        catch (NotFoundException)
         {
             throw new QueueItemNotFoundException();
         }
@@ -129,13 +132,13 @@ public sealed class QueuedMessage : IEmail
         {
             _db.Messages.DeleteMessage(_handle, _queueItem.Message);
         }
-        catch (Data.NotFoundException)
+        catch (NotFoundException)
         {
             throw new MessageNotFoundException();
         }
     }
 
-    public void MoveToStore(Store.Directory directory)
+    public void MoveToStore(Directory directory)
     {
         _db.Store.LinkMessage(_handle, _queueItem.Message, directory);
 
@@ -143,7 +146,7 @@ public sealed class QueuedMessage : IEmail
         {
             _db.Queues.DeleteQueueItem(_handle, _queueItem);
         }
-        catch (Data.NotFoundException)
+        catch (NotFoundException)
         {
             throw new QueueItemNotFoundException();
         }

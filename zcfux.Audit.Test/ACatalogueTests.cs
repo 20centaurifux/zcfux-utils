@@ -20,20 +20,21 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using NUnit.Framework;
+using zcfux.Audit.Test.Event;
 using zcfux.Filter;
 
 namespace zcfux.Audit.Test;
 
 public abstract class ACatalogueTests : ADbTest
 {
-    Event.Utility? _utility;
+    Utility? _utility;
 
     [SetUp]
     public override void Setup()
     {
         base.Setup();
 
-        _utility = new Event.Utility(_db!, _handle!);
+        _utility = new Utility(_db!, _handle!);
 
         _utility.InsertDefaultEntries();
     }
@@ -337,19 +338,19 @@ public abstract class ACatalogueTests : ADbTest
     [Test]
     public void DeleteEvents_ReferencedTopicExists()
     {
-        var alice = _db!.Topics.NewTopic(_handle!, Event.TopicKinds.User, "Alice");
+        var alice = _db!.Topics.NewTopic(_handle!, TopicKinds.User, "Alice");
 
-        var eventTopic = _db.Topics.NewTopic(_handle!, Event.TopicKinds.Event, "User created");
+        var eventTopic = _db.Topics.NewTopic(_handle!, TopicKinds.Event, "User created");
 
-        var firstEvent = _db.Events.NewEvent(_handle!, Event.EventKinds.Security, ESeverity.Medium, DateTime.UtcNow, eventTopic);
+        var firstEvent = _db.Events.NewEvent(_handle!, EventKinds.Security, ESeverity.Medium, DateTime.UtcNow, eventTopic);
 
-        _db.Associations.Associate(_handle!, eventTopic, Event.Associations.Created, alice);
+        _db.Associations.Associate(_handle!, eventTopic, Associations.Created, alice);
 
-        eventTopic = _db.Topics.NewTopic(_handle!, Event.TopicKinds.Event, "User deleted");
+        eventTopic = _db.Topics.NewTopic(_handle!, TopicKinds.Event, "User deleted");
 
-        _db.Events.NewEvent(_handle!, Event.EventKinds.Security, ESeverity.Medium, DateTime.UtcNow, eventTopic);
+        _db.Events.NewEvent(_handle!, EventKinds.Security, ESeverity.Medium, DateTime.UtcNow, eventTopic);
 
-        _db.Associations.Associate(_handle!, eventTopic, Event.Associations.Created, alice);
+        _db.Associations.Associate(_handle!, eventTopic, Associations.Created, alice);
 
         MoveEvents();
 
@@ -389,9 +390,9 @@ public abstract class ACatalogueTests : ADbTest
 
         Assert.AreEqual(3, edges.Count());
 
-        TestContains(edges, Event.TopicKinds.Event, "Login", Event.Associations.ConnectedFrom, Event.TopicKinds.Endpoint, endpoint);
-        TestContains(edges, Event.TopicKinds.Event, "Login", Event.Associations.AuthenticatedAs, Event.TopicKinds.User, username);
-        TestContains(edges, Event.TopicKinds.User, username, Event.Associations.CreatedSession, Event.TopicKinds.Session, session);
+        TestContains(edges, TopicKinds.Event, "Login", Associations.ConnectedFrom, TopicKinds.Endpoint, endpoint);
+        TestContains(edges, TopicKinds.Event, "Login", Associations.AuthenticatedAs, TopicKinds.User, username);
+        TestContains(edges, TopicKinds.User, username, Associations.CreatedSession, TopicKinds.Session, session);
     }
 
     [Test]
@@ -510,8 +511,8 @@ public abstract class ACatalogueTests : ADbTest
 
         Assert.AreEqual(2, result.Length);
 
-        Assert.AreEqual(Event.EventKinds.Service.Id, result[0].Item1.Kind.Id);
-        Assert.AreEqual(Event.EventKinds.Security.Id, result[1].Item1.Kind.Id);
+        Assert.AreEqual(EventKinds.Service.Id, result[0].Item1.Kind.Id);
+        Assert.AreEqual(EventKinds.Security.Id, result[1].Item1.Kind.Id);
     }
 
     [Test]
@@ -537,8 +538,8 @@ public abstract class ACatalogueTests : ADbTest
 
         Assert.AreEqual(2, result.Length);
 
-        Assert.AreEqual(Event.EventKinds.Service.Name, result[0].Item1.Kind.Name);
-        Assert.AreEqual(Event.EventKinds.Security.Name, result[1].Item1.Kind.Name);
+        Assert.AreEqual(EventKinds.Service.Name, result[0].Item1.Kind.Name);
+        Assert.AreEqual(EventKinds.Security.Name, result[1].Item1.Kind.Name);
     }
 
     [Test]
@@ -581,7 +582,7 @@ public abstract class ACatalogueTests : ADbTest
             QueryBuilder.All(),
             AssociationFilters.LeftTopicId.EqualTo(ev.Topic!.Id));
 
-        TestSingleEventWithSingleEdge(result, ev, Event.Associations.Created, topic);
+        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
     }
 
     [Test]
@@ -598,9 +599,9 @@ public abstract class ACatalogueTests : ADbTest
 
         var result = catalogue.FindAssociations(
             qb.Build(),
-            AssociationFilters.LeftTopicKindId.EqualTo(Event.TopicKinds.Event.Id));
+            AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id));
 
-        TestSingleEventWithSingleEdge(result, ev, Event.Associations.Created, topic);
+        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
     }
 
     [Test]
@@ -619,7 +620,7 @@ public abstract class ACatalogueTests : ADbTest
             qb.Build(),
             AssociationFilters.LeftTopicKind.EqualTo("Event"));
 
-        TestSingleEventWithSingleEdge(result, ev, Event.Associations.Created, topic);
+        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
     }
 
     [Test]
@@ -635,7 +636,7 @@ public abstract class ACatalogueTests : ADbTest
             QueryBuilder.All(),
             AssociationFilters.LeftTopic.EqualTo("User created"));
 
-        TestSingleEventWithSingleEdge(result, ev, Event.Associations.Created, topic);
+        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
     }
 
     [Test]
@@ -649,9 +650,9 @@ public abstract class ACatalogueTests : ADbTest
 
         var result = catalogue.FindAssociations(
             QueryBuilder.All(),
-            AssociationFilters.AssociationId.EqualTo(Event.Associations.Created.Id));
+            AssociationFilters.AssociationId.EqualTo(Associations.Created.Id));
 
-        TestSingleEventWithSingleEdge(result, ev, Event.Associations.Created, topic);
+        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
     }
 
     [Test]
@@ -667,7 +668,7 @@ public abstract class ACatalogueTests : ADbTest
             QueryBuilder.All(),
             AssociationFilters.Association.EqualTo("created"));
 
-        TestSingleEventWithSingleEdge(result, ev, Event.Associations.Created, topic);
+        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
     }
 
     [Test]
@@ -683,7 +684,7 @@ public abstract class ACatalogueTests : ADbTest
             QueryBuilder.All(),
             AssociationFilters.RightTopicId.EqualTo(topic.Id));
 
-        TestSingleEventWithSingleEdge(result, ev, Event.Associations.Created, topic);
+        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
     }
 
     [Test]
@@ -702,9 +703,9 @@ public abstract class ACatalogueTests : ADbTest
 
         var result = catalogue.FindAssociations(
             qb.Build(),
-            AssociationFilters.RightTopicKindId.EqualTo(Event.TopicKinds.User.Id));
+            AssociationFilters.RightTopicKindId.EqualTo(TopicKinds.User.Id));
 
-        TestSingleEventWithSingleEdge(result, ev, Event.Associations.Created, topic);
+        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
     }
 
     [Test]
@@ -725,7 +726,7 @@ public abstract class ACatalogueTests : ADbTest
             qb.Build(),
             AssociationFilters.RightTopicKind.EqualTo("User"));
 
-        TestSingleEventWithSingleEdge(result, ev, Event.Associations.Created, topic);
+        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
     }
 
     [Test]
@@ -741,7 +742,7 @@ public abstract class ACatalogueTests : ADbTest
             QueryBuilder.All(),
             AssociationFilters.RightTopic.EqualTo("Alice"));
 
-        TestSingleEventWithSingleEdge(result, ev, Event.Associations.Created, topic);
+        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
     }
 
     [Test]
@@ -758,9 +759,9 @@ public abstract class ACatalogueTests : ADbTest
 
         var result = catalogue.FindAssociations(
             qb.Build(),
-            AssociationFilters.LeftTopicKindId.EqualTo(Event.TopicKinds.Event.Id));
+            AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id));
 
-        TestSingleEventWithSingleEdge(result, ev, Event.Associations.Created, topic);
+        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
     }
 
     [Test]
@@ -777,14 +778,14 @@ public abstract class ACatalogueTests : ADbTest
 
         var result = catalogue.FindAssociations(
                 qb.Build(),
-                AssociationFilters.LeftTopicKindId.EqualTo(Event.TopicKinds.Event.Id))
+                AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id))
             .ToArray();
 
         Assert.AreEqual(2, result.Length);
 
-        TestSingleEventWithSingleEdge(result.Where(r => r.Item1.Id == ev1.Id), ev1, Event.Associations.Created, topic1);
+        TestSingleEventWithSingleEdge(result.Where(r => r.Item1.Id == ev1.Id), ev1, Associations.Created, topic1);
 
-        TestSingleEventWithSingleEdge(result.Where(r => r.Item1.Id == ev2.Id), ev2, Event.Associations.Created, topic2);
+        TestSingleEventWithSingleEdge(result.Where(r => r.Item1.Id == ev2.Id), ev2, Associations.Created, topic2);
     }
 
     [Test]
@@ -801,9 +802,9 @@ public abstract class ACatalogueTests : ADbTest
 
         var result = catalogue.FindAssociations(
             qb.Build(),
-            AssociationFilters.LeftTopicKindId.EqualTo(Event.TopicKinds.Event.Id));
+            AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id));
 
-        TestSingleEventWithSingleEdge(result, ev, Event.Associations.Deleted, topic);
+        TestSingleEventWithSingleEdge(result, ev, Associations.Deleted, topic);
     }
 
     [Test]
@@ -819,12 +820,12 @@ public abstract class ACatalogueTests : ADbTest
 
         var qb = new QueryBuilder()
             .WithFilter(Logical.Or(
-                EventFilters.KindId.EqualTo(Event.EventKinds.Service.Id),
-                EventFilters.Kind.EqualTo(Event.EventKinds.Service.Name)));
+                EventFilters.KindId.EqualTo(EventKinds.Service.Id),
+                EventFilters.Kind.EqualTo(EventKinds.Service.Name)));
 
         var result = catalogue.FindAssociations(
                 qb.Build(),
-                AssociationFilters.LeftTopicKindId.EqualTo(Event.TopicKinds.Event.Id))
+                AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id))
             .ToArray();
 
         Assert.AreEqual(1, result.Length);
@@ -840,11 +841,11 @@ public abstract class ACatalogueTests : ADbTest
         Assert.AreEqual(ev.Topic.Kind.Name, edge.Left.Kind.Name);
         Assert.AreEqual(ev.Topic.DisplayName, edge.Left.DisplayName);
 
-        Assert.AreEqual(Event.Associations.Started.Id, edge.Association.Id);
-        Assert.AreEqual(Event.Associations.Started.Name, edge.Association.Name);
+        Assert.AreEqual(Associations.Started.Id, edge.Association.Id);
+        Assert.AreEqual(Associations.Started.Name, edge.Association.Name);
 
-        Assert.AreEqual(Event.TopicKinds.Service.Id, edge.Right.Kind.Id);
-        Assert.AreEqual(Event.TopicKinds.Service.Name, edge.Right.Kind.Name);
+        Assert.AreEqual(TopicKinds.Service.Id, edge.Right.Kind.Id);
+        Assert.AreEqual(TopicKinds.Service.Name, edge.Right.Kind.Name);
         Assert.AreEqual("Mail", edge.Right.DisplayName);
     }
 
@@ -862,9 +863,9 @@ public abstract class ACatalogueTests : ADbTest
 
         var result = catalogue.FindAssociations(
             qb.Build(),
-            AssociationFilters.LeftTopicKindId.EqualTo(Event.TopicKinds.Event.Id));
+            AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id));
 
-        TestSingleEventWithSingleEdge(result, ev, Event.Associations.Deleted, topic);
+        TestSingleEventWithSingleEdge(result, ev, Associations.Deleted, topic);
     }
 
     [Test]
@@ -882,9 +883,9 @@ public abstract class ACatalogueTests : ADbTest
 
         var result = catalogue.FindAssociations(
             qb.Build(),
-            AssociationFilters.LeftTopicKindId.EqualTo(Event.TopicKinds.Event.Id));
+            AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id));
 
-        TestSingleEventWithSingleEdge(result, ev, Event.Associations.Deleted, topic);
+        TestSingleEventWithSingleEdge(result, ev, Associations.Deleted, topic);
     }
 
     [Test]
@@ -902,9 +903,9 @@ public abstract class ACatalogueTests : ADbTest
 
         var result = catalogue.FindAssociations(
             qb.Build(),
-            AssociationFilters.LeftTopicKindId.EqualTo(Event.TopicKinds.Event.Id));
+            AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id));
 
-        TestSingleEventWithSingleEdge(result, ev, Event.Associations.Created, topic);
+        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
     }
 
     [Test]
@@ -925,9 +926,9 @@ public abstract class ACatalogueTests : ADbTest
 
         var result = catalogue.FindAssociations(
             qb.Build(),
-            AssociationFilters.LeftTopicKindId.EqualTo(Event.TopicKinds.Event.Id));
+            AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id));
 
-        TestSingleEventWithSingleEdge(result, ev, Event.Associations.Deleted, topic);
+        TestSingleEventWithSingleEdge(result, ev, Associations.Deleted, topic);
     }
 
     [Test]
@@ -944,7 +945,7 @@ public abstract class ACatalogueTests : ADbTest
 
         var result = catalogue.FindAssociations(
                 qb.Build(),
-                AssociationFilters.LeftTopicKindId.EqualTo(Event.TopicKinds.Event.Id))
+                AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id))
             .ToArray();
 
         Assert.AreEqual(2, result.Length);
@@ -966,7 +967,7 @@ public abstract class ACatalogueTests : ADbTest
 
         var result = catalogue.FindAssociations(
                 qb.Build(),
-                AssociationFilters.LeftTopicKindId.EqualTo(Event.TopicKinds.Event.Id))
+                AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id))
             .ToArray();
 
         Assert.AreEqual(2, result.Length);
@@ -988,7 +989,7 @@ public abstract class ACatalogueTests : ADbTest
 
         var result = catalogue.FindAssociations(
                 qb.Build(),
-                AssociationFilters.LeftTopicKindId.EqualTo(Event.TopicKinds.Event.Id))
+                AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id))
             .ToArray();
 
         Assert.AreEqual(2, result.Length);
@@ -1011,7 +1012,7 @@ public abstract class ACatalogueTests : ADbTest
 
         var result = catalogue.FindAssociations(
                 qb.Build(),
-                AssociationFilters.LeftTopicKindId.EqualTo(Event.TopicKinds.Event.Id))
+                AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id))
             .ToArray();
 
         Assert.AreEqual(2, result.Length);
@@ -1034,7 +1035,7 @@ public abstract class ACatalogueTests : ADbTest
 
         var result = catalogue.FindAssociations(
                 qb.Build(),
-                AssociationFilters.LeftTopicKindId.EqualTo(Event.TopicKinds.Event.Id))
+                AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id))
             .ToArray();
 
         Assert.AreEqual(2, result.Length);
@@ -1057,7 +1058,7 @@ public abstract class ACatalogueTests : ADbTest
 
         var result = catalogue.FindAssociations(
                 qb.Build(),
-                AssociationFilters.LeftTopicKindId.EqualTo(Event.TopicKinds.Event.Id))
+                AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id))
             .ToArray();
 
         Assert.AreEqual(2, result.Length);
@@ -1131,7 +1132,7 @@ public abstract class ACatalogueTests : ADbTest
         ITopicKind rightKind,
         string rightDisplayName)
     {
-        var found = edges.Any(e => Event.Utility.Equals(e, leftKind, leftDisplayName, assoc, rightKind, rightDisplayName));
+        var found = edges.Any(e => Utility.Equals(e, leftKind, leftDisplayName, assoc, rightKind, rightDisplayName));
 
         Assert.IsTrue(found);
     }

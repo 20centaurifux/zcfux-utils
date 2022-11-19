@@ -23,6 +23,7 @@ using NUnit.Framework;
 using zcfux.Data;
 using zcfux.Filter;
 using zcfux.JobRunner.Data;
+using zcfux.JobRunner.Test.Jobs;
 
 namespace zcfux.JobRunner.Test;
 
@@ -67,7 +68,7 @@ public abstract class AJobDbTests
 
         using (var t = _engine.NewTransaction())
         {
-            guid = jobDb.Create<Jobs.Simple>(t.Handle).Guid;
+            guid = jobDb.Create<Simple>(t.Handle).Guid;
 
             t.Commit = true;
         }
@@ -95,7 +96,7 @@ public abstract class AJobDbTests
 
         using (var t = _engine.NewTransaction())
         {
-            var created = jobDb.Create<Jobs.Simple>(t.Handle);
+            var created = jobDb.Create<Simple>(t.Handle);
 
             var fetched = jobDb.Query(t.Handle, QueryBuilder.All()).Single();
 
@@ -110,7 +111,7 @@ public abstract class AJobDbTests
 
         using (var t = _engine.NewTransaction())
         {
-            var created = jobDb.Create<Jobs.Simple>(t.Handle, new[] { "hello", "world" });
+            var created = jobDb.Create<Simple>(t.Handle, new[] { "hello", "world" });
 
             var fetched = jobDb.Query(t.Handle, QueryBuilder.All()).Single();
 
@@ -125,7 +126,7 @@ public abstract class AJobDbTests
 
         using (var t = _engine.NewTransaction())
         {
-            var created = jobDb.Schedule<Jobs.Simple>(t.Handle, DateTime.UtcNow.AddHours(1));
+            var created = jobDb.Schedule<Simple>(t.Handle, DateTime.UtcNow.AddHours(1));
 
             var fetched = jobDb.Query(t.Handle, QueryBuilder.All()).Single();
 
@@ -140,7 +141,7 @@ public abstract class AJobDbTests
 
         using (var t = _engine.NewTransaction())
         {
-            var created = jobDb.Schedule<Jobs.Simple>(
+            var created = jobDb.Schedule<Simple>(
                 t.Handle,
                 DateTime.UtcNow.AddHours(1),
                 new[] { "hello", "world" });
@@ -158,7 +159,7 @@ public abstract class AJobDbTests
 
         using (var t = _engine.NewTransaction())
         {
-            var created = jobDb.CreateCronJob<Jobs.Cron>(t.Handle, "*/1 * * * * *");
+            var created = jobDb.CreateCronJob<Cron>(t.Handle, "*/1 * * * * *");
 
             var fetched = jobDb.Query(t.Handle, QueryBuilder.All()).Single();
 
@@ -173,7 +174,7 @@ public abstract class AJobDbTests
 
         using (var t = _engine.NewTransaction())
         {
-            var created = jobDb.CreateCronJob<Jobs.Cron>(
+            var created = jobDb.CreateCronJob<Cron>(
                 t.Handle,
                 "*/1 * * * * *",
                 new[] { "hello", "world" });
@@ -191,9 +192,9 @@ public abstract class AJobDbTests
 
         using (var t = _engine.NewTransaction())
         {
-            var first = jobDb.Create<Jobs.Simple>(t.Handle);
+            var first = jobDb.Create<Simple>(t.Handle);
 
-            jobDb.Create<Jobs.Simple>(t.Handle);
+            jobDb.Create<Simple>(t.Handle);
 
             var qb = new QueryBuilder()
                 .WithFilter(Filters.Guid.EqualTo(first.Guid));
@@ -211,12 +212,12 @@ public abstract class AJobDbTests
 
         using (var t = _engine.NewTransaction())
         {
-            var first = jobDb.Create<Jobs.Simple>(t.Handle);
+            var first = jobDb.Create<Simple>(t.Handle);
 
-            jobDb.Create<Jobs.Fail>(t.Handle);
+            jobDb.Create<Fail>(t.Handle);
 
             var qb = new QueryBuilder()
-                .WithFilter(Filters.Type.EqualTo(typeof(Jobs.Simple).FullName!));
+                .WithFilter(Filters.Type.EqualTo(typeof(Simple).FullName!));
 
             var fetched = jobDb.Query(t.Handle, qb.Build()).Single();
 
@@ -231,11 +232,11 @@ public abstract class AJobDbTests
         {
             var jobDb = CreateJobDb();
 
-            var first = jobDb.Create<Jobs.Simple>(t.Handle);
+            var first = jobDb.Create<Simple>(t.Handle);
 
             Thread.Sleep(1000);
 
-            var second = jobDb.Create<Jobs.Simple>(t.Handle);
+            var second = jobDb.Create<Simple>(t.Handle);
 
             var diff = Convert.ToInt32((second.Created - first.Created).TotalSeconds);
 
@@ -255,7 +256,7 @@ public abstract class AJobDbTests
     {
         var queue = CreateQueue();
 
-        queue.Create<Jobs.Simple>();
+        queue.Create<Simple>();
 
         var runner = new Runner(queue, new(MaxJobs: 2, MaxErrors: 2, RetrySecs: 1));
 
@@ -269,7 +270,7 @@ public abstract class AJobDbTests
 
         runner.Stop();
 
-        var active = queue.Create<Jobs.Simple>();
+        var active = queue.Create<Simple>();
 
         var qb = new QueryBuilder()
             .WithFilter(Filters.Status.EqualTo(EStatus.Active));
@@ -289,7 +290,7 @@ public abstract class AJobDbTests
     {
         var queue = CreateQueue();
 
-        queue.Create<Jobs.Fail>();
+        queue.Create<Fail>();
 
         var runner = new Runner(queue, new(MaxJobs: 2, MaxErrors: 2, RetrySecs: 1));
 
@@ -303,7 +304,7 @@ public abstract class AJobDbTests
 
         runner.Stop();
 
-        var active = queue.Create<Jobs.Simple>();
+        var active = queue.Create<Simple>();
 
         using (var t = _engine.NewTransaction())
         {
@@ -323,9 +324,9 @@ public abstract class AJobDbTests
     {
         var queue = CreateQueue();
 
-        queue.Create<Jobs.Simple>();
+        queue.Create<Simple>();
 
-        var second = queue.Schedule<Jobs.Simple>(DateTime.UtcNow.AddMinutes(1));
+        var second = queue.Schedule<Simple>(DateTime.UtcNow.AddMinutes(1));
 
         using (var t = _engine.NewTransaction())
         {
@@ -345,7 +346,7 @@ public abstract class AJobDbTests
     {
         var queue = CreateQueue();
 
-        queue.Create<Jobs.Simple>();
+        queue.Create<Simple>();
 
         var runner = new Runner(queue, new(MaxJobs: 2, MaxErrors: 2, RetrySecs: 1));
 
@@ -359,7 +360,7 @@ public abstract class AJobDbTests
 
         runner.Stop();
 
-        var active = queue.Create<Jobs.Simple>();
+        var active = queue.Create<Simple>();
 
 
         using (var t = _engine.NewTransaction())
@@ -382,9 +383,9 @@ public abstract class AJobDbTests
 
         var jobs = new[]
         {
-            queue.Create<Jobs.Simple>(),
-            queue.Create<Jobs.Simple>(),
-            queue.Create<Jobs.Simple>()
+            queue.Create<Simple>(),
+            queue.Create<Simple>(),
+            queue.Create<Simple>()
         }.OrderBy(job => job.Guid).ToArray();
 
         var qb = new QueryBuilder()
@@ -409,9 +410,9 @@ public abstract class AJobDbTests
 
         var jobs = new[]
         {
-            queue.Create<Jobs.Fail>(),
-            queue.Create<Jobs.Simple>(),
-            queue.Create<Jobs.Twice>()
+            queue.Create<Fail>(),
+            queue.Create<Simple>(),
+            queue.Create<Twice>()
         }.OrderBy(job => job.GetType().FullName).ToArray();
 
         using (var t = _engine.NewTransaction())
@@ -438,7 +439,7 @@ public abstract class AJobDbTests
 
         for (var i = 0; i < jobs.Length; ++i)
         {
-            jobs[i] = queue.Create<Jobs.Simple>();
+            jobs[i] = queue.Create<Simple>();
 
             if (i < (jobs.Length - 1))
             {
@@ -466,7 +467,7 @@ public abstract class AJobDbTests
     {
         var queue = CreateQueue();
 
-        queue.Create<Jobs.Simple>();
+        queue.Create<Simple>();
 
         var runner = new Runner(queue, new(MaxJobs: 2, MaxErrors: 2, RetrySecs: 1));
 
@@ -480,7 +481,7 @@ public abstract class AJobDbTests
 
         runner.Stop();
 
-        queue.Create<Jobs.Simple>();
+        queue.Create<Simple>();
 
         using (var t = _engine.NewTransaction())
         {
@@ -507,7 +508,7 @@ public abstract class AJobDbTests
     {
         var queue = CreateQueue();
 
-        queue.Create<Jobs.Fail>();
+        queue.Create<Fail>();
 
         var runner = new Runner(queue, new(MaxJobs: 2, MaxErrors: 2, RetrySecs: 1));
 
@@ -521,7 +522,7 @@ public abstract class AJobDbTests
 
         runner.Stop();
 
-        queue.Create<Jobs.Simple>();
+        queue.Create<Simple>();
 
         using (var t = _engine.NewTransaction())
         {
@@ -541,9 +542,9 @@ public abstract class AJobDbTests
     {
         var queue = CreateQueue();
 
-        var first = queue.Create<Jobs.Simple>();
+        var first = queue.Create<Simple>();
 
-        var second = queue.Schedule<Jobs.Simple>(DateTime.UtcNow.AddMinutes(1));
+        var second = queue.Schedule<Simple>(DateTime.UtcNow.AddMinutes(1));
 
         using (var t = _engine.NewTransaction())
         {
@@ -566,7 +567,7 @@ public abstract class AJobDbTests
 
         Guid RunJob()
         {
-            queue.Create<Jobs.Simple>();
+            queue.Create<Simple>();
 
             var runner = new Runner(queue, new(MaxJobs: 1, MaxErrors: 2, RetrySecs: 1));
 
@@ -610,9 +611,9 @@ public abstract class AJobDbTests
 
         var jobs = new[]
         {
-            queue.Create<Jobs.Simple>(),
-            queue.Create<Jobs.Simple>(),
-            queue.Create<Jobs.Simple>()
+            queue.Create<Simple>(),
+            queue.Create<Simple>(),
+            queue.Create<Simple>()
         }.OrderBy(job => job.Guid).ToArray();
 
         using (var t = _engine.NewTransaction())
@@ -636,9 +637,9 @@ public abstract class AJobDbTests
 
         var jobs = new[]
         {
-            queue.Create<Jobs.Simple>(),
-            queue.Create<Jobs.Simple>(),
-            queue.Create<Jobs.Simple>()
+            queue.Create<Simple>(),
+            queue.Create<Simple>(),
+            queue.Create<Simple>()
         }.OrderBy(job => job.Guid).ToArray();
 
         using (var t = _engine.NewTransaction())
@@ -662,9 +663,9 @@ public abstract class AJobDbTests
 
         var jobs = new[]
         {
-            queue.Create<Jobs.Simple>(),
-            queue.Create<Jobs.Simple>(),
-            queue.Create<Jobs.Simple>()
+            queue.Create<Simple>(),
+            queue.Create<Simple>(),
+            queue.Create<Simple>()
         }.OrderBy(job => job.Guid).ToArray();
 
 
@@ -690,8 +691,8 @@ public abstract class AJobDbTests
 
         using (var t = _engine.NewTransaction())
         {
-            queue.Create<Jobs.Simple>();
-            queue.Create<Jobs.Simple>();
+            queue.Create<Simple>();
+            queue.Create<Simple>();
 
             var jobDb = CreateJobDb();
 
@@ -706,8 +707,8 @@ public abstract class AJobDbTests
     {
         var queue = CreateQueue();
 
-        var first = queue.Create<Jobs.Simple>();
-        var second = queue.Create<Jobs.Simple>();
+        var first = queue.Create<Simple>();
+        var second = queue.Create<Simple>();
 
         using (var t = _engine.NewTransaction())
         {
@@ -726,15 +727,15 @@ public abstract class AJobDbTests
     {
         var queue = CreateQueue();
 
-        queue.Create<Jobs.Fail>();
+        queue.Create<Fail>();
 
-        var second = queue.Create<Jobs.Simple>();
+        var second = queue.Create<Simple>();
 
         using (var t = _engine.NewTransaction())
         {
             var jobDb = CreateJobDb();
 
-            jobDb.Delete(t.Handle, Filters.Type.EqualTo(typeof(Jobs.Fail).FullName!));
+            jobDb.Delete(t.Handle, Filters.Type.EqualTo(typeof(Fail).FullName!));
 
             var fetched = jobDb.Query(t.Handle, QueryBuilder.All()).Single();
 
@@ -747,11 +748,11 @@ public abstract class AJobDbTests
     {
         var queue = CreateQueue();
 
-        var first = queue.Create<Jobs.Simple>();
+        var first = queue.Create<Simple>();
 
         Thread.Sleep(1000);
 
-        var second = queue.Create<Jobs.Simple>();
+        var second = queue.Create<Simple>();
 
         var diff = Convert.ToInt32((second.Created - first.Created).TotalSeconds);
 
@@ -774,7 +775,7 @@ public abstract class AJobDbTests
     {
         var queue = CreateQueue();
 
-        queue.Create<Jobs.Simple>();
+        queue.Create<Simple>();
 
         var runner = new Runner(queue, new(MaxJobs: 2, MaxErrors: 2, RetrySecs: 1));
 
@@ -790,7 +791,7 @@ public abstract class AJobDbTests
 
         using (var t = _engine.NewTransaction())
         {
-            var active = queue.Create<Jobs.Simple>();
+            var active = queue.Create<Simple>();
 
             var jobDb = CreateJobDb();
 
@@ -807,7 +808,7 @@ public abstract class AJobDbTests
     {
         var queue = CreateQueue();
 
-        queue.Create<Jobs.Fail>();
+        queue.Create<Fail>();
 
         var runner = new Runner(queue, new(MaxJobs: 2, MaxErrors: 2, RetrySecs: 1));
 
@@ -821,7 +822,7 @@ public abstract class AJobDbTests
 
         runner.Stop();
 
-        var active = queue.Create<Jobs.Simple>();
+        var active = queue.Create<Simple>();
 
         using (var t = _engine.NewTransaction())
         {
@@ -840,9 +841,9 @@ public abstract class AJobDbTests
     {
         var queue = CreateQueue();
 
-        var first = queue.Create<Jobs.Simple>();
+        var first = queue.Create<Simple>();
 
-        queue.Schedule<Jobs.Simple>(DateTime.UtcNow.AddMinutes(1));
+        queue.Schedule<Simple>(DateTime.UtcNow.AddMinutes(1));
 
         using (var t = _engine.NewTransaction())
         {
@@ -861,7 +862,7 @@ public abstract class AJobDbTests
     {
         var queue = CreateQueue();
 
-        queue.Create<Jobs.Simple>();
+        queue.Create<Simple>();
 
         var runner = new Runner(queue, new(MaxJobs: 2, MaxErrors: 2, RetrySecs: 1));
 
@@ -875,7 +876,7 @@ public abstract class AJobDbTests
 
         runner.Stop();
 
-        var active = queue.Create<Jobs.Simple>();
+        var active = queue.Create<Simple>();
 
         using (var t = _engine.NewTransaction())
         {

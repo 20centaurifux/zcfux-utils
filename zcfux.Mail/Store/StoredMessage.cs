@@ -19,6 +19,8 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using zcfux.Data;
+
 namespace zcfux.Mail.Store;
 
 public sealed class StoredMessage : IEmail
@@ -75,7 +77,7 @@ public sealed class StoredMessage : IEmail
             {
                 from = _db.Store.GetDirectory(_handle, _directoryEntry.Directory.Id);
             }
-            catch (Data.NotFoundException)
+            catch (NotFoundException)
             {
                 throw new DirectoryNotFoundException($"Directory (id={_directoryEntry.Directory.Id}) not found.");
             }
@@ -86,7 +88,7 @@ public sealed class StoredMessage : IEmail
             {
                 to = _db.Store.GetDirectory(_handle, directory.Id);
             }
-            catch (Data.NotFoundException)
+            catch (NotFoundException)
             {
                 throw new DirectoryNotFoundException($"Directory (id={directory.Id}) not found.");
             }
@@ -95,7 +97,7 @@ public sealed class StoredMessage : IEmail
             {
                 _directoryEntry = _db.Store.MoveMessage(_handle, _directoryEntry.Message, from, to);
             }
-            catch (Data.NotFoundException)
+            catch (NotFoundException)
             {
                 throw new DirectoryEntryNotFoundException();
             }
@@ -108,7 +110,7 @@ public sealed class StoredMessage : IEmail
         {
             _db.Store.UnlinkMessage(_handle, _directoryEntry);
         }
-        catch (Data.NotFoundException)
+        catch (NotFoundException)
         {
             throw new DirectoryEntryNotFoundException();
         }
@@ -117,7 +119,7 @@ public sealed class StoredMessage : IEmail
         {
             _db.Messages.DeleteMessage(_handle, _directoryEntry.Message);
         }
-        catch (Data.NotFoundException)
+        catch (NotFoundException)
         {
             throw new MessageNotFoundException();
         }

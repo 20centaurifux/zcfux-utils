@@ -21,6 +21,8 @@
  ***************************************************************************/
 using LinqToDB.Configuration;
 using NUnit.Framework;
+using zcfux.Data.Proxy;
+using zcfux.Data.Test.LinqToDB;
 
 namespace zcfux.Data.Test;
 
@@ -32,11 +34,11 @@ public sealed class PureProxyTests : APureTests
     [Test]
     public void CreateProxies()
     {
-        var first = Proxy.Factory.ConvertHandle<IPure, LinqToDB.Pure>();
+        var first = Factory.ConvertHandle<IPure, Pure>();
 
         Assert.IsInstanceOf<IPure>(first);
 
-        var second = Proxy.Factory.ConvertHandle<IPure, LinqToDB.Pure>(new LinqToDB.Pure());
+        var second = Factory.ConvertHandle<IPure, Pure>(new Pure());
 
         Assert.IsInstanceOf<IPure>(second);
     }
@@ -52,9 +54,9 @@ public sealed class PureProxyTests : APureTests
 
         var opts = builder.Build();
 
-        return new LinqToDB.Engine(opts);
+        return new Engine(opts);
     }
 
     protected override IPure NewDb()
-        => Proxy.Factory.ConvertHandle<IPure, LinqToDB.Pure>();
+        => Factory.ConvertHandle<IPure, Pure>();
 }

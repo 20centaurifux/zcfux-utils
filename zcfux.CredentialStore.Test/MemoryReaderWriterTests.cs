@@ -19,13 +19,15 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using zcfux.CredentialStore.Memory;
+
 namespace zcfux.CredentialStore.Test;
 
 public sealed class MemoryReaderWriterTests : AReaderWriterTests
 {
     protected override IStore CreateAndSetupStore()
     {
-        var store = new Memory.Store();
+        var store = new Store();
 
         store.Setup();
 

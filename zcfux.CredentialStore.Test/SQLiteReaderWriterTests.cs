@@ -19,7 +19,9 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using Microsoft.Data.Sqlite;
 using NUnit.Framework;
+using zcfux.CredentialStore.SQLite;
 
 namespace zcfux.CredentialStore.Test;
 
@@ -32,7 +34,7 @@ public sealed class SQLiteReaderWriterTests : AReaderWriterTests
     {
         base.Teardown();
 
-        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        SqliteConnection.ClearAllPools();
 
         if (_filename != null)
         {
@@ -45,7 +47,7 @@ public sealed class SQLiteReaderWriterTests : AReaderWriterTests
         _filename = Path.GetTempFileName();
         _password = TestContext.CurrentContext.Random.GetString();
 
-        var store = new SQLite.Store(_filename, _password);
+        var store = new Store(_filename, _password);
 
         store.Setup();
 
@@ -57,9 +59,9 @@ public sealed class SQLiteReaderWriterTests : AReaderWriterTests
     {
         var password = TestContext.CurrentContext.Random.GetString();
 
-        using (var store = new SQLite.Store(_filename!, password))
+        using (var store = new Store(_filename!, password))
         {
-            Assert.Throws<SQLite.InvalidPasswordException>(() => store.Setup());
+            Assert.Throws<InvalidPasswordException>(() => store.Setup());
         }
     }
 }

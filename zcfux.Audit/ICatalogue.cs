@@ -29,5 +29,5 @@ public interface ICatalogue
 
     IEnumerable<(IEvent, IEnumerable<IEdge>)> FindAssociations(Query eventQuery, INode associationFilter);
 
-    void Delete(object handle, INode filter);
+    void Delete(INode filter);
 }

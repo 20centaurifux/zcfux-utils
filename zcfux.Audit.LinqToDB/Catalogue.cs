@@ -113,7 +113,7 @@ internal sealed class Catalogue : ICatalogue
         }
     }
 
-    public void Delete(object handle, INode filter)
+    public void Delete(INode filter)
     {
         DeleteEvents(filter);
         DeleteOrphans();

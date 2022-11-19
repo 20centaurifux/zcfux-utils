@@ -186,7 +186,7 @@ internal class RecentCatalogue : ICatalogue
         return queryable;
     }
 
-    public void Delete(object handle, INode filter)
+    public void Delete(INode filter)
     {
         var db = _handle.Db();
         var util = new DeleteUtil("Recent");

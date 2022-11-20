@@ -33,12 +33,6 @@ public class Engine : IEngine
 
     public virtual void Setup()
     {
-        DataConnection.TurnTraceSwitchOn();
-
-        DataConnection.WriteTraceLine = (s1, s2, l) =>
-        {
-            Console.WriteLine(s1, s2);
-        };
     }
 
     public Transaction NewTransaction()

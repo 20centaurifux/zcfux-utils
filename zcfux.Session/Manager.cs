@@ -116,7 +116,10 @@ public sealed class Manager<TStore> : IManager where TStore : AStore, new()
 
         var store = new TStore();
 
-        store.Init(key);
+        var storeOptions = new StoreOptions(
+            TimeSpan.FromMilliseconds(_ttlMillis));
+        
+        store.Init(key, storeOptions);
 
         var state = new SessionState(store, new Activator(ActivateSession));
 

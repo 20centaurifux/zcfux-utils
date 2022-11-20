@@ -25,8 +25,10 @@ public abstract class AStore
 {
     public SessionId? SessionId { get; private set; }
 
-    public virtual void Init(SessionId sessionId)
-        => SessionId = sessionId;
+    public StoreOptions? Options { get; private set; }
+
+    public virtual void Init(SessionId sessionId, StoreOptions options)
+        => (SessionId, Options) = (sessionId, options);
 
     public abstract object this[string key] { get; set; }
 

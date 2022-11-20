@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageVersion>1.2.0</PackageVersion>
+        <Company>Sebastian Fedrau</Company>
     </PropertyGroup>
 
 </Project>

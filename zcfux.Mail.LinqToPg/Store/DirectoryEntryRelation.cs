@@ -25,7 +25,7 @@ using zcfux.Mail.Store;
 namespace zcfux.Mail.LinqToPg.Store;
 
 [Table(Schema = "mail", Name = "DirectoryEntry")]
-internal sealed class DirectoryEntryRelation : IDirectoryEntry
+sealed class DirectoryEntryRelation : IDirectoryEntry
 {
 #pragma warning disable CS8618
     public DirectoryEntryRelation()

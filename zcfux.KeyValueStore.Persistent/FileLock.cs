@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.KeyValueStore.Persistent;
 
-internal static class FileLock
+static class FileLock
 {
     static readonly object Lock = new();
     static readonly Dictionary<string, ReaderWriterLockSlim> Map = new();

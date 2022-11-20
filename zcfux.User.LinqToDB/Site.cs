@@ -23,4 +23,4 @@ using zcfux.Application;
 
 namespace zcfux.User.LinqToDB;
 
-internal sealed record Site(Guid Guid, string Name) : ISite;
+sealed record Site(Guid Guid, string Name) : ISite;

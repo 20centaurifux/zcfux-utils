@@ -23,7 +23,7 @@ using System.Reflection;
 
 namespace zcfux.SqlMapper;
 
-internal static class Analyzer
+static class Analyzer
 {
     public static IDictionary<string, PropertyInfo> GetProperties<T>()
         => IsModel<T>()

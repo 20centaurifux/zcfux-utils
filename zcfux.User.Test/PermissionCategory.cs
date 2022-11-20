@@ -24,7 +24,7 @@ using zcfux.Application;
 
 namespace zcfux.User.Test;
 
-internal record PermissionCategory(int Id, string Name, IApplication Application)
+sealed record PermissionCategory(int Id, string Name, IApplication Application)
     : IPermissionCategory
 {
     public static PermissionCategory Random(IApplication application)

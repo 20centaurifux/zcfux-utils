@@ -24,7 +24,7 @@ using System.Data;
 
 namespace zcfux.SqlMapper;
 
-internal sealed class LazyDataReader<T> : IEnumerable<T> where T : new()
+sealed class LazyDataReader<T> : IEnumerable<T> where T : new()
 {
     readonly IDataReader _reader;
 

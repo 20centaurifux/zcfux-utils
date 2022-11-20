@@ -23,7 +23,7 @@ using Newtonsoft.Json;
 
 namespace zcfux.CredentialStore.Vault.Model;
 
-internal sealed class SecretVersionResponse
+sealed class SecretVersionResponse
 {
     [JsonProperty("data")]
     public Secret Data { get; set; } = null!;

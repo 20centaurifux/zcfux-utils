@@ -25,7 +25,7 @@ using zcfux.User.Password;
 
 namespace zcfux.User.Test;
 
-internal class PasswordHasher : AAlgorithm
+sealed class PasswordHasher : AAlgorithm
 {
     readonly int _format;
     readonly HashAlgorithm _hashAlgorithm;

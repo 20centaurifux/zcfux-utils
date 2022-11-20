@@ -25,7 +25,7 @@ namespace zcfux.Audit.LinqToDB;
 
 #pragma warning disable CS8618
 [Table(Schema = "audit", Name = "EventView")]
-internal sealed class EventView
+sealed class EventView
 {
     [Column(Name = "Id")]
     public long Id { get; set; }

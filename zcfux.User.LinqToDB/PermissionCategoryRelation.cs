@@ -24,7 +24,7 @@ using LinqToDB.Mapping;
 namespace zcfux.User.LinqToDB;
 
 [Table(Schema = "user", Name = "Permission")]
-internal class PermissionRelation
+sealed class PermissionRelation
 {
 #pragma warning disable CS8618
     public PermissionRelation()

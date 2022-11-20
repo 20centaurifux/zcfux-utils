@@ -25,7 +25,7 @@ using zcfux.Security.Token;
 namespace zcfux.Security.LinqToDB;
 
 [Table(Schema = "security", Name = "Tokens")]
-internal class TokenView
+sealed class TokenView
 {
 #pragma warning disable CS8618
     [Column(Name = "KindId")]

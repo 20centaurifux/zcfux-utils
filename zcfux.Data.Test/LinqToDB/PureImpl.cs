@@ -24,7 +24,7 @@ using zcfux.Data.LinqToDB;
 
 namespace zcfux.Data.Test.LinqToDB;
 
-internal sealed class PureDb
+sealed class PureDb
 {
     public void DeleteAll(Handle handle)
         => handle.Db()

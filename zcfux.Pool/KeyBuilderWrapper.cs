@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Pool;
 
-internal sealed class KeyBuilderWrapper : IKeyBuilder
+sealed class KeyBuilderWrapper : IKeyBuilder
 {
     readonly Func<Uri, string> _fn;
 

@@ -24,7 +24,7 @@ using LinqToDB.Mapping;
 namespace zcfux.JobRunner.Data.LinqToDB;
 
 [Table(Schema = "scheduler", Name = "JobKind")]
-internal class JobKindRelation
+sealed class JobKindRelation
 {
     [Column(Name = "Id"), PrimaryKey, Identity]
     public int? Id { get; set; }

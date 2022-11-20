@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Telemetry;
 
-internal sealed class EmptyAsyncEnumerable<T> : IAsyncEnumerable<T>
+sealed class EmptyAsyncEnumerable<T> : IAsyncEnumerable<T>
 {
     public IAsyncEnumerator<T> GetAsyncEnumerator(
         CancellationToken cancellationToken)

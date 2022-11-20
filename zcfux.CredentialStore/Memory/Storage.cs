@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.CredentialStore.Memory;
 
-internal sealed class Storage
+sealed class Storage
 {
     readonly object _lock = new();
 

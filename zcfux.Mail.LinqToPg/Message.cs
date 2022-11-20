@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Mail.LinqToPg;
 
-internal sealed class Message : IMessage
+sealed class Message : IMessage
 {
 #pragma warning disable CS8618
     public long Id { get; set; }

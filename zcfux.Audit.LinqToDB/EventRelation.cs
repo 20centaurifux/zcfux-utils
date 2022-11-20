@@ -25,7 +25,7 @@ namespace zcfux.Audit.LinqToDB;
 
 #pragma warning disable CS8618
 [Table(Schema = "audit", Name = "Event")]
-internal sealed class EventRelation : IEvent
+sealed class EventRelation : IEvent
 {
     public EventRelation()
     {

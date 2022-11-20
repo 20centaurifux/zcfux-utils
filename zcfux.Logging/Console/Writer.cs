@@ -22,7 +22,7 @@
 namespace zcfux.Logging.Console;
 
 [Logger("console")]
-internal sealed class Writer : IWriter
+sealed class Writer : IWriter
 {
     string? _name;
 

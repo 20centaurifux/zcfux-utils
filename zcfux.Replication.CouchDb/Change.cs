@@ -22,7 +22,7 @@
 namespace zcfux.Replication.CouchDb;
 
 #pragma warning disable CS8618
-internal sealed class Change
+sealed class Change
 {
     public string Seq { get; set; }
 

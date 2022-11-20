@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Replication.CouchDb;
 
-internal interface ISuspend
+interface ISuspend
 {
     void Suspend();
 }

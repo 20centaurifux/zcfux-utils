@@ -28,7 +28,7 @@ using zcfux.Mail.Store;
 
 namespace zcfux.Mail.LinqToPg.Store;
 
-internal sealed class StoreDb : IStoreDb
+sealed class StoreDb : IStoreDb
 {
     public IDirectory NewDirectory(object handle, string name)
     {

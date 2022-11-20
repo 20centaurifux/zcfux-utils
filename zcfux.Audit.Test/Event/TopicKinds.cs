@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Audit.Test.Event;
 
-internal static class TopicKinds
+static class TopicKinds
 {
     public static readonly ITopicKind Event = new TopicKind(1, "Event");
     public static readonly ITopicKind Endpoint = new TopicKind(2, "Endpoint");

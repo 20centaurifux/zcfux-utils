@@ -28,7 +28,7 @@ using zcfux.Mail.Queue;
 
 namespace zcfux.Mail.LinqToPg.Queue;
 
-internal sealed class QueueDb : IQueueDb
+sealed class QueueDb : IQueueDb
 {
     public IQueue NewQueue(object handle, string name)
     {

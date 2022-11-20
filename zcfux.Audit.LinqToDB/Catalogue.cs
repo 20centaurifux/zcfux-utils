@@ -26,7 +26,7 @@ using zcfux.Filter.Linq;
 
 namespace zcfux.Audit.LinqToDB;
 
-internal sealed class Catalogue : ICatalogue
+sealed class Catalogue : ICatalogue
 {
     readonly object _handle;
     readonly bool _archived;

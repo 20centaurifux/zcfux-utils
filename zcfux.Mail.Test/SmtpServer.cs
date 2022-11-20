@@ -25,7 +25,7 @@ using zcfux.Mail.Transfer;
 
 namespace zcfux.Mail.Test;
 
-internal sealed class SmtpServer
+sealed class SmtpServer
 {
     [DllImport("libc", SetLastError = true)]
     static extern int kill(int pid, int sig);

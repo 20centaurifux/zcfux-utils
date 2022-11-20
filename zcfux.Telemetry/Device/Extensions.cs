@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Telemetry.Device;
 
-internal static class Extensions
+static class Extensions
 {
     public static Type[] GetAllInterfaces(this Type type)
     {

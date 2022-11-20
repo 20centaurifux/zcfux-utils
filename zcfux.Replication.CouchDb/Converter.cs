@@ -23,7 +23,7 @@ using zcfux.Replication.Generic;
 
 namespace zcfux.Replication.CouchDb;
 
-internal static class Converter
+static class Converter
 {
     public static Document<T> ToDocument<T>(T entity)
         where T : IEntity

@@ -23,4 +23,4 @@ using zcfux.Application;
 
 namespace zcfux.User.Test;
 
-internal sealed record Application(int Id, string Name) : IApplication;
+sealed record Application(int Id, string Name) : IApplication;

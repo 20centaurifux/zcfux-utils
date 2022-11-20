@@ -38,7 +38,7 @@ public sealed class Producer<T> : IAsyncEnumerable<T>, IProducer
 
         readonly object _lock = new();
 
-        private readonly CancellationToken _externalCancellactionToken;
+        readonly CancellationToken _externalCancellactionToken;
         readonly CancellationTokenSource _cancellationTokenSource;
         T _value = default!;
 

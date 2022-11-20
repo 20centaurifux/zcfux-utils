@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.CredentialStore.Memory;
 
-internal class Writer : IWriter
+sealed class Writer : IWriter
 {
     readonly Storage _storage;
 

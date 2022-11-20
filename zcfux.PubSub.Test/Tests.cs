@@ -26,7 +26,7 @@ namespace zcfux.PubSub.Test;
 
 public sealed class Tests
 {
-    record PrivateMessage(Subscriber From, string Text);
+    sealed record PrivateMessage(Subscriber From, string Text);
 
     [Test]
     public void Subscribe()

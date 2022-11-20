@@ -23,7 +23,7 @@ using NLog;
 
 namespace zcfux.Logging.NLog;
 
-internal static class Mapper
+static class Mapper
 {
     public static LogLevel Map(ESeverity severity)
     {

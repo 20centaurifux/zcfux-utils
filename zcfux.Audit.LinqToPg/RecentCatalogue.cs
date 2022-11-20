@@ -27,7 +27,7 @@ using zcfux.Filter.Linq;
 
 namespace zcfux.Audit.LinqToPg;
 
-internal class RecentCatalogue : ICatalogue
+class RecentCatalogue : ICatalogue
 {
     readonly Handle _handle;
 

@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Logging;
 
-internal sealed class BasicLogger : ILogger
+sealed class BasicLogger : ILogger
 {
     readonly IWriter _writer;
     long _verbosity = 1;

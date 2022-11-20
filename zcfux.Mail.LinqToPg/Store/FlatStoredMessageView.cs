@@ -24,7 +24,7 @@ using LinqToDB.Mapping;
 namespace zcfux.Mail.LinqToPg.Store;
 
 [Table(Schema = "mail", Name = "FlatStoredMessages")]
-internal class FlatStoredMessageView
+sealed class FlatStoredMessageView
 {
 #pragma warning disable CS8618
     [Column(Name = "Id", IsPrimaryKey = true, IsIdentity = true)]

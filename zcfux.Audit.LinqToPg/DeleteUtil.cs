@@ -26,7 +26,7 @@ using zcfux.Filter.Linq;
 
 namespace zcfux.Audit.LinqToPg;
 
-internal sealed class DeleteUtil
+sealed class DeleteUtil
 {
     readonly string _relationPrefix;
 

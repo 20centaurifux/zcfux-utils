@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Audit.Test.LinqToDB;
 
-internal sealed class EventTests : AEventTests
+sealed class EventTests : AEventTests
 {
     string? _connectionString;
 

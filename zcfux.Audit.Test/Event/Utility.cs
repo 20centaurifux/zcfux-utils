@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Audit.Test.Event;
 
-internal sealed class Utility
+sealed class Utility
 {
     readonly IAuditDb _db;
     readonly object _handle;

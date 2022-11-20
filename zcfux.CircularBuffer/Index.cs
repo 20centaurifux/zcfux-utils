@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.CircularBuffer;
 
-internal sealed class Index
+sealed class Index
 {
     readonly int _limit;
 

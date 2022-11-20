@@ -23,7 +23,7 @@ using zcfux.Data.LinqToDB;
 
 namespace zcfux.Data.Test.LinqToDB;
 
-internal sealed class Pure : IPure
+sealed class Pure : IPure
 {
     static readonly PureDb Db = new();
 

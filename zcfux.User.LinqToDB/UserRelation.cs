@@ -24,7 +24,7 @@ using LinqToDB.Mapping;
 namespace zcfux.User.LinqToDB;
 
 [Table(Schema = "user", Name = "User")]
-internal class UserRelation : IUser
+sealed class UserRelation : IUser
 {
 #pragma warning disable CS8618
     public UserRelation()

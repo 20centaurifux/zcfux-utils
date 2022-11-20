@@ -25,7 +25,7 @@ using zcfux.Security.Token;
 namespace zcfux.Security.LinqToDB;
 
 [Table(Schema = "security", Name = "TokenKind")]
-internal class TokenKindRelation : IKind
+sealed class TokenKindRelation : IKind
 {
 #pragma warning disable CS8618
     public TokenKindRelation()

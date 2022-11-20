@@ -40,7 +40,7 @@ public sealed class Tests
     sealed class InjectableA
     {
         [Inject]
-        private Foo? _privateFooProp { get; set; }
+        Foo? _privateFooProp { get; set; }
 
         [Inject]
         protected Foo? ProtectedFooProp { get; set; }
@@ -49,7 +49,7 @@ public sealed class Tests
         public Foo? PublicFooProp { get; set; }
 
         [Inject]
-        private Bar? _privateBarField;
+        Bar? _privateBarField;
 
         [Inject]
         protected Bar? ProtectedBarField;

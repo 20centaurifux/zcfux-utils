@@ -25,7 +25,7 @@ namespace zcfux.Audit.LinqToPg;
 
 #pragma warning disable CS8618
 [Table(Schema = "audit", Name = "TopicKind")]
-internal sealed class TopicKindRelation : ITopicKind
+sealed class TopicKindRelation : ITopicKind
 {
     public TopicKindRelation()
     {

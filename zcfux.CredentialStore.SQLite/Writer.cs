@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.CredentialStore.SQLite;
 
-internal sealed class Writer : IWriter
+sealed class Writer : IWriter
 {
     readonly Db _db;
 

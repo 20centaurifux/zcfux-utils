@@ -22,7 +22,7 @@
 namespace zcfux.Replication.CouchDb;
 
 #pragma warning disable CS8618
-internal sealed class Document<T>
+sealed class Document<T>
 {
     public string _id { get; set; }
 

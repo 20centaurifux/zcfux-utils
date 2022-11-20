@@ -23,7 +23,7 @@ using MyCouch;
 
 namespace zcfux.Replication.CouchDb;
 
-internal class ClientBootstrapper : MyCouchClientBootstrapper
+sealed class ClientBootstrapper : MyCouchClientBootstrapper
 {
     protected override void ConfigureDbConnectionFn()
     {

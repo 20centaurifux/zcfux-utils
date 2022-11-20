@@ -23,7 +23,7 @@ using System.Collections.Immutable;
 
 namespace zcfux.Logging;
 
-internal sealed class Chain : ILogger
+sealed class Chain : ILogger
 {
     ImmutableList<IWriter> _writers = ImmutableList<IWriter>.Empty;
     long _verbosity = 1;

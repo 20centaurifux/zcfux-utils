@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.CredentialStore.SQLite;
 
-internal sealed class Reader : IReader
+sealed class Reader : IReader
 {
     readonly Db _db;
 

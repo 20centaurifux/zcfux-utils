@@ -23,7 +23,7 @@ using zcfux.Pool;
 
 namespace zcfux.Replication.CouchDb;
 
-internal static class Pool
+static class Pool
 {
     static readonly Lazy<Pool<CouchClientResource>> CouchClientPool = new(() =>
     {

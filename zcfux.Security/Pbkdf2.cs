@@ -25,7 +25,7 @@ using zcfux.Byte;
 
 namespace zcfux.Security;
 
-internal sealed class Pbkdf2 : IPasswordHashAlgorithm
+sealed class Pbkdf2 : IPasswordHashAlgorithm
 {
     sealed class Options
     {

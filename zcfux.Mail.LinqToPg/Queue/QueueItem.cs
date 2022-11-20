@@ -23,7 +23,7 @@ using zcfux.Mail.Queue;
 
 namespace zcfux.Mail.LinqToPg.Queue;
 
-internal sealed class QueueItem : IQueueItem
+sealed class QueueItem : IQueueItem
 {
 #pragma warning disable CS8618
     public IQueue Queue { get; set; }

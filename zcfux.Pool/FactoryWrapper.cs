@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Pool;
 
-internal sealed class FactoryWrapper<T> : IFactory<T>
+sealed class FactoryWrapper<T> : IFactory<T>
     where T : AResource
 {
     readonly Func<Uri, T> _fn;

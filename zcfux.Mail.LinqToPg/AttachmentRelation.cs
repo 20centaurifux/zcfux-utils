@@ -24,7 +24,7 @@ using LinqToDB.Mapping;
 namespace zcfux.Mail.LinqToPg;
 
 [Table(Schema = "mail", Name = "Attachment")]
-internal sealed class AttachmentRelation : IAttachment
+sealed class AttachmentRelation : IAttachment
 #pragma warning disable CS8618
 {
     public AttachmentRelation()

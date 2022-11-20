@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Audit.Test.Event;
 
-internal static class Associations
+static class Associations
 {
     public static readonly Association ConnectedFrom = new(1, "connected from");
     public static readonly Association AuthenticatedAs = new(2, "authenticated as");

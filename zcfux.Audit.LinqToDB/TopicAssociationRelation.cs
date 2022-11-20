@@ -25,7 +25,7 @@ namespace zcfux.Audit.LinqToDB;
 
 #pragma warning disable CS8618
 [Table(Schema = "audit", Name = "TopicAssociation")]
-internal sealed class TopicAssociationRelation
+sealed class TopicAssociationRelation
 {
     [Column(Name = "Id"), PrimaryKey, Identity]
     public long Id { get; set; }

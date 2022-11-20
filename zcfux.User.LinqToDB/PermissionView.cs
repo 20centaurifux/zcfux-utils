@@ -24,7 +24,7 @@ using LinqToDB.Mapping;
 namespace zcfux.User.LinqToDB;
 
 [Table(Schema = "user", Name = "Permissions")]
-internal class PermissionView
+sealed class PermissionView
 {
 #pragma warning disable CS8618
     [Column(Name = "Id")]

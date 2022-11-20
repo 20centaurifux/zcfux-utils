@@ -23,7 +23,7 @@ using MyCouch;
 
 namespace zcfux.Replication.CouchDb;
 
-internal class ServerConnection : MyCouch.Net.ServerConnection, ISuspend
+sealed class ServerConnection : MyCouch.Net.ServerConnection, ISuspend
 {
     public ServerConnection(ServerConnectionInfo connectionInfo)
         : base(connectionInfo)

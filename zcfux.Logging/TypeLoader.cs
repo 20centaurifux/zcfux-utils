@@ -23,7 +23,7 @@ using System.Reflection;
 
 namespace zcfux.Logging;
 
-internal static class TypeLoader
+static class TypeLoader
 {
     public static IDictionary<string, Type> GetTypes()
     {

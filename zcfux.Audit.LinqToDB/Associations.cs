@@ -24,7 +24,7 @@ using zcfux.Data.LinqToDB;
 
 namespace zcfux.Audit.LinqToDB;
 
-internal sealed class Associations : IAssociations
+sealed class Associations : IAssociations
 {
     public void InsertAssociation(object handle, IAssociation association)
         => handle.Db()

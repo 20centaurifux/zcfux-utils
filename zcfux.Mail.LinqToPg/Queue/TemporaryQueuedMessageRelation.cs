@@ -24,7 +24,7 @@ using LinqToDB.Mapping;
 
 namespace zcfux.Mail.LinqToPg.Queue;
 
-internal class TemporaryQueuedMessageRelation : QueuedMessageView
+sealed class TemporaryQueuedMessageRelation : QueuedMessageView
 {
     [Column(Name = "Offset")]
     public long Offset { get; set; }

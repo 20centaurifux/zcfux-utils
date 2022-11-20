@@ -22,7 +22,7 @@
 namespace zcfux.Audit.LinqToPg;
 
 #pragma warning disable CS8618
-internal sealed class EdgeView
+sealed class EdgeView
 {
     public long EventId { get; set; }
 

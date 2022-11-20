@@ -23,7 +23,7 @@ using Newtonsoft.Json;
 
 namespace zcfux.CredentialStore.Vault.Model;
 
-internal sealed class MetaData
+sealed class MetaData
 {
     [JsonProperty("created_time")]
     public DateTime CreatedTime { get; set; }

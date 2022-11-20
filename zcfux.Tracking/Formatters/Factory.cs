@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Tracking.Formatters;
 
-internal static class Factory
+static class Factory
 {
     public static IFormatter CreateFormatter(FormatterAttribute attr)
     {

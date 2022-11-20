@@ -23,7 +23,7 @@ using LinqToDB.Mapping;
 
 namespace zcfux.Mail.LinqToPg.Queue;
 
-internal sealed class TemporaryFoundQueueItemRelation
+sealed class TemporaryFoundQueueItemRelation
 {
 #pragma warning disable CS8618
     [Column(Name = "QueueId")]

@@ -26,7 +26,7 @@ using zcfux.User.Password;
 
 namespace zcfux.User.Test.LinqToDB;
 
-internal sealed class PasswordDbTests : APasswordDbTests
+sealed class PasswordDbTests : APasswordDbTests
 {
     protected override IEngine CreateAndSetupEngine()
         => Factory.CreateAndSetupEngine();

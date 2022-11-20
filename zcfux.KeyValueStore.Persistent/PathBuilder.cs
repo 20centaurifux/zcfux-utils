@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.KeyValueStore.Persistent;
 
-internal static class PathBuilder
+static class PathBuilder
 {
     public static string BuildBlobPath(string storagePath, string hash)
     {

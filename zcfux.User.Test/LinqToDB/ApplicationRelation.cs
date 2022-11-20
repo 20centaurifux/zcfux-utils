@@ -25,7 +25,7 @@ using zcfux.Application;
 namespace zcfux.User.Test.LinqToDB;
 
 [Table(Schema = "user", Name = "Application")]
-internal class ApplicationRelation : IApplication
+sealed class ApplicationRelation : IApplication
 {
 #pragma warning disable CS8618
     public ApplicationRelation()

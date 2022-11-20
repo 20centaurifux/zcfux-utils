@@ -23,7 +23,7 @@ using NUnit.Framework;
 
 namespace zcfux.User.Test;
 
-internal record Origin(int Id, string Name, bool Writable) : IOrigin
+sealed record Origin(int Id, string Name, bool Writable) : IOrigin
 {
     public static Origin Random()
         => new(

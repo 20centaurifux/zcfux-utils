@@ -23,7 +23,7 @@ using Castle.DynamicProxy;
 
 namespace zcfux.Tracking;
 
-internal sealed class Interceptor : IInterceptor
+sealed class Interceptor : IInterceptor
 {
     public void Intercept(IInvocation invocation)
     {

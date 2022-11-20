@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.CredentialStore.Memory;
 
-internal class Reader : IReader
+sealed class Reader : IReader
 {
     readonly Storage _storage;
 

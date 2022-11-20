@@ -29,7 +29,7 @@ public sealed class OptionsBuilder
     IConnection? _connection;
     ImmutableList<DeviceFilter> _filters = ImmutableList<DeviceFilter>.Empty;
     ApiRegistry? _apiRegistry;
-    private ISerializer? _serializer;
+    ISerializer? _serializer;
     ILogger? _logger;
 
     OptionsBuilder Clone()

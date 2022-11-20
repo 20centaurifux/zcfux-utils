@@ -24,7 +24,7 @@ namespace zcfux.CredentialStore;
 public sealed class Secret
 {
     readonly Dictionary<string, string> _data;
-    private readonly DateTime? _expiryDate;
+    readonly DateTime? _expiryDate;
 
     public Secret(IReadOnlyDictionary<string, string> data, DateTime? expiryDate)
         => (_data, _expiryDate) = (new Dictionary<string, string>(data), expiryDate);

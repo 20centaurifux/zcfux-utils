@@ -23,7 +23,7 @@ using NUnit.Framework;
 
 namespace zcfux.User.Test;
 
-internal sealed record User(
+sealed record User(
         Guid Guid,
         IOrigin Origin,
         string Name,

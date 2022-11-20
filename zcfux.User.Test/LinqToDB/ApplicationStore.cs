@@ -27,7 +27,7 @@ using zcfux.Filter.Linq;
 
 namespace zcfux.User.Test.LinqToDB;
 
-internal class ApplicationStore
+sealed class ApplicationStore
     : ISiteDb, IApplicationDb
 {
     public void Write(object handle, ISite site)

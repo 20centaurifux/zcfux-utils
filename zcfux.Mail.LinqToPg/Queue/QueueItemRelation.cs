@@ -25,7 +25,7 @@ using zcfux.Mail.Queue;
 namespace zcfux.Mail.LinqToPg.Queue;
 
 [Table(Schema = "mail", Name = "QueueItem")]
-internal sealed class QueueItemRelation : IQueueItem
+sealed class QueueItemRelation : IQueueItem
 {
 #pragma warning disable CS8618
     public QueueItemRelation()

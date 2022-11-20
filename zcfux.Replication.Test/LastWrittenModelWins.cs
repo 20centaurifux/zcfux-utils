@@ -23,7 +23,7 @@ using zcfux.Replication.Generic;
 
 namespace zcfux.Replication.Test;
 
-internal sealed class LastWrittenModelWins : IMergeAlgorithm<Model>
+sealed class LastWrittenModelWins : IMergeAlgorithm<Model>
 {
     public IVersion<Model> Merge(IVersion<Model> version, IVersion<Model>[] conflicts)
     {

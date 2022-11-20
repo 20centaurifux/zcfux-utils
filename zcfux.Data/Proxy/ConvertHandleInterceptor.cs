@@ -25,7 +25,7 @@ using Castle.DynamicProxy;
 
 namespace zcfux.Data.Proxy;
 
-internal sealed class ConvertHandleInterceptor<TInterface, TImpl> : IInterceptor
+sealed class ConvertHandleInterceptor<TInterface, TImpl> : IInterceptor
     where TImpl : notnull
 {
     static readonly Lazy<ConcurrentDictionary<string, MethodInfo>> Methods

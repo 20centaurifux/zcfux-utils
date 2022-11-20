@@ -25,7 +25,7 @@ using Castle.DynamicProxy;
 
 namespace zcfux.Data.Proxy;
 
-internal sealed class PrependHandleInterceptor<TImpl>
+sealed class PrependHandleInterceptor<TImpl>
     : IInterceptor
     where TImpl : class
 {

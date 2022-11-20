@@ -23,7 +23,7 @@ using zcfux.Mail.Queue;
 
 namespace zcfux.Mail.LinqToPg.Queue;
 
-internal sealed class FlatViewAggregator
+sealed class FlatViewAggregator
 {
     readonly IQueryable<FlatQueuedMessageView> _records;
 

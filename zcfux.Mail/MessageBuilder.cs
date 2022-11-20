@@ -23,7 +23,7 @@ using System.Collections.Immutable;
 
 namespace zcfux.Mail;
 
-internal sealed class MessageBuilder
+sealed class MessageBuilder
 {
     readonly IDb _db;
     readonly object _handle;

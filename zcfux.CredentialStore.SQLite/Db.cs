@@ -26,7 +26,7 @@ using zcfux.Security;
 
 namespace zcfux.CredentialStore.SQLite;
 
-internal sealed class Db : IDisposable
+sealed class Db : IDisposable
 {
     const int Revision = 1;
 

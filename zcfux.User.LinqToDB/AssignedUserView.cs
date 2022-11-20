@@ -25,7 +25,7 @@ using zcfux.Application;
 namespace zcfux.User.LinqToDB;
 
 [Table(Schema = "user", Name = "AssignedUsers")]
-internal class AssignedUserView : IAssignedUser
+sealed class AssignedUserView : IAssignedUser
 {
 #pragma warning disable CS8618
     [Column(Name = "SiteUid")]

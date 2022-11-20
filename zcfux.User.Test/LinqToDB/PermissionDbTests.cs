@@ -25,7 +25,7 @@ using zcfux.User.LinqToDB;
 
 namespace zcfux.User.Test.LinqToDB;
 
-internal sealed class PermissionDbTests : APermissionDbTests
+sealed class PermissionDbTests : APermissionDbTests
 {
     protected override IEngine CreateAndSetupEngine()
         => Factory.CreateAndSetupEngine();

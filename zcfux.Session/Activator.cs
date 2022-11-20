@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Session;
 
-internal sealed class Activator
+sealed class Activator
 {
     readonly Action<SessionId> _fn;
 

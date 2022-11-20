@@ -24,7 +24,7 @@ using LinqToDB.Mapping;
 namespace zcfux.Audit.LinqToPg;
 
 #pragma warning disable CS8618
-internal sealed class TemporaryEventRelation : EventView
+sealed class TemporaryEventRelation : EventView
 {
     [Column(Name = "Offset"), Identity]
     public long Offset { get; set; }

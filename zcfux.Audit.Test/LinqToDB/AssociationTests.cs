@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Audit.Test.LinqToDB;
 
-internal sealed class AssociationTests : AAssociationTests
+sealed class AssociationTests : AAssociationTests
 {
     string? _connectionString;
 

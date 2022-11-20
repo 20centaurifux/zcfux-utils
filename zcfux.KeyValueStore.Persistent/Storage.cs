@@ -23,7 +23,7 @@ using zcfux.Byte;
 
 namespace zcfux.KeyValueStore.Persistent;
 
-internal sealed class Storage : IDisposable
+sealed class Storage : IDisposable
 {
     readonly string _path;
     DirectoryInfo? _blobs;

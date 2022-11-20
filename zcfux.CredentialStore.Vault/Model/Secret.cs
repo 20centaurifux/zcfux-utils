@@ -23,7 +23,7 @@ using Newtonsoft.Json;
 
 namespace zcfux.CredentialStore.Vault.Model;
 
-internal sealed class Secret
+sealed class Secret
 {
     public Dictionary<string, object> Data { get; set; } = null!;
 

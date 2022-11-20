@@ -24,7 +24,7 @@ using LinqToDB.Mapping;
 namespace zcfux.JobRunner.Data.LinqToDB;
 
 [Table(Schema = "scheduler", Name = "Jobs")]
-internal class JobViewRelation : IJobDetails
+sealed class JobViewRelation : IJobDetails
 {
     public JobViewRelation()
     {

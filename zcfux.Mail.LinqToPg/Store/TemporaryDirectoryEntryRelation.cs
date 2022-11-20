@@ -23,7 +23,7 @@ using LinqToDB.Mapping;
 
 namespace zcfux.Mail.LinqToPg.Store;
 
-internal sealed class TemporaryDirectoryEntryRelation
+sealed class TemporaryDirectoryEntryRelation
 {
 #pragma warning disable CS8618
     [Column(Name = "DirectoryId")]

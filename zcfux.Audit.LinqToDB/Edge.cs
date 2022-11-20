@@ -22,7 +22,7 @@
 namespace zcfux.Audit.LinqToDB;
 
 #pragma warning disable CS8618
-internal sealed class Edge : IEdge
+sealed class Edge : IEdge
 {
     public ITopic Left { get; set; }
 

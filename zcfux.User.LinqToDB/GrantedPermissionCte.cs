@@ -23,7 +23,7 @@ using LinqToDB.Mapping;
 
 namespace zcfux.User.LinqToDB;
 
-internal class GrantedPermissionCte
+sealed class GrantedPermissionCte
 {
 #pragma warning disable CS8618
     [Column(Name = "PermissionId")]

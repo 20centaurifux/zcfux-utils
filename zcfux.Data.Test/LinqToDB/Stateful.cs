@@ -24,7 +24,7 @@ using zcfux.Data.LinqToDB;
 
 namespace zcfux.Data.Test.LinqToDB;
 
-internal sealed class Stateful
+sealed class Stateful
 {
     public void DeleteAll(Handle handle)
         => handle.Db()

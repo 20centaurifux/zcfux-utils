@@ -24,7 +24,7 @@ using System.Linq.Expressions;
 
 namespace zcfux.Filter.Linq;
 
-internal class Frame<T>
+sealed class Frame<T>
 {
     readonly string _name;
     readonly List<object?> _args = new();

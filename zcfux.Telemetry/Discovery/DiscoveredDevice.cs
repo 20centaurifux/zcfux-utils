@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Telemetry.Discovery;
 
-internal sealed class DiscoveredDevice : IDiscoveredDevice
+sealed class DiscoveredDevice : IDiscoveredDevice
 {
     sealed record Proxy(object Instance, string Version);
 

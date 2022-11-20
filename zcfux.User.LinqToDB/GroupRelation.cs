@@ -24,7 +24,7 @@ using LinqToDB.Mapping;
 namespace zcfux.User.LinqToDB;
 
 [Table(Schema = "user", Name = "Group")]
-internal class GroupRelation : IGroup
+sealed class GroupRelation : IGroup
 {
 #pragma warning disable CS8618
     public GroupRelation()

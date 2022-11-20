@@ -25,7 +25,7 @@ using zcfux.Application;
 namespace zcfux.User.Test.LinqToDB;
 
 [Table(Schema = "user", Name = "Site")]
-internal class SiteRelation : ISite
+sealed class SiteRelation : ISite
 {
 #pragma warning disable CS8618
     public SiteRelation()

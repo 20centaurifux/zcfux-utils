@@ -23,7 +23,7 @@ using zcfux.Mail.Store;
 
 namespace zcfux.Mail.LinqToPg.Store;
 
-internal sealed class DirectoryEntry : IDirectoryEntry
+sealed class DirectoryEntry : IDirectoryEntry
 {
 #pragma warning disable CS8618
     public IDirectory Directory { get; set; }

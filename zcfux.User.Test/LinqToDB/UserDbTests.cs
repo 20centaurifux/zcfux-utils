@@ -24,7 +24,7 @@ using zcfux.User.LinqToDB;
 
 namespace zcfux.User.Test.LinqToDB;
 
-internal sealed class UserDbTests : AUserDbTests
+sealed class UserDbTests : AUserDbTests
 {
     protected override IEngine CreateAndSetupEngine()
         => Factory.CreateAndSetupEngine();

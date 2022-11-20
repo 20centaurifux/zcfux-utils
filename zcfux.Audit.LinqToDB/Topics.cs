@@ -26,7 +26,7 @@ using zcfux.Filter.Linq;
 
 namespace zcfux.Audit.LinqToDB;
 
-internal sealed class Topics : ITopics
+sealed class Topics : ITopics
 {
     public void InsertTopicKind(object handle, ITopicKind kind)
         => handle.Db().Insert(new TopicKindRelation(kind));

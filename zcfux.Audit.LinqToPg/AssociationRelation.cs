@@ -25,7 +25,7 @@ namespace zcfux.Audit.LinqToPg;
 
 #pragma warning disable CS8618
 [Table(Schema = "audit", Name = "Association")]
-internal sealed class AssociationRelation : IAssociation
+sealed class AssociationRelation : IAssociation
 {
     public AssociationRelation()
     {

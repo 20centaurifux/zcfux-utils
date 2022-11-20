@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Filter.Test;
 
-internal static class Columns
+static class Columns
 {
     public static Column<long> Id { get; } = Column<long>.FromMember();
 

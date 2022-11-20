@@ -26,7 +26,7 @@ using zcfux.Replication.Generic;
 
 namespace zcfux.Replication.CouchDb;
 
-internal sealed class Updater<T>
+sealed class Updater<T>
     where T : IEntity
 {
     readonly string _url;

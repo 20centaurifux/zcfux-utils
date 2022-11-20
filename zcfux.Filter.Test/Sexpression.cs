@@ -24,7 +24,7 @@ using System.Text;
 
 namespace zcfux.Filter.Test;
 
-internal sealed class Sexpression : IVisitor
+sealed class Sexpression : IVisitor
 {
     readonly List<object?> _stack = new();
 

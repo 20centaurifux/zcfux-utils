@@ -24,7 +24,7 @@ using LinqToDB.Mapping;
 namespace zcfux.Mail.LinqToPg.Queue;
 
 [Table(Schema = "mail", Name = "QueuedMessages")]
-internal class QueuedMessageView
+class QueuedMessageView
 {
 #pragma warning disable CS8618
     [Column(Name = "Id", IsPrimaryKey = true, IsIdentity = true)]

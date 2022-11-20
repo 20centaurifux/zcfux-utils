@@ -24,7 +24,7 @@ using System.Text.RegularExpressions;
 
 namespace zcfux.KeyValueStore.Persistent;
 
-internal sealed class BlobDirectory
+sealed class BlobDirectory
 {
     static readonly Regex HashRegex = new("[0-9A-F]{64}$");
     readonly string _path;

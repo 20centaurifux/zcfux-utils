@@ -25,7 +25,7 @@ using zcfux.Pool;
 
 namespace zcfux.Replication.CouchDb;
 
-internal sealed class ServerClientResource : AResource, IMyCouchServerClient
+sealed class ServerClientResource : AResource, IMyCouchServerClient
 {
     readonly MyCouchServerClient _client;
 

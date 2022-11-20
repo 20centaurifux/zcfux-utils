@@ -22,7 +22,7 @@
 namespace zcfux.Audit.LinqToDB;
 
 #pragma warning disable CS8618
-internal sealed class Topic : ITopic
+sealed class Topic : ITopic
 {
     public long Id { get; set; }
 

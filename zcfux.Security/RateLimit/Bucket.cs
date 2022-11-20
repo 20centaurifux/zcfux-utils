@@ -23,7 +23,7 @@ using System.Diagnostics;
 
 namespace zcfux.Security.RateLimit;
 
-internal sealed class Bucket
+sealed class Bucket
 {
     readonly Queue<Stopwatch> _bucket;
 

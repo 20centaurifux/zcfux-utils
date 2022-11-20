@@ -26,7 +26,7 @@ namespace zcfux.Filter.Test;
 
 public sealed class LinqTests
 {
-    record Model(int Id, string? Value);
+    sealed record Model(int Id, string? Value);
 
     static class Columns
     {

@@ -26,7 +26,7 @@ using zcfux.Data.LinqToDB;
 
 namespace zcfux.Mail.LinqToPg;
 
-internal sealed class MessageDb : IMessageDb
+sealed class MessageDb : IMessageDb
 {
     public IMessage NewMessage(
         object handle,

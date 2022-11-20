@@ -24,7 +24,7 @@ using LinqToDB.Mapping;
 namespace zcfux.Mail.LinqToPg;
 
 [Table(Schema = "mail", Name = "Message")]
-internal sealed class MessageRelation : IMessage
+sealed class MessageRelation : IMessage
 {
 #pragma warning disable CS8618
     public MessageRelation()

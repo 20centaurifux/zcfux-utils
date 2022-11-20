@@ -24,7 +24,7 @@ using zcfux.Data.LinqToDB;
 
 namespace zcfux.Audit.LinqToDB;
 
-internal sealed class Events : IEvents
+sealed class Events : IEvents
 {
     public void InsertEventKind(object handle, IEventKind kind)
         => handle.Db().Insert(new EventKindRelation(kind));

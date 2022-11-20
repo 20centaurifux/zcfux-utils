@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Audit.LinqToPg;
 
-internal interface IEventView
+interface IEventView
 {
     long Id { get; set; }
 
@@ -38,7 +38,7 @@ internal interface IEventView
     string? DisplayName { get; set; }
 }
 
-internal static class EventViewExtensions
+static class EventViewExtensions
 {
     public static IEvent ToRecentEvent(this IEventView self)
         => self.ToEvent(archived: false);

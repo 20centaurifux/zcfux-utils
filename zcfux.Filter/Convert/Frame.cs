@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Filter.Convert;
 
-internal class Frame
+sealed class Frame
 {
     readonly string _name;
     readonly List<INode> _args = new();

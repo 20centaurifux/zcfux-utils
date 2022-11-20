@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Tracking.Formatters;
 
-internal sealed class Anonymize : IFormatter
+sealed class Anonymize : IFormatter
 {
     public char Char { get; set; }
 

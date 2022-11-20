@@ -27,7 +27,7 @@ using zcfux.Data.LinqToDB;
 
 namespace zcfux.Audit.Test.LinqToDB;
 
-internal sealed class Methods : IDbTestMethods
+sealed class Methods : IDbTestMethods
 {
     readonly string _connectionString;
 

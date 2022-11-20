@@ -23,4 +23,4 @@ using zcfux.Application;
 
 namespace zcfux.User.LinqToDB;
 
-internal record PermissionCategory(int Id, string Name, IApplication Application) : IPermissionCategory;
+sealed record PermissionCategory(int Id, string Name, IApplication Application) : IPermissionCategory;

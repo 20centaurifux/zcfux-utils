@@ -21,9 +21,9 @@
  ***************************************************************************/
 namespace zcfux.User.LinqToDB;
 
-internal sealed class Permission : IPermission
+sealed class Permission : IPermission
 {
-    private readonly List<IPermission> _preconditions = new();
+    readonly List<IPermission> _preconditions = new();
 
     public Permission(int id, string name, IPermissionCategory category)
         => (Id, Name, Category) = (id, name, category);

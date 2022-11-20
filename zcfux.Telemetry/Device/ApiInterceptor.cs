@@ -27,7 +27,7 @@ using zcfux.Logging;
 
 namespace zcfux.Telemetry.Device;
 
-internal sealed class ApiInterceptor : IInterceptor
+sealed class ApiInterceptor : IInterceptor
 {
     sealed record Command(string Topic, uint TimeToLive, uint ResponseTimeout);
 

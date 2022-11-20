@@ -25,7 +25,7 @@ using zcfux.Data.LinqToDB;
 
 namespace zcfux.Security.Test;
 
-internal static class LinqToDBFactory
+static class LinqToDBFactory
 {
     const string DefaultConnectionString
         = "User ID=test;Host=localhost;Port=5432;Database=test;";

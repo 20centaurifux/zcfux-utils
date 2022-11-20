@@ -27,7 +27,7 @@ using zcfux.Data.LinqToDB;
 
 namespace zcfux.Audit.Test.LinqToPg;
 
-internal class Methods : IDbTestMethods
+sealed class Methods : IDbTestMethods
 {
     const string DefaultConnectionString
         = "User ID=test;Host=localhost;Port=5432;Database=test;";

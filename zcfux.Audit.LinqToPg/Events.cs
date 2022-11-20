@@ -25,9 +25,9 @@ using zcfux.Data.LinqToDB;
 
 namespace zcfux.Audit.LinqToPg;
 
-internal sealed class Events : IEvents
+sealed class Events : IEvents
 {
-    record Pair(long AssocId, long TopicId);
+    sealed record Pair(long AssocId, long TopicId);
 
     public void InsertEventKind(object handle, IEventKind kind)
         => handle.Db().Insert(new EventKindRelation(kind));

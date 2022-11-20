@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.KeyValueStore.Persistent;
 
-internal sealed class BlobFileReader : Stream
+sealed class BlobFileReader : Stream
 {
     bool _disposed;
     readonly FileStream _stream;

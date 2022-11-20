@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Telemetry;
 
-internal sealed class EmptyAsyncEnumerator<T> : IAsyncEnumerator<T>
+sealed class EmptyAsyncEnumerator<T> : IAsyncEnumerator<T>
 {
     public static readonly EmptyAsyncEnumerator<T> Instance = new();
 

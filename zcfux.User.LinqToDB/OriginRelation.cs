@@ -24,7 +24,7 @@ using LinqToDB.Mapping;
 namespace zcfux.User.LinqToDB;
 
 [Table(Schema = "user", Name = "Origin")]
-internal class OriginRelation : IOrigin
+sealed class OriginRelation : IOrigin
 {
 #pragma warning disable CS8618
     public OriginRelation()

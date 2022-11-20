@@ -24,7 +24,7 @@ using LinqToDB.Mapping;
 namespace zcfux.Mail.LinqToPg.Queue;
 
 [Table(Schema = "mail", Name = "FlatQueuedMessages")]
-internal sealed class FlatQueuedMessageView
+sealed class FlatQueuedMessageView
 {
 #pragma warning disable CS8618
     [Column(Name = "Id", IsPrimaryKey = true, IsIdentity = true)]

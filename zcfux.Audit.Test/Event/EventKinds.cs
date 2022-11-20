@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Audit.Test.Event;
 
-internal static class EventKinds
+static class EventKinds
 {
     public static readonly IEventKind Security = new EventKind(1, "Security");
     public static readonly IEventKind Service = new EventKind(2, "Service");

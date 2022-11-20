@@ -22,7 +22,7 @@
 namespace zcfux.Audit.LinqToDB;
 
 #pragma warning disable CS8618
-internal sealed class Event : IEvent
+sealed class Event : IEvent
 {
     public long Id { get; set; }
 

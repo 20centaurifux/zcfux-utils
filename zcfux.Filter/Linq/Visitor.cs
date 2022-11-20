@@ -23,7 +23,7 @@ using System.Linq.Expressions;
 
 namespace zcfux.Filter.Linq;
 
-internal class Visitor<T> : IVisitor
+sealed class Visitor<T> : IVisitor
 {
     readonly Stack<Frame<T>> _stack = new();
 

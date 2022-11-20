@@ -24,7 +24,7 @@ using System.Reflection;
 
 namespace zcfux.SqlMapper;
 
-internal static class Cache
+static class Cache
 {
     static readonly ConcurrentDictionary<Type, IDictionary<string, PropertyInfo>> Map = new();
 

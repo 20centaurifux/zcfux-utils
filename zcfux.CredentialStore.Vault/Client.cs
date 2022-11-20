@@ -26,7 +26,7 @@ using zcfux.CredentialStore.Vault.Model;
 
 namespace zcfux.CredentialStore.Vault;
 
-internal sealed class Client
+sealed class Client
 {
     readonly Options _options;
     readonly HttpClient _client;

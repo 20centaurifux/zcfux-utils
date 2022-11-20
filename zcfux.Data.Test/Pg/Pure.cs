@@ -24,7 +24,7 @@ using zcfux.SqlMapper;
 
 namespace zcfux.Data.Test.Pg;
 
-internal sealed class Pure : IPure
+sealed class Pure : IPure
 {
     void IPure.DeleteAll(object handle)
         => DeleteAll((handle as Handle)!);

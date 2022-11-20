@@ -25,7 +25,7 @@ using Microsoft.Data.Sqlite;
 
 namespace zcfux.KeyValueStore.Persistent;
 
-internal sealed class Db : IDisposable
+sealed class Db : IDisposable
 {
     internal sealed record Association(string Key, string Hash, byte[]? Blob);
 

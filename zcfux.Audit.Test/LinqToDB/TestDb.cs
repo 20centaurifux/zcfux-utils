@@ -23,7 +23,7 @@ using Microsoft.Data.Sqlite;
 
 namespace zcfux.Audit.Test.LinqToDB;
 
-internal sealed class TestDb
+sealed class TestDb
 {
     public string? ConnectionString { get; private set; }
 

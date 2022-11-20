@@ -24,7 +24,7 @@ using LinqToDB.Mapping;
 namespace zcfux.User.LinqToDB;
 
 [Table(Schema = "user", Name = "Users")]
-internal class UserView
+sealed class UserView
 {
 #pragma warning disable CS8618
     public UserView()

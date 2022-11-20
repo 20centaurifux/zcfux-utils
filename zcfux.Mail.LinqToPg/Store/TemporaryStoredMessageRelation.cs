@@ -23,7 +23,7 @@ using LinqToDB.Mapping;
 
 namespace zcfux.Mail.LinqToPg.Store;
 
-internal sealed class TemporaryStoredMessageRelation : StoredMessageView
+sealed class TemporaryStoredMessageRelation : StoredMessageView
 {
     [Column(Name = "Offset")]
     public long Offset { get; set; }

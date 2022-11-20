@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Replication.Test.CouchDb;
 
-internal static class Replication
+static class Replication
 {
     public static void Push(string from, string to)
     {

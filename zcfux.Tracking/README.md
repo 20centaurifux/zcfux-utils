@@ -35,7 +35,7 @@ public class Person : ATrackable
     public virtual Address? Address { get; set; }
 }
 
-internal static class App
+static class App
 {
     static void Main(string[] args)
     {

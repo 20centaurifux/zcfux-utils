@@ -25,7 +25,7 @@ using zcfux.User.Password;
 namespace zcfux.User.LinqToDB.Password;
 
 [Table(Schema = "user", Name = "Password")]
-internal class PasswordRelation : IPassword
+sealed class PasswordRelation : IPassword
 {
 #pragma warning disable CS8618
     [Column(Name = "User"), PrimaryKey]

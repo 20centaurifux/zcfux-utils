@@ -24,7 +24,7 @@ using LinqToDB.Mapping;
 namespace zcfux.Audit.LinqToPg;
 
 #pragma warning disable CS8618
-internal class EventView : IEventView
+class EventView : IEventView
 {
     [Column(Name = "Id")]
     public long Id { get; set; }

@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Tracking;
 
-internal static class Extensions
+static class Extensions
 {
     public static object Copy(this object self)
         => (self is ICloneable cloneable) ? cloneable.Clone() : self;

@@ -245,7 +245,7 @@ public sealed class Tests
         container.Build();
 
         var injectable = container.Inject<InjectableB>();
-        injectable = container.Inject<InjectableB>();
+
         Assert.IsInstanceOf<InjectableB>(injectable);
     }
 
@@ -261,6 +261,36 @@ public sealed class Tests
         Assert.Throws<ContainerException>(() =>
         {
             container.Inject<InjectableB>();
+        });
+    }
+
+    [Test]
+    public void CreateNewInjectableFromType()
+    {
+        var container = new Container();
+
+        container.Register(new Foo());
+        container.Register(new Bar());
+
+        container.Build();
+
+        var injectable = container.Inject(typeof(InjectableB));
+
+        Assert.IsInstanceOf<InjectableB>(injectable);
+    }
+
+    [Test]
+    public void CreateNewInjectableFromTypeWithoutMatchingConstructor()
+    {
+        var container = new Container();
+
+        container.Register(new Foo());
+
+        container.Build();
+
+        Assert.Throws<ContainerException>(() =>
+        {
+            container.Inject(typeof(InjectableB));
         });
     }
 

@@ -100,30 +100,33 @@ public static class Extensions
         }
     }
 
-
     public static T Inject<T>(this IResolver self)
         where T : class
+        => (self.Inject(typeof(T)) as T)!;
+
+    public static object Inject(this IResolver self, Type type)
     {
-        var ctor = self.FindConstructor<T>()
+        var ctor = self.FindConstructor(type)
                    ?? throw new ContainerException("No compatible constructor found.");
 
         var parameters = self.CreateParameters(ctor).ToArray();
 
-        var instance = ctor.Invoke(parameters) as T;
+        var instance = ctor.Invoke(parameters);
 
-        return instance!;
+        return instance;
     }
 
-    static ConstructorInfo? FindConstructor<T>(this IResolver self)
+    static ConstructorInfo? FindConstructor(this IResolver self, Type type)
     {
         var cache = self.GetCachedConstructors();
 
-        if (!cache.TryGetValue(typeof(T), out var match))
+        if (!cache.TryGetValue(type, out var match))
         {
-            var ctors = typeof(T).GetConstructors(BindingFlags.Instance | BindingFlags.Public);
+            var ctors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public);
 
             match = ctors
-                .SingleOrDefault(ctor =>
+                .OrderByDescending(ctor => ctor.GetParameters().Length)
+                .FirstOrDefault(ctor =>
                     ctor
                         .GetParameters()
                         .Select(p => p.ParameterType)
@@ -131,7 +134,7 @@ public static class Extensions
 
             if (match is { })
             {
-                cache[typeof(T)] = match;
+                cache[type] = match;
             }
         }
 

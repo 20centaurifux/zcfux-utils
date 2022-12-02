@@ -26,11 +26,12 @@ using Castle.DynamicProxy;
 
 namespace zcfux.Tracking;
 
-public abstract class ATrackable :
-    IInitialProperties,
-    IChangedProperties,
-    ITouchedProperties,
-    INotifyPropertyChanged
+public abstract class ATrackable
+    : IInitialProperties
+    , IChangedProperties
+    , ITouchedProperties
+    , INotifyPropertyChanged
+    , ITrackable
 {
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -128,7 +129,7 @@ public abstract class ATrackable :
         }
     }
 
-    public ReadOnlyDictionary<string, ChangedValue> GetChangedProperties()
+    public IReadOnlyDictionary<string, ChangedValue> GetChangedProperties()
         => ProxyUtil.IsProxy(this)
             ? FormatChangedProperties()
             : throw new InvalidOperationException();

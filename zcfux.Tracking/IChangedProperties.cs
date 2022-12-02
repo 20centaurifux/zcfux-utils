@@ -23,9 +23,9 @@ using System.Collections.ObjectModel;
 
 namespace zcfux.Tracking;
 
-public interface IChangedProperties
+internal interface IChangedProperties
 {
     internal void ChangeProperty(string propertyName, object? value);
 
-    ReadOnlyDictionary<string, ChangedValue> GetChangedProperties();
+    IReadOnlyDictionary<string, ChangedValue> GetChangedProperties();
 }

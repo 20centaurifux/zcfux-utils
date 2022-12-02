@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Tracking;
 
-public interface IInitialProperties
+internal interface IInitialProperties
 {
     internal void InitializeProperty(string propertyName, object? value);
 

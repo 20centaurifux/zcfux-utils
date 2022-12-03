@@ -53,7 +53,7 @@ public sealed class SessionId
 
     public override int GetHashCode()
     {
-        return _id.GetHashCode();
+        return ToString().GetHashCode();
     }
 
     public override string ToString()

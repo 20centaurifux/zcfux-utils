@@ -45,6 +45,11 @@ public sealed class Manager<TStore> : IManager where TStore : AStore, new()
     public Manager(TimeSpan sessionTimeout)
         => _ttlMillis = Convert.ToInt32(sessionTimeout.TotalMilliseconds);
 
+    public TimeSpan Timeout
+    {
+        get => TimeSpan.FromMilliseconds(_ttlMillis);
+    }
+
     public void Start()
     {
         if (Interlocked.CompareExchange(ref _state, Started, Stopped) == Stopped)

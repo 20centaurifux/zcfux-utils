@@ -31,6 +31,8 @@ public interface IManager
 
     void Stop();
 
+    TimeSpan Timeout { get; }
+
     SessionState New();
 
     SessionState Get(SessionId key);

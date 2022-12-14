@@ -43,19 +43,29 @@ public sealed class Tests
         Foo? _privateFooProp { get; set; }
 
         [Inject]
+#pragma warning disable CS0628
         protected Foo? ProtectedFooProp { get; set; }
+#pragma warning restore CS0628
 
         [Inject]
         public Foo? PublicFooProp { get; set; }
 
         [Inject]
+#pragma warning disable CS0649
         Bar? _privateBarField;
+#pragma warning restore CS0649
 
         [Inject]
+#pragma warning disable CS0628
+#pragma warning disable CS0649
         protected Bar? ProtectedBarField;
+#pragma warning restore CS0649
+#pragma warning restore CS0628
 
         [Inject]
+#pragma warning disable CS0649
         public Bar? PublicBarField;
+#pragma warning restore CS0649
 
         [Inject]
         public Baz? UnregisteredBazProp { get; set; }

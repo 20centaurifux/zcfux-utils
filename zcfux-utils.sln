@@ -111,11 +111,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zcfux.CredentialStore.SQLit
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zcfux.Telemetry", "zcfux.Telemetry\zcfux.Telemetry.csproj", "{8795302F-5F76-4C82-B183-408367D356F4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Telemetry.MQTT", "zcfux.Telemetry.MQTT\zcfux.Telemetry.MQTT.csproj", "{5192CECA-5D88-4430-9D61-E26FF162956D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zcfux.Telemetry.MQTT", "zcfux.Telemetry.MQTT\zcfux.Telemetry.MQTT.csproj", "{5192CECA-5D88-4430-9D61-E26FF162956D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Telemetry.Test", "zcfux.Telemetry.Test\zcfux.Telemetry.Test.csproj", "{4EBC4AB8-4CFF-45D0-9CA4-8B2BF8D2187B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zcfux.Telemetry.Test", "zcfux.Telemetry.Test\zcfux.Telemetry.Test.csproj", "{4EBC4AB8-4CFF-45D0-9CA4-8B2BF8D2187B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Audit.LinqToDB", "zcfux.Audit.LinqToDB\zcfux.Audit.LinqToDB.csproj", "{6DF3B44E-1111-4796-93EF-1A4B8E047F40}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zcfux.Audit.LinqToDB", "zcfux.Audit.LinqToDB\zcfux.Audit.LinqToDB.csproj", "{6DF3B44E-1111-4796-93EF-1A4B8E047F40}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Translation", "zcfux.Translation\zcfux.Translation.csproj", "{4B7B8C49-D377-42E2-B63D-6669619CBF29}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -351,6 +353,10 @@ Global
 		{6DF3B44E-1111-4796-93EF-1A4B8E047F40}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6DF3B44E-1111-4796-93EF-1A4B8E047F40}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6DF3B44E-1111-4796-93EF-1A4B8E047F40}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B7B8C49-D377-42E2-B63D-6669619CBF29}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B7B8C49-D377-42E2-B63D-6669619CBF29}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B7B8C49-D377-42E2-B63D-6669619CBF29}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B7B8C49-D377-42E2-B63D-6669619CBF29}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -121,6 +121,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Translation", "zcfux.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Translation.LinqtoDB", "zcfux.Translation.LinqtoDB\zcfux.Translation.LinqtoDB.csproj", "{36F7B1D3-84AC-48BA-9B07-0737D9C897C7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zcfux.Translation.Test", "zcfux.Translation.Test\zcfux.Translation.Test.csproj", "{9FF93B71-427D-421A-992E-34A9431AF127}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -363,6 +365,10 @@ Global
 		{36F7B1D3-84AC-48BA-9B07-0737D9C897C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{36F7B1D3-84AC-48BA-9B07-0737D9C897C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{36F7B1D3-84AC-48BA-9B07-0737D9C897C7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FF93B71-427D-421A-992E-34A9431AF127}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FF93B71-427D-421A-992E-34A9431AF127}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9FF93B71-427D-421A-992E-34A9431AF127}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9FF93B71-427D-421A-992E-34A9431AF127}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<Version>1.2.0</Version>
+		<Authors>Sebastian Fedrau</Authors>
+		<Company>Sebastian Fedrau</Company>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\zcfux.Data.LinqToDB\zcfux.Data.LinqToDB.csproj" />
+		<ProjectReference Include="..\zcfux.Translation\zcfux.Translation.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+			<_Parameter1>zcfux.Audit.Test</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
+</Project>

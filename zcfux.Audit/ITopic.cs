@@ -19,6 +19,8 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using zcfux.Translation.Data;
+
 namespace zcfux.Audit;
 
 public interface ITopic
@@ -27,5 +29,7 @@ public interface ITopic
 
     ITopicKind Kind { get; }
 
-    string DisplayName { get; }
+    ITextResource DisplayName { get; }
+
+    bool Translatable { get; }
 }

@@ -27,7 +27,13 @@ public static class TopicFilters
 {
     public static Column<long> Id { get; } = Column<long>.FromMember();
 
-    public static Column<string> DisplayName { get; } = Column<string>.FromMember();
+    public static Column<int> TextId { get; } = Column<int>.FromMember();
+
+    public static Column<int> TextCategoryId { get; } = Column<int>.FromMember();
+
+    public static Column<string> TextCategory { get; } = Column<string>.FromMember();
+
+    public static Column<string> MsgId { get; } = Column<string>.FromMember();
 
     public static Column<int> KindId { get; } = Column<int>.FromMember();
 

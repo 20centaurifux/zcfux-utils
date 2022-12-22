@@ -20,6 +20,7 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using zcfux.Filter;
+using zcfux.Translation.Data;
 
 namespace zcfux.Audit;
 
@@ -29,7 +30,9 @@ public interface ITopics
 
     ITopicKind GetTopicKind(object handle, int id);
 
-    ITopic NewTopic(object handle, ITopicKind topicKind, string displayName);
+    ITopic NewTopic(object handle, ITopicKind topicKind, ITextResource displayName);
+
+    ITopic NewTranslatableTopic(object handle, ITopicKind topicKind, ITextResource displayName);
 
     IEnumerable<ITopic> QueryTopics(object handle, Query query);
 }

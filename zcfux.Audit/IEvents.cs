@@ -29,7 +29,7 @@ public interface IEvents
 
     IEvent NewEvent(object handle, IEventKind kind, ESeverity severity, DateTime createdAt, ITopic? topic = null);
 
-    ICatalogue CreateCatalogue(object handle, ECatalogue catalogue);
+    ICatalogue CreateCatalogue(object handle, ECatalogue catalogue, string locale);
 
     void ArchiveEvents(object handle, DateTime before);
 }

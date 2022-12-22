@@ -29,12 +29,6 @@ public sealed class TopicKind : ITopicKind
         Name = name;
     }
 
-    public TopicKind(ITopicKind other)
-    {
-        Id = other.Id;
-        Name = other.Name;
-    }
-
     public int Id { get; }
 
     public string Name { get; }

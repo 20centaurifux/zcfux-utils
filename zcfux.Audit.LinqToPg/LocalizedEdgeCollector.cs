@@ -29,13 +29,13 @@ sealed class EdgeCollector<TEventView>
     public event EventHandler? Completed;
 
     readonly ECatalogue _catalogue;
-    IEvent? _event;
-    readonly List<IEdge> _edges = new();
+    ILocalizedEvent? _event;
+    readonly List<ILocalizedEdge> _edges = new();
 
     public EdgeCollector(ECatalogue catalogue)
         => _catalogue = catalogue;
 
-    public IEnumerable<(IEvent, IEnumerable<IEdge>)> Collect(IQueryable<EventEdgePair> pairs)
+    public IEnumerable<(ILocalizedEvent, IEnumerable<ILocalizedEdge>)> Collect(IQueryable<EventEdgePair> pairs)
     {
         Clear();
 
@@ -73,15 +73,15 @@ sealed class EdgeCollector<TEventView>
         _edges.Clear();
     }
 
-    IEvent ToEvent(IEventView ev)
+    ILocalizedEvent ToEvent(IEventView ev)
         => (_catalogue == ECatalogue.Recent)
-            ? ev.ToRecentEvent()
-            : ev.ToArchivedEvent();
+            ? ev.ToRecentLocalizedEvent()
+            : ev.ToArchivedLocalizedEvent();
 
-    static IEdge ToEdge(EdgeView edge)
-        => new Edge
+    static ILocalizedEdge ToEdge(EdgeView edge)
+        => new LocalizedEdge
         {
-            Left = new Topic
+            Left = new LocalizedTopic
             {
                 Id = edge.LeftTopicId,
                 Kind = new TopicKind(edge.LeftTopicKindId, edge.LeftTopicKind),
@@ -92,7 +92,7 @@ sealed class EdgeCollector<TEventView>
                 Id = edge.AssociationId,
                 Name = edge.Association
             },
-            Right = new Topic
+            Right = new LocalizedTopic
             {
                 Id = edge.RightTopicId,
                 Kind = new TopicKind(edge.RightTopicKindId, edge.RightTopicKind),

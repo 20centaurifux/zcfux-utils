@@ -29,12 +29,6 @@ public sealed class EventKind : IEventKind
         Name = name;
     }
 
-    public EventKind(IEventKind other)
-    {
-        Id = other.Id;
-        Name = other.Name;
-    }
-
     public int Id { get; }
 
     public string Name { get; }

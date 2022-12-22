@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\zcfux.Filter\zcfux.Filter.csproj" />
+    <ProjectReference Include="..\zcfux.Translation\zcfux.Translation.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -15,7 +16,7 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Authors>Sebastian Fedrau</Authors>
         <Company>Sebastian Fedrau</Company>
-        <PackageVersion>1.2.0</PackageVersion>
+        <PackageVersion>1.3.0</PackageVersion>
     </PropertyGroup>
 
 </Project>

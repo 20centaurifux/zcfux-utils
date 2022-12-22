@@ -25,9 +25,11 @@ namespace zcfux.Audit;
 
 public interface ICatalogue
 {
-    IEnumerable<(IEvent, IEnumerable<IEdge>)> QueryEvents(Query query);
+    IEnumerable<(ILocalizedEvent, IEnumerable<ILocalizedEdge>)> QueryEvents(Query query);
 
-    IEnumerable<(IEvent, IEnumerable<IEdge>)> FindAssociations(Query eventQuery, INode associationFilter);
+    IEnumerable<(ILocalizedEvent, IEnumerable<ILocalizedEdge>)> FindAssociations(
+        Query eventQuery,
+        INode associationFilter);
 
     void Delete(INode filter);
 }

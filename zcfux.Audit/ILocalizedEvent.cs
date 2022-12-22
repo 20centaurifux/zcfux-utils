@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Audit;
 
-public interface IEvent
+public interface ILocalizedEvent
 {
     long Id { get; }
 
@@ -29,7 +29,7 @@ public interface IEvent
 
     ESeverity Severity { get; }
 
-    ITopic? Topic { get; }
+    ILocalizedTopic? Topic { get; }
 
     bool Archived { get; }
 

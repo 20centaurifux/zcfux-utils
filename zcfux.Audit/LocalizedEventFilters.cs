@@ -19,19 +19,21 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using zcfux.Filter;
+
 namespace zcfux.Audit;
 
-public interface IEvent
+public static class LocalizedEventFilters
 {
-    long Id { get; }
+    public static Column<long> Id { get; } = Column<long>.FromMember();
 
-    IEventKind Kind { get; }
+    public static Column<DateTime> CreatedAt { get; } = Column<DateTime>.FromMember();
 
-    ESeverity Severity { get; }
+    public static Column<ESeverity> Severity { get; } = Column<ESeverity>.FromMember();
 
-    ITopic? Topic { get; }
+    public static Column<int> KindId { get; } = Column<int>.FromMember();
 
-    bool Archived { get; }
+    public static Column<string> Kind { get; } = Column<string>.FromMember();
 
-    DateTime CreatedAt { get; }
+    public static Column<string> DisplayName { get; } = Column<string>.FromMember();
 }

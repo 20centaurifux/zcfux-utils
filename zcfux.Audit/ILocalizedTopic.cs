@@ -19,19 +19,15 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using zcfux.Translation.Data;
+
 namespace zcfux.Audit;
 
-public interface IEvent
+public interface ILocalizedTopic
 {
     long Id { get; }
 
-    IEventKind Kind { get; }
+    ITopicKind Kind { get; }
 
-    ESeverity Severity { get; }
-
-    ITopic? Topic { get; }
-
-    bool Archived { get; }
-
-    DateTime CreatedAt { get; }
+    string DisplayName { get; }
 }

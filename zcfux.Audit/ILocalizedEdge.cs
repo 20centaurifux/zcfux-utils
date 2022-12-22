@@ -21,17 +21,11 @@
  ***************************************************************************/
 namespace zcfux.Audit;
 
-public interface IEvent
+public interface ILocalizedEdge
 {
-    long Id { get; }
+    ILocalizedTopic Left { get; }
 
-    IEventKind Kind { get; }
+    IAssociation Association { get; }
 
-    ESeverity Severity { get; }
-
-    ITopic? Topic { get; }
-
-    bool Archived { get; }
-
-    DateTime CreatedAt { get; }
+    ILocalizedTopic Right { get; }
 }

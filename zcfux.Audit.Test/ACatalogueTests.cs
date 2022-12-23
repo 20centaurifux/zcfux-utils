@@ -22,21 +22,40 @@
 using NUnit.Framework;
 using zcfux.Audit.Test.Event;
 using zcfux.Filter;
+using zcfux.Translation;
 
 namespace zcfux.Audit.Test;
 
 public abstract class ACatalogueTests : ADbTest
 {
     Utility? _utility;
+    Dictionary<string, ITranslation> _translations = default!;
 
     [SetUp]
     public override void Setup()
     {
         base.Setup();
 
-        _utility = new Utility(_db!, _handle!);
+        _utility = new Utility(_auditDb!, _translationDb!, _handle!);
 
         _utility.InsertDefaultEntries();
+
+        _translations = new Dictionary<string, ITranslation>
+        {
+            ["de-DE"] = LoadTranslation("de-DE"),
+            ["en-US"] = LoadTranslation("en-US")
+        };
+    }
+
+    ITranslation LoadTranslation(string locale)
+    {
+        var translation = new Translation.Translation();
+
+        var entries = _translationDb!.GetTranslation(_handle!, locale);
+
+        translation.Setup(entries);
+
+        return translation;
     }
 
     protected virtual void MoveEvents()
@@ -57,11 +76,11 @@ public abstract class ACatalogueTests : ADbTest
         MoveEvents();
 
         var qb = new QueryBuilder()
-            .WithFilter(EventFilters.Id.EqualTo(ev.Id));
+            .WithFilter(LocalizedEventFilters.Id.EqualTo(ev.Id));
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
-        TestSingleLoginEventQuery(catalogue, qb.Build(), ev, "::1", "Alice", session);
+        TestSingleLoginEventQuery(catalogue, qb.Build(), ev, "::1", "Alice", session, "en-US");
     }
 
     [Test]
@@ -76,11 +95,11 @@ public abstract class ACatalogueTests : ADbTest
         MoveEvents();
 
         var qb = new QueryBuilder()
-            .WithFilter(EventFilters.Severity.EqualTo(ESeverity.Low));
+            .WithFilter(LocalizedEventFilters.Severity.EqualTo(ESeverity.Low));
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
-        TestSingleLoginEventQuery(catalogue, qb.Build(), ev, "::1", "Alice", session);
+        TestSingleLoginEventQuery(catalogue, qb.Build(), ev, "::1", "Alice", session, "en-US");
     }
 
     [Test]
@@ -95,11 +114,11 @@ public abstract class ACatalogueTests : ADbTest
         MoveEvents();
 
         var qb = new QueryBuilder()
-            .WithFilter(EventFilters.CreatedAt.Between(ev.CreatedAt.AddDays(-1), ev.CreatedAt));
+            .WithFilter(LocalizedEventFilters.CreatedAt.Between(ev.CreatedAt.AddDays(-1), ev.CreatedAt));
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
-        TestSingleLoginEventQuery(catalogue, qb.Build(), ev, "::1", "Alice", session);
+        TestSingleLoginEventQuery(catalogue, qb.Build(), ev, "::1", "Alice", session, "en-US");
     }
 
     [Test]
@@ -114,11 +133,11 @@ public abstract class ACatalogueTests : ADbTest
         MoveEvents();
 
         var qb = new QueryBuilder()
-            .WithFilter(EventFilters.KindId.EqualTo(ev.Kind.Id));
+            .WithFilter(LocalizedEventFilters.KindId.EqualTo(ev.Kind.Id));
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
-        TestSingleLoginEventQuery(catalogue, qb.Build(), ev, "::1", "Alice", session);
+        TestSingleLoginEventQuery(catalogue, qb.Build(), ev, "::1", "Alice", session, "en-US");
     }
 
     [Test]
@@ -133,11 +152,11 @@ public abstract class ACatalogueTests : ADbTest
         MoveEvents();
 
         var qb = new QueryBuilder()
-            .WithFilter(EventFilters.Kind.EqualTo(ev.Kind.Name));
+            .WithFilter(LocalizedEventFilters.Kind.EqualTo(ev.Kind.Name));
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
-        TestSingleLoginEventQuery(catalogue, qb.Build(), ev, "::1", "Alice", session);
+        TestSingleLoginEventQuery(catalogue, qb.Build(), ev, "::1", "Alice", session, "en-US");
     }
 
     [Test]
@@ -152,11 +171,11 @@ public abstract class ACatalogueTests : ADbTest
         MoveEvents();
 
         var qb = new QueryBuilder()
-            .WithFilter(EventFilters.DisplayName.EqualTo("Login"));
+            .WithFilter(LocalizedEventFilters.DisplayName.EqualTo("Login"));
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
-        TestSingleLoginEventQuery(catalogue, qb.Build(), ev, "::1", "Alice", session);
+        TestSingleLoginEventQuery(catalogue, qb.Build(), ev, "::1", "Alice", session, "en-US");
     }
 
     [Test]
@@ -175,12 +194,12 @@ public abstract class ACatalogueTests : ADbTest
         MoveEvents();
 
         var qb = new QueryBuilder()
-            .WithOrderBy(EventFilters.CreatedAt)
+            .WithOrderBy(LocalizedEventFilters.CreatedAt)
             .WithSkip(1);
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
-        TestSingleLoginEventQuery(catalogue, qb.Build(), ev, "127.0.0.1", "Bob", session);
+        TestSingleLoginEventQuery(catalogue, qb.Build(), ev, "127.0.0.1", "Bob", session, "en-US");
     }
 
     [Test]
@@ -195,12 +214,12 @@ public abstract class ACatalogueTests : ADbTest
         MoveEvents();
 
         var qb = new QueryBuilder()
-            .WithOrderBy(EventFilters.CreatedAt)
+            .WithOrderBy(LocalizedEventFilters.CreatedAt)
             .WithLimit(1);
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
-        TestSingleLoginEventQuery(catalogue, qb.Build(), ev, "::1", "Alice", session);
+        TestSingleLoginEventQuery(catalogue, qb.Build(), ev, "::1", "Alice", session, "en-US");
     }
 
     [Test]
@@ -217,13 +236,13 @@ public abstract class ACatalogueTests : ADbTest
         MoveEvents();
 
         var qb = new QueryBuilder()
-            .WithOrderBy(EventFilters.CreatedAt)
+            .WithOrderBy(LocalizedEventFilters.CreatedAt)
             .WithSkip(1)
             .WithLimit(1);
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
-        TestSingleLoginEventQuery(catalogue, qb.Build(), ev, "::1", "Alice", session);
+        TestSingleLoginEventQuery(catalogue, qb.Build(), ev, "::1", "Alice", session, "en-US");
     }
 
     [Test]
@@ -234,11 +253,11 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
-        catalogue.Delete(EventFilters.Id.EqualTo(first.Id));
+        catalogue.Delete(LocalizedEventFilters.Id.EqualTo(first.Id));
 
-        TestSingleLoginEventQuery(catalogue, QueryBuilder.All(), second, "::1", "Bob", "world");
+        TestSingleLoginEventQuery(catalogue, QueryBuilder.All(), second, "::1", "Bob", "world", "en-US");
     }
 
     [Test]
@@ -249,11 +268,11 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
-        catalogue.Delete(EventFilters.Severity.EqualTo(ESeverity.Critical));
+        catalogue.Delete(LocalizedEventFilters.Severity.EqualTo(ESeverity.Critical));
 
-        TestSingleLoginEventQuery(catalogue, QueryBuilder.All(), first, "::1", "Alice", "hello world");
+        TestSingleLoginEventQuery(catalogue, QueryBuilder.All(), first, "::1", "Alice", "hello world", "en-US");
     }
 
     [Test]
@@ -264,11 +283,11 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
-        catalogue.Delete(EventFilters.CreatedAt.EqualTo(first.CreatedAt));
+        catalogue.Delete(LocalizedEventFilters.CreatedAt.EqualTo(first.CreatedAt));
 
-        TestSingleLoginEventQuery(catalogue, QueryBuilder.All(), second, "::1", "Bob", "world");
+        TestSingleLoginEventQuery(catalogue, QueryBuilder.All(), second, "::1", "Bob", "world", "en-US");
     }
 
     [Test]
@@ -279,11 +298,11 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
-        catalogue.Delete(EventFilters.KindId.EqualTo(second.Kind.Id));
+        catalogue.Delete(LocalizedEventFilters.KindId.EqualTo(second.Kind.Id));
 
-        TestSingleLoginEventQuery(catalogue, QueryBuilder.All(), first, "::1", "Alice", "hello world");
+        TestSingleLoginEventQuery(catalogue, QueryBuilder.All(), first, "::1", "Alice", "hello world", "en-US");
     }
 
     [Test]
@@ -294,11 +313,11 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
-        catalogue.Delete(EventFilters.Kind.EqualTo(second.Kind.Name));
+        catalogue.Delete(LocalizedEventFilters.Kind.EqualTo(second.Kind.Name));
 
-        TestSingleLoginEventQuery(catalogue, QueryBuilder.All(), first, "::1", "Alice", "hello world");
+        TestSingleLoginEventQuery(catalogue, QueryBuilder.All(), first, "::1", "Alice", "hello world", "en-US");
     }
 
     [Test]
@@ -309,11 +328,15 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
-        catalogue.Delete(EventFilters.DisplayName.EqualTo(second.Topic!.DisplayName));
+        var displayName = _translations["en-US"].Translate(
+            second.Topic!.DisplayName.Category.Name,
+            second.Topic.DisplayName.MsgId)!;
 
-        TestSingleLoginEventQuery(catalogue, QueryBuilder.All(), first, "::1", "Alice", "hello world");
+        catalogue.Delete(LocalizedEventFilters.DisplayName.EqualTo(displayName));
+
+        TestSingleLoginEventQuery(catalogue, QueryBuilder.All(), first, "::1", "Alice", "hello world", "en-US");
     }
 
     [Test]
@@ -323,55 +346,74 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
-        catalogue.Delete(EventFilters.Id.EqualTo(ev.Id));
+        catalogue.Delete(LocalizedEventFilters.Id.EqualTo(ev.Id));
 
         var qb = new QueryBuilder()
             .WithFilter(TopicFilters.Id.EqualTo(topic.Id));
 
-        var results = _db.Topics.QueryTopics(_handle!, qb.Build()).ToArray();
+        var results = _auditDb.Topics.QueryTopics(_handle!, qb.Build()).ToArray();
 
         Assert.AreEqual(0, results.Length);
     }
 
     [Test]
-    public void DeleteEvents_ReferencedTopicExists()
+    public void DeleteEvents_ReferencedTopicRemains()
     {
-        var alice = _db!.Topics.NewTopic(_handle!, TopicKinds.User, "Alice");
+        var alice = _auditDb!.Topics.NewTopic(
+            _handle!,
+            TopicKinds.User,
+            _translationDb!.GetOrCreateTextResource(_handle!, _utility!.TextCategory, "Alice"));
 
-        var eventTopic = _db.Topics.NewTopic(_handle!, TopicKinds.Event, "User created");
+        var eventTopic = _auditDb.Topics.NewTopic(
+            _handle!,
+            TopicKinds.Event,
+            _translationDb!.GetOrCreateTextResource(_handle!, _utility!.TextCategory, "User created"));
 
-        var firstEvent = _db.Events.NewEvent(_handle!, EventKinds.Security, ESeverity.Medium, DateTime.UtcNow, eventTopic);
+        var firstEvent = _auditDb.Events.NewEvent(_handle!, EventKinds.Security, ESeverity.Medium, DateTime.UtcNow, eventTopic);
 
-        _db.Associations.Associate(_handle!, eventTopic, Associations.Created, alice);
+        _auditDb.Associations.Associate(_handle!, eventTopic, Associations.Created, alice);
 
-        eventTopic = _db.Topics.NewTopic(_handle!, TopicKinds.Event, "User deleted");
+        eventTopic = _auditDb.Topics.NewTopic(
+            _handle!,
+            TopicKinds.Event,
+            _translationDb!.GetOrCreateTextResource(_handle!, _utility!.TextCategory, "User deleted"));
 
-        _db.Events.NewEvent(_handle!, EventKinds.Security, ESeverity.Medium, DateTime.UtcNow, eventTopic);
+        _auditDb.Events.NewEvent(_handle!, EventKinds.Security, ESeverity.Medium, DateTime.UtcNow, eventTopic);
 
-        _db.Associations.Associate(_handle!, eventTopic, Associations.Created, alice);
+        _auditDb.Associations.Associate(_handle!, eventTopic, Associations.Created, alice);
 
         MoveEvents();
 
-        var catalogue = _db.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
-        catalogue.Delete(EventFilters.Id.EqualTo(firstEvent.Id));
+        catalogue.Delete(LocalizedEventFilters.Id.EqualTo(firstEvent.Id));
 
         var qb = new QueryBuilder()
             .WithFilter(TopicFilters.Id.EqualTo(alice.Id));
 
-        var topic = _db.Topics.QueryTopics(_handle!, qb.Build()).FirstOrDefault();
+        var topic = _auditDb.Topics.QueryTopics(_handle!, qb.Build()).FirstOrDefault();
 
         Assert.IsInstanceOf<ITopic>(topic);
 
         Assert.AreEqual(alice.Id, topic!.Id);
         Assert.AreEqual(alice.Kind.Id, topic.Kind.Id);
         Assert.AreEqual(alice.Kind.Name, topic.Kind.Name);
-        Assert.AreEqual(alice.DisplayName, topic.DisplayName);
+        Assert.AreEqual(alice.DisplayName.Id, topic.DisplayName.Id);
+        Assert.AreEqual(alice.DisplayName.Category.Id, topic.DisplayName.Category.Id);
+        Assert.AreEqual(alice.DisplayName.Category.Name, topic.DisplayName.Category.Name);
+        Assert.AreEqual(alice.DisplayName.MsgId, topic.DisplayName.MsgId);
     }
 
-    void TestSingleLoginEventQuery(ICatalogue catalogue, Query query, IEvent ev, string endpoint, string username, string session)
+    void TestSingleLoginEventQuery(
+        ICatalogue catalogue,
+        Query query,
+        IEvent ev,
+        string endpoint,
+        string username,
+        string session,
+        string locale)
     {
         var result = catalogue.QueryEvents(query).ToArray();
 
@@ -386,7 +428,7 @@ public abstract class ACatalogueTests : ADbTest
             .Item2
             .ToArray();
 
-        TestEquals(ev, e);
+        TestEquals(ev, e, locale);
 
         Assert.AreEqual(3, edges.Count());
 
@@ -406,13 +448,13 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        TestOrderById(_db!.Events.CreateCatalogue(_handle!, Catalogue));
+        TestOrderById(_auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US"));
     }
 
     static void TestOrderById(ICatalogue catalogue)
     {
         var qb = new QueryBuilder()
-            .WithOrderByDescending(EventFilters.Id);
+            .WithOrderByDescending(LocalizedEventFilters.Id);
 
         var result = catalogue.QueryEvents(qb.Build()).ToArray();
 
@@ -439,13 +481,13 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        TestOrderBySeverity(_db!.Events.CreateCatalogue(_handle!, Catalogue));
+        TestOrderBySeverity(_auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US"));
     }
 
     static void TestOrderBySeverity(ICatalogue catalogue)
     {
         var qb = new QueryBuilder()
-            .WithOrderByDescending(EventFilters.Severity);
+            .WithOrderByDescending(LocalizedEventFilters.Severity);
 
         var result = catalogue.QueryEvents(qb.Build()).ToArray();
 
@@ -466,13 +508,13 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        TestOrderByCreatedAt(_db!.Events.CreateCatalogue(_handle!, Catalogue));
+        TestOrderByCreatedAt(_auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US"));
     }
 
     static void TestOrderByCreatedAt(ICatalogue catalogue)
     {
         var qb = new QueryBuilder()
-            .WithOrderBy(EventFilters.CreatedAt);
+            .WithOrderBy(LocalizedEventFilters.CreatedAt);
 
         var result = catalogue.QueryEvents(qb.Build()).ToArray();
 
@@ -499,13 +541,13 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        TestOrderByKindId(_db!.Events.CreateCatalogue(_handle!, Catalogue));
+        TestOrderByKindId(_auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US"));
     }
 
     static void TestOrderByKindId(ICatalogue catalogue)
     {
         var qb = new QueryBuilder()
-            .WithOrderByDescending(EventFilters.KindId);
+            .WithOrderByDescending(LocalizedEventFilters.KindId);
 
         var result = catalogue.QueryEvents(qb.Build()).ToArray();
 
@@ -526,13 +568,13 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        TestOrderByKind(_db!.Events.CreateCatalogue(_handle!, Catalogue));
+        TestOrderByKind(_auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US"));
     }
 
     static void TestOrderByKind(ICatalogue catalogue)
     {
         var qb = new QueryBuilder()
-            .WithOrderByDescending(EventFilters.Kind);
+            .WithOrderByDescending(LocalizedEventFilters.Kind);
 
         var result = catalogue.QueryEvents(qb.Build()).ToArray();
 
@@ -553,13 +595,13 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        TestOrderByDisplayName(_db!.Events.CreateCatalogue(_handle!, Catalogue));
+        TestOrderByDisplayName(_auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US"));
     }
 
     static void TestOrderByDisplayName(ICatalogue catalogue)
     {
         var qb = new QueryBuilder()
-            .WithOrderByDescending(EventFilters.DisplayName);
+            .WithOrderByDescending(LocalizedEventFilters.DisplayName);
 
         var result = catalogue.QueryEvents(qb.Build()).ToArray();
 
@@ -576,13 +618,13 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var result = catalogue.FindAssociations(
             QueryBuilder.All(),
             AssociationFilters.LeftTopicId.EqualTo(ev.Topic!.Id));
 
-        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
+        TestSingleLocalizedEventWithSingleEdge(result.ToArray(), ev, Associations.Created, topic, "en-US");
     }
 
     [Test]
@@ -592,16 +634,16 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var qb = new QueryBuilder()
-            .WithFilter(EventFilters.Severity.EqualTo(ESeverity.Medium));
+            .WithFilter(LocalizedEventFilters.Severity.EqualTo(ESeverity.Medium));
 
         var result = catalogue.FindAssociations(
             qb.Build(),
             AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id));
 
-        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
+        TestSingleLocalizedEventWithSingleEdge(result.ToArray(), ev, Associations.Created, topic, "en-US");
     }
 
     [Test]
@@ -611,16 +653,16 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var qb = new QueryBuilder()
-            .WithFilter(EventFilters.Severity.EqualTo(ESeverity.Medium));
+            .WithFilter(LocalizedEventFilters.Severity.EqualTo(ESeverity.Medium));
 
         var result = catalogue.FindAssociations(
             qb.Build(),
             AssociationFilters.LeftTopicKind.EqualTo("Event"));
 
-        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
+        TestSingleLocalizedEventWithSingleEdge(result.ToArray(), ev, Associations.Created, topic, "en-US");
     }
 
     [Test]
@@ -630,13 +672,13 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var result = catalogue.FindAssociations(
             QueryBuilder.All(),
             AssociationFilters.LeftTopic.EqualTo("User created"));
 
-        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
+        TestSingleLocalizedEventWithSingleEdge(result.ToArray(), ev, Associations.Created, topic, "en-US");
     }
 
     [Test]
@@ -646,13 +688,13 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var result = catalogue.FindAssociations(
             QueryBuilder.All(),
             AssociationFilters.AssociationId.EqualTo(Associations.Created.Id));
 
-        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
+        TestSingleLocalizedEventWithSingleEdge(result.ToArray(), ev, Associations.Created, topic, "en-US");
     }
 
     [Test]
@@ -662,13 +704,13 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var result = catalogue.FindAssociations(
             QueryBuilder.All(),
             AssociationFilters.Association.EqualTo("created"));
 
-        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
+        TestSingleLocalizedEventWithSingleEdge(result.ToArray(), ev, Associations.Created, topic, "en-US");
     }
 
     [Test]
@@ -678,13 +720,13 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var result = catalogue.FindAssociations(
             QueryBuilder.All(),
             AssociationFilters.RightTopicId.EqualTo(topic.Id));
 
-        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
+        TestSingleLocalizedEventWithSingleEdge(result.ToArray(), ev, Associations.Created, topic, "en-US");
     }
 
     [Test]
@@ -696,16 +738,16 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var qb = new QueryBuilder()
-            .WithFilter(EventFilters.Severity.EqualTo(ESeverity.Medium));
+            .WithFilter(LocalizedEventFilters.Severity.EqualTo(ESeverity.Medium));
 
         var result = catalogue.FindAssociations(
             qb.Build(),
             AssociationFilters.RightTopicKindId.EqualTo(TopicKinds.User.Id));
 
-        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
+        TestSingleLocalizedEventWithSingleEdge(result.ToArray(), ev, Associations.Created, topic, "en-US");
     }
 
     [Test]
@@ -717,16 +759,16 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var qb = new QueryBuilder()
-            .WithFilter(EventFilters.Severity.EqualTo(ESeverity.Medium));
+            .WithFilter(LocalizedEventFilters.Severity.EqualTo(ESeverity.Medium));
 
         var result = catalogue.FindAssociations(
             qb.Build(),
             AssociationFilters.RightTopicKind.EqualTo("User"));
 
-        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
+        TestSingleLocalizedEventWithSingleEdge(result.ToArray(), ev, Associations.Created, topic, "en-US");
     }
 
     [Test]
@@ -736,13 +778,13 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var result = catalogue.FindAssociations(
             QueryBuilder.All(),
             AssociationFilters.RightTopic.EqualTo("Alice"));
 
-        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
+        TestSingleLocalizedEventWithSingleEdge(result.ToArray(), ev, Associations.Created, topic, "en-US");
     }
 
     [Test]
@@ -752,16 +794,16 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var qb = new QueryBuilder()
-            .WithFilter(EventFilters.Id.EqualTo(ev.Id));
+            .WithFilter(LocalizedEventFilters.Id.EqualTo(ev.Id));
 
         var result = catalogue.FindAssociations(
             qb.Build(),
             AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id));
 
-        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
+        TestSingleLocalizedEventWithSingleEdge(result.ToArray(), ev, Associations.Created, topic, "en-US");
     }
 
     [Test]
@@ -771,10 +813,10 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var qb = new QueryBuilder()
-            .WithFilter(EventFilters.CreatedAt.LessThanOrEqualTo(DateTime.UtcNow));
+            .WithFilter(LocalizedEventFilters.CreatedAt.LessThanOrEqualTo(DateTime.UtcNow));
 
         var result = catalogue.FindAssociations(
                 qb.Build(),
@@ -783,9 +825,18 @@ public abstract class ACatalogueTests : ADbTest
 
         Assert.AreEqual(2, result.Length);
 
-        TestSingleEventWithSingleEdge(result.Where(r => r.Item1.Id == ev1.Id), ev1, Associations.Created, topic1);
+        TestSingleLocalizedEventWithSingleEdge(
+            result.Where(r => r.Item1.Id == ev1.Id).ToArray(),
+            ev1,
+            Associations.Created,
+            topic1,
+            "en-US");
 
-        TestSingleEventWithSingleEdge(result.Where(r => r.Item1.Id == ev2.Id), ev2, Associations.Created, topic2);
+        TestSingleLocalizedEventWithSingleEdge(
+            result.Where(r => r.Item1.Id == ev2.Id).ToArray(),
+            ev2, Associations.Created,
+            topic2,
+            "en-US");
     }
 
     [Test]
@@ -795,16 +846,16 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var qb = new QueryBuilder()
-            .WithFilter(EventFilters.Severity.EqualTo(ESeverity.Critical));
+            .WithFilter(LocalizedEventFilters.Severity.EqualTo(ESeverity.Critical));
 
         var result = catalogue.FindAssociations(
             qb.Build(),
             AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id));
 
-        TestSingleEventWithSingleEdge(result, ev, Associations.Deleted, topic);
+        TestSingleLocalizedEventWithSingleEdge(result.ToArray(), ev, Associations.Deleted, topic, "en-US");
     }
 
     [Test]
@@ -816,12 +867,12 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var qb = new QueryBuilder()
             .WithFilter(Logical.Or(
-                EventFilters.KindId.EqualTo(EventKinds.Service.Id),
-                EventFilters.Kind.EqualTo(EventKinds.Service.Name)));
+                LocalizedEventFilters.KindId.EqualTo(EventKinds.Service.Id),
+                LocalizedEventFilters.Kind.EqualTo(EventKinds.Service.Name)));
 
         var result = catalogue.FindAssociations(
                 qb.Build(),
@@ -830,16 +881,20 @@ public abstract class ACatalogueTests : ADbTest
 
         Assert.AreEqual(1, result.Length);
 
-        TestEquals(ev, result[0].Item1);
+        TestEquals(ev, result[0].Item1, "en-US");
 
         Assert.AreEqual(1, result[0].Item2.Count());
 
         var edge = result[0].Item2.First();
 
+        var displayName = _translations["en-US"].Translate(
+            ev.Topic!.DisplayName.Category.Name,
+            ev.Topic.DisplayName.MsgId);
+
         Assert.AreEqual(ev.Topic!.Id, edge.Left.Id);
         Assert.AreEqual(ev.Topic.Kind.Id, edge.Left.Kind.Id);
         Assert.AreEqual(ev.Topic.Kind.Name, edge.Left.Kind.Name);
-        Assert.AreEqual(ev.Topic.DisplayName, edge.Left.DisplayName);
+        Assert.AreEqual(displayName, edge.Left.DisplayName);
 
         Assert.AreEqual(Associations.Started.Id, edge.Association.Id);
         Assert.AreEqual(Associations.Started.Name, edge.Association.Name);
@@ -856,16 +911,16 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var qb = new QueryBuilder()
-            .WithFilter(EventFilters.DisplayName.EqualTo("User deleted"));
+            .WithFilter(LocalizedEventFilters.DisplayName.EqualTo("User deleted"));
 
         var result = catalogue.FindAssociations(
             qb.Build(),
             AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id));
 
-        TestSingleEventWithSingleEdge(result, ev, Associations.Deleted, topic);
+        TestSingleLocalizedEventWithSingleEdge(result.ToArray(), ev, Associations.Deleted, topic, "en-US");
     }
 
     [Test]
@@ -875,17 +930,17 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var qb = new QueryBuilder()
             .WithSkip(1)
-            .WithOrderBy(EventFilters.CreatedAt);
+            .WithOrderBy(LocalizedEventFilters.CreatedAt);
 
         var result = catalogue.FindAssociations(
             qb.Build(),
             AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id));
 
-        TestSingleEventWithSingleEdge(result, ev, Associations.Deleted, topic);
+        TestSingleLocalizedEventWithSingleEdge(result.ToArray(), ev, Associations.Deleted, topic, "en-US");
     }
 
     [Test]
@@ -895,17 +950,17 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var qb = new QueryBuilder()
             .WithLimit(1)
-            .WithOrderBy(EventFilters.CreatedAt);
+            .WithOrderBy(LocalizedEventFilters.CreatedAt);
 
         var result = catalogue.FindAssociations(
             qb.Build(),
             AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id));
 
-        TestSingleEventWithSingleEdge(result, ev, Associations.Created, topic);
+        TestSingleLocalizedEventWithSingleEdge(result.ToArray(), ev, Associations.Created, topic, "en-US");
     }
 
     [Test]
@@ -917,18 +972,18 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var qb = new QueryBuilder()
             .WithSkip(1)
             .WithLimit(1)
-            .WithOrderBy(EventFilters.CreatedAt);
+            .WithOrderBy(LocalizedEventFilters.CreatedAt);
 
         var result = catalogue.FindAssociations(
             qb.Build(),
             AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id));
 
-        TestSingleEventWithSingleEdge(result, ev, Associations.Deleted, topic);
+        TestSingleLocalizedEventWithSingleEdge(result.ToArray(), ev, Associations.Deleted, topic, "en-US");
     }
 
     [Test]
@@ -938,10 +993,10 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var qb = new QueryBuilder()
-            .WithOrderByDescending(EventFilters.Id);
+            .WithOrderByDescending(LocalizedEventFilters.Id);
 
         var result = catalogue.FindAssociations(
                 qb.Build(),
@@ -960,10 +1015,10 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var qb = new QueryBuilder()
-            .WithOrderByDescending(EventFilters.CreatedAt);
+            .WithOrderByDescending(LocalizedEventFilters.CreatedAt);
 
         var result = catalogue.FindAssociations(
                 qb.Build(),
@@ -982,10 +1037,10 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var qb = new QueryBuilder()
-            .WithOrderByDescending(EventFilters.Severity);
+            .WithOrderByDescending(LocalizedEventFilters.Severity);
 
         var result = catalogue.FindAssociations(
                 qb.Build(),
@@ -1005,10 +1060,10 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var qb = new QueryBuilder()
-            .WithOrderByDescending(EventFilters.KindId);
+            .WithOrderByDescending(LocalizedEventFilters.KindId);
 
         var result = catalogue.FindAssociations(
                 qb.Build(),
@@ -1028,10 +1083,10 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var qb = new QueryBuilder()
-            .WithOrderByDescending(EventFilters.Kind);
+            .WithOrderByDescending(LocalizedEventFilters.Kind);
 
         var result = catalogue.FindAssociations(
                 qb.Build(),
@@ -1051,10 +1106,10 @@ public abstract class ACatalogueTests : ADbTest
 
         MoveEvents();
 
-        var catalogue = _db!.Events.CreateCatalogue(_handle!, Catalogue);
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
         var qb = new QueryBuilder()
-            .WithOrderByDescending(EventFilters.DisplayName);
+            .WithOrderByDescending(LocalizedEventFilters.DisplayName);
 
         var result = catalogue.FindAssociations(
                 qb.Build(),
@@ -1083,49 +1138,74 @@ public abstract class ACatalogueTests : ADbTest
         return ((ev1, topic1), (ev2, topic2));
     }
 
-    static void TestSingleEventWithSingleEdge(
-        IEnumerable<(IEvent, IEnumerable<IEdge>)> events,
+    void TestSingleLocalizedEventWithSingleEdge(
+        (ILocalizedEvent, IEnumerable<ILocalizedEdge>)[] events,
         IEvent expectedEvent,
         IAssociation expectedAssociation,
-        ITopic expectedRightTopic)
+        ITopic expectedRightTopic,
+        string locale)
     {
-        Assert.AreEqual(1, events.Count());
+        Assert.AreEqual(1, events.Length);
 
-        var (ev, edges) = events.First();
+        var (ev, edges) = (events[0].Item1, events[0].Item2.ToArray());
 
-        TestEquals(expectedEvent, ev);
+        TestEquals(expectedEvent, ev, locale);
 
-        Assert.AreEqual(1, edges.Count());
+        Assert.AreEqual(1, edges.Length);
 
-        var edge = edges.First();
+        var edge = edges[0];
+
+        var expectedLeftTopicDisplayName = _translations[locale].Translate(
+            expectedEvent.Topic!.DisplayName.Category.Name,
+            expectedEvent.Topic.DisplayName.MsgId)!;
 
         Assert.AreEqual(expectedEvent.Topic!.Id, edge.Left.Id);
         Assert.AreEqual(expectedEvent.Topic.Kind.Id, edge.Left.Kind.Id);
         Assert.AreEqual(expectedEvent.Topic.Kind.Name, edge.Left.Kind.Name);
-        Assert.AreEqual(expectedEvent.Topic.DisplayName, edge.Left.DisplayName);
+        Assert.AreEqual(expectedLeftTopicDisplayName, edge.Left.DisplayName);
 
         Assert.AreEqual(expectedAssociation.Id, edge.Association.Id);
         Assert.AreEqual(expectedAssociation.Name, edge.Association.Name);
 
+        var expectedRightTopicDisplayName = _translations[locale].Translate(
+                                                expectedRightTopic.DisplayName.Category.Name,
+                                                expectedRightTopic.DisplayName.MsgId)
+                                            ?? expectedRightTopic.DisplayName.MsgId;
+
         Assert.AreEqual(expectedRightTopic.Id, edge.Right.Id);
         Assert.AreEqual(expectedRightTopic.Kind.Id, edge.Right.Kind.Id);
         Assert.AreEqual(expectedRightTopic.Kind.Name, edge.Right.Kind.Name);
-        Assert.AreEqual(expectedRightTopic.DisplayName, edge.Right.DisplayName);
+        Assert.AreEqual(expectedRightTopicDisplayName, edge.Right.DisplayName);
     }
 
-    static void TestEquals(IEvent first, IEvent second)
+    void TestEquals(IEvent first, ILocalizedEvent second, string locale)
     {
         Assert.AreEqual(first.Id, second.Id);
         Assert.AreEqual(0, (int)(first.CreatedAt - second.CreatedAt).TotalSeconds);
         Assert.AreEqual(first.Kind.Id, second.Kind.Id);
         Assert.AreEqual(first.Kind.Name, second.Kind.Name);
         Assert.AreEqual(first.Severity, second.Severity);
-        Assert.AreEqual(first.Topic?.Id, second.Topic?.Id);
-        Assert.AreEqual(first.Topic?.DisplayName, second.Topic?.DisplayName);
+
+        if (first.Topic is null)
+        {
+            Assert.IsNull(second.Topic);
+        }
+        else if (first.Topic.Translatable)
+        {
+            var translation = _translations[locale].Translate(
+                first.Topic.DisplayName.Category.Name,
+                first.Topic.DisplayName.MsgId);
+
+            Assert.AreEqual(translation, second.Topic?.DisplayName);
+        }
+        else
+        {
+            Assert.AreEqual(first.Topic.DisplayName.MsgId, second.Topic?.DisplayName);
+        }
     }
 
     void TestContains(
-        IEnumerable<IEdge> edges,
+        IEnumerable<ILocalizedEdge> edges,
         ITopicKind leftKind,
         string leftDisplayName,
         IAssociation assoc,
@@ -1135,5 +1215,46 @@ public abstract class ACatalogueTests : ADbTest
         var found = edges.Any(e => Utility.Equals(e, leftKind, leftDisplayName, assoc, rightKind, rightDisplayName));
 
         Assert.IsTrue(found);
+    }
+    
+    [Test]
+    public void QueryEvents_MultipleLanguages()
+    {
+        var session = TestContext.CurrentContext.Random.GetString();
+
+        var ev = _utility!.InsertLoginEvent(DateTime.UtcNow, "::1", "Alice", session);
+
+        _utility.InsertFailedLoginEvent(DateTime.UtcNow, "::1", "Bob");
+
+        MoveEvents();
+
+        var qb = new QueryBuilder()
+            .WithFilter(LocalizedEventFilters.Id.EqualTo(ev.Id));
+
+        foreach (var locale in new[] { "de-DE", "en-US" })
+        {
+            var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, locale);
+
+            TestSingleLoginEventQuery(catalogue, qb.Build(), ev, "::1", "Alice", session, locale);
+        }
+    }
+    
+    [Test]
+    public void FindAssociations_MultipleLanguages()
+    {
+        var ((ev, topic), _) = CreateAliceAndDeleteBob();
+
+        MoveEvents();
+
+        foreach (var locale in new[] { "de-DE", "en-US" })
+        {
+            var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, locale);
+
+            var result = catalogue.FindAssociations(
+                QueryBuilder.All(),
+                AssociationFilters.Association.EqualTo("created"));
+
+            TestSingleLocalizedEventWithSingleEdge(result.ToArray(), ev, Associations.Created, topic, locale);
+        }
     }
 }

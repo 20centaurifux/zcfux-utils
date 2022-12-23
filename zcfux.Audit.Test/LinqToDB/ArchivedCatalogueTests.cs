@@ -39,7 +39,7 @@ public sealed class ArchivedCatalogueTests : ACatalogueTests
     protected override IDbTestMethods Methods => new Methods(_connectionString!);
 
     protected override void MoveEvents()
-        => _db!.Events.ArchiveEvents(_handle!, DateTime.UtcNow);
+        => _auditDb!.Events.ArchiveEvents(_handle!, DateTime.UtcNow);
 
     protected override ECatalogue Catalogue => ECatalogue.Archive;
 }

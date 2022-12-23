@@ -20,20 +20,32 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using NUnit.Framework;
+using System.Collections.Generic;
+using zcfux.Audit.LinqToPg;
 using zcfux.Filter;
+using zcfux.Translation.Data;
 
 namespace zcfux.Audit.Test;
 
 public abstract class ATopicTests : ADbTest
 {
+    readonly ICategory _textCategory = new TextCategory(1, "Test");
+
+    public override void Setup()
+    {
+        base.Setup();
+
+        _translationDb!.WriteCategory(_handle!, _textCategory);
+    }
+
     [Test]
     public void InsertAndGetTopicKind()
     {
         var kind = RandomTopicKind();
 
-        _db!.Topics.InsertTopicKind(_handle!, kind);
+        _auditDb!.Topics.InsertTopicKind(_handle!, kind);
 
-        var fetched = _db.Topics.GetTopicKind(_handle!, kind.Id);
+        var fetched = _auditDb.Topics.GetTopicKind(_handle!, kind.Id);
 
         Assert.AreEqual(kind.Id, fetched.Id);
         Assert.AreEqual(kind.Name, fetched.Name);
@@ -44,11 +56,11 @@ public abstract class ATopicTests : ADbTest
     {
         var kind = RandomTopicKind();
 
-        _db!.Topics.InsertTopicKind(_handle!, kind);
+        _auditDb!.Topics.InsertTopicKind(_handle!, kind);
 
         Assert.That(() =>
         {
-            _db.Topics.InsertTopicKind(_handle!, kind);
+            _auditDb.Topics.InsertTopicKind(_handle!, kind);
         }, Throws.Exception);
     }
 
@@ -59,7 +71,7 @@ public abstract class ATopicTests : ADbTest
 
         Assert.That(() =>
         {
-            _db!.Topics.InsertTopicKind(_handle!, kind);
+            _auditDb!.Topics.InsertTopicKind(_handle!, kind);
         }, Throws.Exception);
     }
 
@@ -68,7 +80,7 @@ public abstract class ATopicTests : ADbTest
     {
         Assert.That(() =>
         {
-            _db!.Topics.GetTopicKind(_handle!, TestContext.CurrentContext.Random.Next());
+            _auditDb!.Topics.GetTopicKind(_handle!, TestContext.CurrentContext.Random.Next());
         }, Throws.Exception);
     }
 
@@ -77,26 +89,60 @@ public abstract class ATopicTests : ADbTest
     {
         var kind = RandomTopicKind();
 
-        _db!.Topics.InsertTopicKind(_handle!, kind);
+        _auditDb!.Topics.InsertTopicKind(_handle!, kind);
 
-        var displayName = TestContext.CurrentContext.Random.GetString();
+        var displayName = CreateRandomTextResource();
 
-        var topic = _db.Topics.NewTopic(_handle!, kind, displayName);
+        var topic = _auditDb.Topics.NewTopic(_handle!, kind, displayName);
 
         Assert.Greater(topic.Id, 0);
         Assert.AreEqual(kind.Id, topic.Kind.Id);
         Assert.AreEqual(kind.Name, topic.Kind.Name);
-        Assert.AreEqual(displayName, topic.DisplayName);
+        Assert.AreEqual(displayName.Id, topic.DisplayName.Id);
+        Assert.AreEqual(displayName.Category.Id, topic.DisplayName.Category.Id);
+        Assert.AreEqual(displayName.MsgId, topic.DisplayName.MsgId);
+        Assert.IsFalse(topic.Translatable);
+    }
+
+    [Test]
+    public void NewTranslatableTopic()
+    {
+        var kind = RandomTopicKind();
+
+        _auditDb!.Topics.InsertTopicKind(_handle!, kind);
+
+        var displayName = CreateRandomTextResource();
+
+        var topic = _auditDb.Topics.NewTranslatableTopic(_handle!, kind, displayName);
+
+        Assert.Greater(topic.Id, 0);
+        Assert.AreEqual(kind.Id, topic.Kind.Id);
+        Assert.AreEqual(kind.Name, topic.Kind.Name);
+        Assert.AreEqual(displayName.Id, topic.DisplayName.Id);
+        Assert.AreEqual(displayName.Category.Id, topic.DisplayName.Category.Id);
+        Assert.AreEqual(displayName.MsgId, topic.DisplayName.MsgId);
+        Assert.IsTrue(topic.Translatable);
     }
 
     [Test]
     public void NewTopicWithoutKind()
     {
-        var displayName = TestContext.CurrentContext.Random.GetString();
+        var displayName = new TextResource(1, new TextCategory(1, "Test"), "Test");
 
         Assert.That(() =>
         {
-            _db!.Topics.NewTopic(_handle!, null!, displayName);
+            _auditDb!.Topics.NewTopic(_handle!, null!, displayName);
+        }, Throws.Exception);
+    }
+
+    [Test]
+    public void NewTranslatableTopicWithoutKind()
+    {
+        var displayName = new TextResource(1, new TextCategory(1, "Test"), "Test");
+
+        Assert.That(() =>
+        {
+            _auditDb!.Topics.NewTranslatableTopic(_handle!, null!, displayName);
         }, Throws.Exception);
     }
 
@@ -105,38 +151,57 @@ public abstract class ATopicTests : ADbTest
     {
         var kind = RandomTopicKind();
 
-        var displayName = TestContext.CurrentContext.Random.GetString();
+        var displayName = CreateRandomTextResource();
 
         Assert.That(() =>
         {
-            _db!.Topics.NewTopic(_handle!, kind, displayName);
+            _auditDb!.Topics.NewTopic(_handle!, kind, displayName);
         }, Throws.Exception);
     }
 
     [Test]
-    public void NewTopicWithoutDisplayName()
+    public void NewTranslatableTopicWithNonExistingKind()
     {
         var kind = RandomTopicKind();
 
-        _db!.Topics.InsertTopicKind(_handle!, kind);
+        var displayName = CreateRandomTextResource();
 
         Assert.That(() =>
         {
-            _db.Topics.NewTopic(_handle!, kind, null!);
+            _auditDb!.Topics.NewTranslatableTopic(_handle!, kind, displayName);
         }, Throws.Exception);
     }
+
 
     [Test]
     public void InsertSameTopicTwice()
     {
         var kind = RandomTopicKind();
 
-        _db!.Topics.InsertTopicKind(_handle!, kind);
+        _auditDb!.Topics.InsertTopicKind(_handle!, kind);
 
-        var displayName = TestContext.CurrentContext.Random.GetString();
+        var displayName = CreateRandomTextResource();
 
-        var first = _db.Topics.NewTopic(_handle!, kind, displayName);
-        var second = _db.Topics.NewTopic(_handle!, kind, displayName);
+        var first = _auditDb.Topics.NewTopic(_handle!, kind, displayName);
+        var second = _auditDb.Topics.NewTopic(_handle!, kind, displayName);
+
+        Assert.AreNotEqual(first.Id, second.Id);
+        Assert.AreEqual(first.Kind.Id, second.Kind.Id);
+        Assert.AreEqual(first.Kind.Name, second.Kind.Name);
+        Assert.AreEqual(first.DisplayName, second.DisplayName);
+    }
+
+    [Test]
+    public void InsertSameTranslatableTopicTwice()
+    {
+        var kind = RandomTopicKind();
+
+        _auditDb!.Topics.InsertTopicKind(_handle!, kind);
+
+        var displayName = CreateRandomTextResource();
+
+        var first = _auditDb.Topics.NewTranslatableTopic(_handle!, kind, displayName);
+        var second = _auditDb.Topics.NewTranslatableTopic(_handle!, kind, displayName);
 
         Assert.AreNotEqual(first.Id, second.Id);
         Assert.AreEqual(first.Kind.Id, second.Kind.Id);
@@ -149,18 +214,18 @@ public abstract class ATopicTests : ADbTest
     {
         var kind = RandomTopicKind();
 
-        _db!.Topics.InsertTopicKind(_handle!, kind);
+        _auditDb!.Topics.InsertTopicKind(_handle!, kind);
 
         var topics = new ITopic[3];
 
-        topics[0] = _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
-        topics[1] = _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
-        topics[2] = _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
+        topics[0] = _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
+        topics[1] = _auditDb.Topics.NewTranslatableTopic(_handle!, kind, CreateRandomTextResource());
+        topics[2] = _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
 
         var qb = new QueryBuilder()
-            .WithOrderBy(TopicFilters.DisplayName);
+            .WithOrderBy(TopicFilters.Id);
 
-        var all = _db.Topics.QueryTopics(_handle!, qb.Build()).ToArray();
+        var all = _auditDb.Topics.QueryTopics(_handle!, qb.Build()).ToArray();
 
         Assert.AreEqual(3, all.Length);
 
@@ -170,7 +235,11 @@ public abstract class ATopicTests : ADbTest
 
             Assert.AreEqual(topic.Kind.Id, fetched.Kind.Id);
             Assert.AreEqual(topic.Kind.Name, fetched.Kind.Name);
-            Assert.AreEqual(topic.DisplayName, fetched.DisplayName);
+            Assert.AreEqual(topic.DisplayName.Id, fetched.DisplayName.Id);
+            Assert.AreEqual(topic.DisplayName.Category.Id, fetched.DisplayName.Category.Id);
+            Assert.AreEqual(topic.DisplayName.Category.Name, fetched.DisplayName.Category.Name);
+            Assert.AreEqual(topic.DisplayName.MsgId, fetched.DisplayName.MsgId);
+            Assert.AreEqual(topic.Translatable, fetched.Translatable);
         }
     }
 
@@ -179,25 +248,26 @@ public abstract class ATopicTests : ADbTest
     {
         var kind = RandomTopicKind();
 
-        _db!.Topics.InsertTopicKind(_handle!, kind);
+        _auditDb!.Topics.InsertTopicKind(_handle!, kind);
 
-        _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
-        _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
-        _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
+        _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
+        _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
+        _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
 
         var qb = new QueryBuilder()
-            .WithOrderBy(TopicFilters.DisplayName);
+            .WithOrderBy(TopicFilters.Id);
 
-        var first = _db.Topics.QueryTopics(_handle!, qb.Build()).First();
+        var first = _auditDb.Topics.QueryTopics(_handle!, qb.Build()).First();
 
         qb = qb.WithLimit(1);
 
-        var range = _db.Topics.QueryTopics(_handle!, qb.Build()).Single();
+        var range = _auditDb.Topics.QueryTopics(_handle!, qb.Build()).Single();
 
         Assert.AreEqual(first.Id, range.Id);
         Assert.AreEqual(first.Kind.Id, range.Kind.Id);
         Assert.AreEqual(first.Kind.Name, range.Kind.Name);
         Assert.AreEqual(first.DisplayName, range.DisplayName);
+        Assert.AreEqual(first.Translatable, range.Translatable);
     }
 
     [Test]
@@ -205,20 +275,20 @@ public abstract class ATopicTests : ADbTest
     {
         var kind = RandomTopicKind();
 
-        _db!.Topics.InsertTopicKind(_handle!, kind);
+        _auditDb!.Topics.InsertTopicKind(_handle!, kind);
 
-        _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
-        _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
-        _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
+        _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
+        _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
+        _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
 
         var qb = new QueryBuilder()
-            .WithOrderBy(TopicFilters.DisplayName);
+            .WithOrderBy(TopicFilters.Id);
 
-        var all = _db.Topics.QueryTopics(_handle!, qb.Build()).ToArray();
+        var all = _auditDb.Topics.QueryTopics(_handle!, qb.Build()).ToArray();
 
         qb = qb.WithSkip(1);
 
-        var range = _db.Topics.QueryTopics(_handle!, qb.Build()).ToArray();
+        var range = _auditDb.Topics.QueryTopics(_handle!, qb.Build()).ToArray();
 
         Assert.AreEqual(2, range.Length);
 
@@ -228,6 +298,7 @@ public abstract class ATopicTests : ADbTest
             Assert.AreEqual(all[i + 1].Kind.Id, range[i].Kind.Id);
             Assert.AreEqual(all[i + 1].Kind.Name, range[i].Kind.Name);
             Assert.AreEqual(all[i + 1].DisplayName, range[i].DisplayName);
+            Assert.AreEqual(all[i + 1].Translatable, range[i].Translatable);
         }
     }
 
@@ -236,53 +307,53 @@ public abstract class ATopicTests : ADbTest
     {
         var kind = RandomTopicKind();
 
-        _db!.Topics.InsertTopicKind(_handle!, kind);
+        _auditDb!.Topics.InsertTopicKind(_handle!, kind);
 
-        _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
-        _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
-        _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
+        _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
+        _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
+        _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
 
         var qb = new QueryBuilder()
-            .WithOrderBy(TopicFilters.DisplayName);
+            .WithOrderBy(TopicFilters.Id);
 
-        var last = _db.Topics.QueryTopics(_handle!, qb.Build()).Last();
+        var last = _auditDb.Topics.QueryTopics(_handle!, qb.Build()).Last();
 
         qb = qb
             .WithSkip(2)
             .WithLimit(1);
 
-        var range = _db.Topics.QueryTopics(_handle!, qb.Build()).Single();
+        var range = _auditDb.Topics.QueryTopics(_handle!, qb.Build()).Single();
 
         Assert.AreEqual(last.Id, range.Id);
         Assert.AreEqual(last.Kind.Id, range.Kind.Id);
         Assert.AreEqual(last.Kind.Name, range.Kind.Name);
         Assert.AreEqual(last.DisplayName, range.DisplayName);
+        Assert.AreEqual(last.Translatable, range.Translatable);
     }
 
     [Test]
-    public void FilterNameAndId()
+    public void FilterId()
     {
         var kind = RandomTopicKind();
 
-        _db!.Topics.InsertTopicKind(_handle!, kind);
+        _auditDb!.Topics.InsertTopicKind(_handle!, kind);
 
-        var first = _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
-        var second = _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
-
-        var filter = Logical.And(
-            TopicFilters.Id.EqualTo(first.Id),
-            TopicFilters.DisplayName.NotEqualTo(second.DisplayName));
+        var first = _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
+        var second = _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
 
         var qb = new QueryBuilder()
-            .WithFilter(filter)
-            .WithOrderBy(TopicFilters.DisplayName);
+            .WithFilter(TopicFilters.Id.EqualTo(first.Id));
 
-        var fetched = _db.Topics.QueryTopics(_handle!, qb.Build()).Single();
+        var fetched = _auditDb.Topics.QueryTopics(_handle!, qb.Build()).Single();
 
         Assert.AreEqual(first.Id, fetched.Id);
         Assert.AreEqual(first.Kind.Id, fetched.Kind.Id);
         Assert.AreEqual(first.Kind.Name, fetched.Kind.Name);
-        Assert.AreEqual(first.DisplayName, fetched.DisplayName);
+        Assert.AreEqual(first.DisplayName.Id, fetched.DisplayName.Id);
+        Assert.AreEqual(first.DisplayName.Category.Id, fetched.DisplayName.Category.Id);
+        Assert.AreEqual(first.DisplayName.Category.Name, fetched.DisplayName.Category.Name);
+        Assert.AreEqual(first.DisplayName.MsgId, fetched.DisplayName.MsgId);
+        Assert.AreEqual(first.Translatable, fetched.Translatable);
     }
 
     [Test]
@@ -290,73 +361,79 @@ public abstract class ATopicTests : ADbTest
     {
         var kind = RandomTopicKind();
 
-        _db!.Topics.InsertTopicKind(_handle!, kind);
+        _auditDb!.Topics.InsertTopicKind(_handle!, kind);
 
-        var first = _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
+        var first = _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
 
         kind = RandomTopicKind();
 
-        _db.Topics.InsertTopicKind(_handle!, kind);
+        _auditDb.Topics.InsertTopicKind(_handle!, kind);
 
-        var second = _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
+        var second = _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
 
         var filter = Logical.And(
             TopicFilters.KindId.NotEqualTo(second.Kind.Id),
             TopicFilters.Kind.EqualTo(first.Kind.Name));
 
         var qb = new QueryBuilder()
-            .WithFilter(filter)
-            .WithOrderBy(TopicFilters.DisplayName);
+            .WithFilter(filter);
 
-        var fetched = _db.Topics.QueryTopics(_handle!, qb.Build()).Single();
+        var fetched = _auditDb.Topics.QueryTopics(_handle!, qb.Build()).Single();
 
         Assert.AreEqual(first.Id, fetched.Id);
         Assert.AreEqual(first.Kind.Id, fetched.Kind.Id);
         Assert.AreEqual(first.Kind.Name, fetched.Kind.Name);
-        Assert.AreEqual(first.DisplayName, fetched.DisplayName);
+        Assert.AreEqual(first.DisplayName.Id, fetched.DisplayName.Id);
+        Assert.AreEqual(first.DisplayName.Category.Id, fetched.DisplayName.Category.Id);
+        Assert.AreEqual(first.DisplayName.Category.Name, fetched.DisplayName.Category.Name);
+        Assert.AreEqual(first.DisplayName.MsgId, fetched.DisplayName.MsgId);
+        Assert.AreEqual(first.Translatable, fetched.Translatable);
     }
 
     [Test]
-    public void FilterWithRange()
+    public void FilterDisplayName()
     {
         var kind = RandomTopicKind();
 
-        _db!.Topics.InsertTopicKind(_handle!, kind);
+        _auditDb!.Topics.InsertTopicKind(_handle!, kind);
 
-        var first = _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
+        var first = _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
 
         kind = RandomTopicKind();
 
-        _db.Topics.InsertTopicKind(_handle!, kind);
+        _auditDb.Topics.InsertTopicKind(_handle!, kind);
 
-        var second = _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
+        var second = _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
+
+        var filter = Logical.And(
+            TopicFilters.TextId.EqualTo(first.DisplayName.Id),
+            TopicFilters.TextCategoryId.EqualTo(first.DisplayName.Category.Id),
+            TopicFilters.TextCategory.EqualTo(first.DisplayName.Category.Name),
+            TopicFilters.MsgId.EqualTo(first.DisplayName.MsgId));
 
         var qb = new QueryBuilder()
-            .WithOrderBy(TopicFilters.DisplayName);
+            .WithFilter(filter);
 
-        var all = _db.Topics.QueryTopics(_handle!, qb.Build()).ToArray();
+        var fetched = _auditDb.Topics.QueryTopics(_handle!, qb.Build()).Single();
 
-        var filter = Logical.Or(
-            TopicFilters.KindId.EqualTo(first.Kind.Id),
-            TopicFilters.KindId.EqualTo(second.Kind.Id));
-
-        qb = qb
-            .WithFilter(filter)
-            .WithSkip(1);
-
-        var range = _db.Topics.QueryTopics(_handle!, qb.Build()).ToArray();
-
-        Assert.AreEqual(1, range.Length);
-
-        var fetched = range.First();
-
-        Assert.AreEqual(all.Last().Id, fetched.Id);
-        Assert.AreEqual(all.Last().Kind.Id, fetched.Kind.Id);
-        Assert.AreEqual(all.Last().Kind.Name, fetched.Kind.Name);
-        Assert.AreEqual(all.Last().DisplayName, fetched.DisplayName);
+        Assert.AreEqual(first.Id, fetched.Id);
+        Assert.AreEqual(first.Kind.Id, fetched.Kind.Id);
+        Assert.AreEqual(first.Kind.Name, fetched.Kind.Name);
+        Assert.AreEqual(first.DisplayName.Id, fetched.DisplayName.Id);
+        Assert.AreEqual(first.DisplayName.Category.Id, fetched.DisplayName.Category.Id);
+        Assert.AreEqual(first.DisplayName.Category.Name, fetched.DisplayName.Category.Name);
+        Assert.AreEqual(first.DisplayName.MsgId, fetched.DisplayName.MsgId);
+        Assert.AreEqual(first.Translatable, fetched.Translatable);
     }
 
-    ITopicKind RandomTopicKind()
+    ITextResource CreateRandomTextResource()
+    {
+        var msgid = TestContext.CurrentContext.Random.GetString();
+
+        return _translationDb!.NewTextResource(_handle!, _textCategory, msgid);
+    }
+
+    static ITopicKind RandomTopicKind()
         => new TopicKind(
             TestContext.CurrentContext.Random.Next(),
             TestContext.CurrentContext.Random.GetString());

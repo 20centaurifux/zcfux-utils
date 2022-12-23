@@ -21,6 +21,7 @@
  ***************************************************************************/
 using NUnit.Framework;
 using zcfux.Data;
+using zcfux.Translation.Data;
 
 namespace zcfux.Audit.Test;
 
@@ -29,12 +30,15 @@ public abstract class ADbTest
     IEngine? _engine;
     Transaction? _transaction;
     protected object? _handle;
-    protected IAuditDb? _db;
+    protected IAuditDb? _auditDb;
+    protected ITranslationDb? _translationDb;
 
     [SetUp]
     public virtual void Setup()
     {
         _engine = Methods.NewEngine();
+
+        _engine.Setup();
 
         _transaction = _engine.NewTransaction();
 
@@ -42,7 +46,8 @@ public abstract class ADbTest
 
         Methods.DeleteAll(_handle);
 
-        _db = Methods.CreateDb();
+        _auditDb = Methods.CreateAuditDb();
+        _translationDb = Methods.CreateTranslationDb();
     }
 
     [TearDown]

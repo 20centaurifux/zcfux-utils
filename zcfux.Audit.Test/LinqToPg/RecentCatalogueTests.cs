@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Audit.Test.LinqToPg;
 
-public sealed class RecentEventQueryTests : ACatalogueTests
+public sealed class RecentEventCatalogueTests : ACatalogueTests
 {
     protected override IDbTestMethods Methods => new Methods();
 

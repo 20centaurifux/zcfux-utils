@@ -19,6 +19,8 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using zcfux.Translation.Data;
+
 namespace zcfux.Audit.Test;
 
 #pragma warning disable CS8618
@@ -28,6 +30,8 @@ sealed class Topic : ITopic
 
     public ITopicKind Kind { get; set; }
 
-    public string DisplayName { get; set; }
+    public ITextResource DisplayName { get; set; }
+
+    public bool Translatable { get; set; }
 }
 #pragma warning restore CS8618

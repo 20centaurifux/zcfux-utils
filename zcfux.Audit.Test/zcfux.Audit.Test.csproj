@@ -24,6 +24,8 @@
       <ProjectReference Include="..\zcfux.Audit.LinqToPg\zcfux.Audit.LinqToPg.csproj" />
       <ProjectReference Include="..\zcfux.Data\zcfux.Data.csproj" />
       <ProjectReference Include="..\zcfux.Data.LinqToDB\zcfux.Data.LinqToDB.csproj" />
+      <ProjectReference Include="..\zcfux.Translation.LinqtoDB\zcfux.Translation.LinqtoDB.csproj" />
+      <ProjectReference Include="..\zcfux.Translation\zcfux.Translation.csproj" />
     </ItemGroup>
 
 </Project>

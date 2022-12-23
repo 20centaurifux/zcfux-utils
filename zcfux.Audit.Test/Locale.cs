@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,9 +19,10 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Audit.Test.LinqToPg;
+using zcfux.Translation.Data;
 
-public sealed class TopicDbTests : ATopicTests
-{
-    protected override IDbTestMethods Methods => new Methods();
-}
+namespace zcfux.Audit.Test;
+
+internal sealed record Locale(
+    int Id,
+    string Name) : ILocale;

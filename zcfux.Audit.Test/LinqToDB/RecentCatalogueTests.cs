@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Audit.Test.LinqToDB;
 
-public sealed class RecentEventQueryTests : ACatalogueTests
+public sealed class RecentCatalogueTests : ACatalogueTests
 {
     string? _connectionString;
 

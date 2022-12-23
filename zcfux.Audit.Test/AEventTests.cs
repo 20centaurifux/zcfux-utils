@@ -20,21 +20,33 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using NUnit.Framework;
+using zcfux.Audit.LinqToPg;
 using zcfux.Audit.Test.Event;
 using zcfux.Filter;
+using zcfux.Translation;
+using zcfux.Translation.Data;
 
 namespace zcfux.Audit.Test;
 
 public abstract class AEventTests : ADbTest
 {
+    readonly ICategory _textCategory = new TextCategory(1, "Test");
+
+    public override void Setup()
+    {
+        base.Setup();
+
+        _translationDb!.WriteCategory(_handle!, _textCategory);
+    }
+
     [Test]
     public void InsertAndGetEventKind()
     {
         var kind = RandomEventKind();
 
-        _db!.Events.InsertEventKind(_handle!, kind);
+        _auditDb!.Events.InsertEventKind(_handle!, kind);
 
-        var fetched = _db.Events.GetEventKind(_handle!, kind.Id);
+        var fetched = _auditDb.Events.GetEventKind(_handle!, kind.Id);
 
         Assert.AreEqual(kind.Id, fetched.Id);
         Assert.AreEqual(kind.Name, fetched.Name);
@@ -45,12 +57,9 @@ public abstract class AEventTests : ADbTest
     {
         var kind = RandomEventKind();
 
-        _db!.Events.InsertEventKind(_handle!, kind);
+        _auditDb!.Events.InsertEventKind(_handle!, kind);
 
-        Assert.That(() =>
-        {
-            _db.Events.InsertEventKind(_handle!, kind);
-        }, Throws.Exception);
+        Assert.That(() => { _auditDb.Events.InsertEventKind(_handle!, kind); }, Throws.Exception);
     }
 
     [Test]
@@ -58,19 +67,13 @@ public abstract class AEventTests : ADbTest
     {
         var kind = new EventKind(TestContext.CurrentContext.Random.Next(), null!);
 
-        Assert.That(() =>
-        {
-            _db!.Events.InsertEventKind(_handle!, kind);
-        }, Throws.Exception);
+        Assert.That(() => { _auditDb!.Events.InsertEventKind(_handle!, kind); }, Throws.Exception);
     }
 
     [Test]
     public void GetNonExistingEventKind()
     {
-        Assert.That(() =>
-        {
-            _db!.Events.GetEventKind(_handle!, TestContext.CurrentContext.Random.Next());
-        }, Throws.Exception);
+        Assert.That(() => { _auditDb!.Events.GetEventKind(_handle!, TestContext.CurrentContext.Random.Next()); }, Throws.Exception);
     }
 
     [Test]
@@ -78,19 +81,19 @@ public abstract class AEventTests : ADbTest
     {
         var eventKind = RandomEventKind();
 
-        _db!.Events.InsertEventKind(_handle!, eventKind);
+        _auditDb!.Events.InsertEventKind(_handle!, eventKind);
 
         var topicKind = RandomTopicKind();
 
-        _db.Topics.InsertTopicKind(_handle!, topicKind);
+        _auditDb.Topics.InsertTopicKind(_handle!, topicKind);
 
-        var topic = _db.Topics.NewTopic(_handle!, topicKind, TestContext.CurrentContext.Random.GetString());
+        var topic = _auditDb.Topics.NewTopic(_handle!, topicKind, CreateRandomTextResource());
 
         var createdAt = DateTime.UtcNow;
 
         foreach (var severity in Enum.GetValues(typeof(ESeverity)))
         {
-            var ev = _db.Events.NewEvent(_handle!, eventKind, (ESeverity)severity, createdAt, topic);
+            var ev = _auditDb.Events.NewEvent(_handle!, eventKind, (ESeverity)severity, createdAt, topic);
 
             Assert.Greater(ev.Id, 0);
             Assert.AreEqual(eventKind.Id, ev.Kind.Id);
@@ -99,7 +102,11 @@ public abstract class AEventTests : ADbTest
             Assert.AreEqual(createdAt, ev.CreatedAt);
             Assert.IsFalse(ev.Archived);
             Assert.AreEqual(topic.Id, ev.Topic!.Id);
-            Assert.AreEqual(topic.DisplayName, ev.Topic.DisplayName);
+            Assert.AreEqual(topic.DisplayName.Id, ev.Topic.DisplayName.Id);
+            Assert.AreEqual(topic.DisplayName.Category.Id, ev.Topic.DisplayName.Category.Id);
+            Assert.AreEqual(topic.DisplayName.Category.Name, ev.Topic.DisplayName.Category.Name);
+            Assert.AreEqual(topic.DisplayName.MsgId, ev.Topic.DisplayName.MsgId);
+            Assert.AreEqual(topic.Translatable, ev.Topic.Translatable);
             Assert.AreEqual(topic.Kind.Id, ev.Topic.Kind.Id);
             Assert.AreEqual(topic.Kind.Name, ev.Topic.Kind.Name);
         }
@@ -110,23 +117,21 @@ public abstract class AEventTests : ADbTest
     {
         var eventKind = RandomEventKind();
 
-        _db!.Events.InsertEventKind(_handle!, eventKind);
+        _auditDb!.Events.InsertEventKind(_handle!, eventKind);
 
         var topic = new Topic
         {
             Id = TestContext.CurrentContext.Random.NextInt64(),
             Kind = RandomTopicKind(),
-            DisplayName = TestContext.CurrentContext.Random.GetString()
+            DisplayName = CreateRandomTextResource()
         };
 
         var createdAt = DateTime.UtcNow;
 
         foreach (var severity in Enum.GetValues(typeof(ESeverity)))
         {
-            Assert.That(() =>
-            {
-                _db.Events.NewEvent(_handle!, EventKinds.Security, (ESeverity)severity, createdAt, topic);
-            }, Throws.Exception);
+            Assert.That(() => { _auditDb.Events.NewEvent(_handle!, EventKinds.Security, (ESeverity)severity, createdAt, topic); },
+                Throws.Exception);
         }
     }
 
@@ -135,13 +140,13 @@ public abstract class AEventTests : ADbTest
     {
         var eventKind = RandomEventKind();
 
-        _db!.Events.InsertEventKind(_handle!, eventKind);
+        _auditDb!.Events.InsertEventKind(_handle!, eventKind);
 
         var createdAt = DateTime.UtcNow;
 
         foreach (var severity in Enum.GetValues(typeof(ESeverity)))
         {
-            var ev = _db.Events.NewEvent(_handle!, eventKind, (ESeverity)severity, createdAt);
+            var ev = _auditDb.Events.NewEvent(_handle!, eventKind, (ESeverity)severity, createdAt);
 
             Assert.Greater(ev.Id, 0);
             Assert.AreEqual(eventKind.Id, ev.Kind.Id);
@@ -158,16 +163,13 @@ public abstract class AEventTests : ADbTest
     {
         var eventKind = RandomEventKind();
 
-        _db!.Events.InsertEventKind(_handle!, eventKind);
+        _auditDb!.Events.InsertEventKind(_handle!, eventKind);
 
         var createdAt = DateTime.UtcNow;
 
         foreach (var severity in Enum.GetValues(typeof(ESeverity)))
         {
-            Assert.That(() =>
-            {
-                _db.Events.NewEvent(_handle!, null!, (ESeverity)severity, createdAt);
-            }, Throws.Exception);
+            Assert.That(() => { _auditDb.Events.NewEvent(_handle!, null!, (ESeverity)severity, createdAt); }, Throws.Exception);
         }
     }
 
@@ -180,42 +182,44 @@ public abstract class AEventTests : ADbTest
 
         foreach (var severity in Enum.GetValues(typeof(ESeverity)))
         {
-            Assert.That(() =>
-            {
-                _db!.Events.NewEvent(_handle!, eventKind, (ESeverity)severity, createdAt);
-            }, Throws.Exception);
+            Assert.That(() => { _auditDb!.Events.NewEvent(_handle!, eventKind, (ESeverity)severity, createdAt); }, Throws.Exception);
         }
     }
 
     [Test]
     public void ArchiveWithTopics()
     {
-        var utility = new Utility(_db!, _handle!);
+        var utility = new Utility(_auditDb!, _translationDb!, _handle!);
 
         utility.InsertDefaultEntries();
 
         var alice = utility.InsertLoginEvent(DateTime.UtcNow.AddDays(1), "::1", "Alice", "hello");
         var bob = utility.InsertLoginEvent(DateTime.UtcNow.AddDays(-1), "::1", "Bob", "world");
 
-        _db!.Events.ArchiveEvents(_handle!, DateTime.UtcNow);
+        _auditDb!.Events.ArchiveEvents(_handle!, DateTime.UtcNow);
 
-        var archivedEvents = _db.Events.CreateCatalogue(_handle!, ECatalogue.Archive);
+        var archivedEvents = _auditDb.Events.CreateCatalogue(_handle!, ECatalogue.Archive, "en-US");
 
         var qb = new QueryBuilder()
-            .WithOrderBy(EventFilters.Id);
+            .WithOrderBy(LocalizedEventFilters.Id);
 
         var result = archivedEvents.QueryEvents(qb.Build()).ToArray();
 
         Assert.AreEqual(1, result.Length);
 
         var (ev, edges) = result[0];
-
-        TestEquals(bob, ev);
-
+        
+        Assert.AreEqual(bob.Id, ev.Id);
+        Assert.AreEqual(0, (int)(bob.CreatedAt - ev.CreatedAt).TotalSeconds);
+        Assert.AreEqual(bob.Kind.Id, ev.Kind.Id);
+        Assert.AreEqual(bob.Kind.Name, ev.Kind.Name);
+        Assert.AreEqual(bob.Severity, ev.Severity);
+        Assert.AreEqual(bob.Topic?.Id, ev.Topic?.Id);
+        Assert.AreEqual("Login", ev.Topic?.DisplayName);
         Assert.IsTrue(ev.Archived);
         Assert.AreEqual(3, edges.Count());
 
-        var recentEvents = _db.Events.CreateCatalogue(_handle!, ECatalogue.Recent);
+        var recentEvents = _auditDb.Events.CreateCatalogue(_handle!, ECatalogue.Recent, "en-US");
 
         result = recentEvents.QueryEvents(QueryBuilder.All()).ToArray();
 
@@ -223,8 +227,13 @@ public abstract class AEventTests : ADbTest
 
         (ev, edges) = result[0];
 
-        TestEquals(alice, ev);
-
+        Assert.AreEqual(alice.Id, ev.Id);
+        Assert.AreEqual(0, (int)(alice.CreatedAt - ev.CreatedAt).TotalSeconds);
+        Assert.AreEqual(alice.Kind.Id, ev.Kind.Id);
+        Assert.AreEqual(alice.Kind.Name, ev.Kind.Name);
+        Assert.AreEqual(alice.Severity, ev.Severity);
+        Assert.AreEqual(alice.Topic?.Id, ev.Topic?.Id);
+        Assert.AreEqual("Login", ev.Topic?.DisplayName);
         Assert.IsFalse(ev.Archived);
         Assert.AreEqual(3, edges.Count());
     }
@@ -232,16 +241,20 @@ public abstract class AEventTests : ADbTest
     [Test]
     public void ArchiveWithoutTopics()
     {
+        var utility = new Utility(_auditDb!, _translationDb!, _handle!);
+
+        utility.InsertDefaultEntries(); // creates required locale
+        
         var eventKind = RandomEventKind();
 
-        _db!.Events.InsertEventKind(_handle!, eventKind);
+        _auditDb!.Events.InsertEventKind(_handle!, eventKind);
 
-        var old = _db.Events.NewEvent(_handle!, eventKind, ESeverity.Low, DateTime.UtcNow.AddDays(-1));
-        var @new = _db.Events.NewEvent(_handle!, eventKind, ESeverity.Low, DateTime.UtcNow.AddDays(1));
+        var old = _auditDb.Events.NewEvent(_handle!, eventKind, ESeverity.Low, DateTime.UtcNow.AddDays(-1));
+        var @new = _auditDb.Events.NewEvent(_handle!, eventKind, ESeverity.Low, DateTime.UtcNow.AddDays(1));
 
-        _db.Events.ArchiveEvents(_handle!, DateTime.UtcNow.AddSeconds(1));
+        _auditDb.Events.ArchiveEvents(_handle!, DateTime.UtcNow.AddSeconds(1));
 
-        var archivedEvents = _db.Events.CreateCatalogue(_handle!, ECatalogue.Archive);
+        var archivedEvents = _auditDb.Events.CreateCatalogue(_handle!, ECatalogue.Archive, "en-US");
 
         var result = archivedEvents.QueryEvents(QueryBuilder.All()).ToArray();
 
@@ -254,7 +267,7 @@ public abstract class AEventTests : ADbTest
         Assert.IsTrue(ev.Archived);
         Assert.AreEqual(0, edges.Count());
 
-        var recentEvents = _db.Events.CreateCatalogue(_handle!, ECatalogue.Recent);
+        var recentEvents = _auditDb.Events.CreateCatalogue(_handle!, ECatalogue.Recent, "en-US");
 
         result = recentEvents.QueryEvents(QueryBuilder.All()).ToArray();
 
@@ -268,7 +281,7 @@ public abstract class AEventTests : ADbTest
         Assert.AreEqual(0, edges.Count());
     }
 
-    static void TestEquals(IEvent first, IEvent second)
+    static void TestEquals(IEvent first, ILocalizedEvent second)
     {
         Assert.AreEqual(first.Id, second.Id);
         Assert.AreEqual(0, (int)(first.CreatedAt - second.CreatedAt).TotalSeconds);
@@ -276,7 +289,14 @@ public abstract class AEventTests : ADbTest
         Assert.AreEqual(first.Kind.Name, second.Kind.Name);
         Assert.AreEqual(first.Severity, second.Severity);
         Assert.AreEqual(first.Topic?.Id, second.Topic?.Id);
-        Assert.AreEqual(first.Topic?.DisplayName, second.Topic?.DisplayName);
+        Assert.AreEqual(first.Topic?.DisplayName.MsgId, second.Topic?.DisplayName);
+    }
+
+    ITextResource CreateRandomTextResource()
+    {
+        var msgid = TestContext.CurrentContext.Random.GetString();
+
+        return _translationDb!.NewTextResource(_handle!, _textCategory, msgid);
     }
 
     static IEventKind RandomEventKind()

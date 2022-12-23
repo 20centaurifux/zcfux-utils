@@ -24,6 +24,10 @@ using LinqToDB.Configuration;
 using zcfux.Audit.LinqToDB;
 using zcfux.Data;
 using zcfux.Data.LinqToDB;
+using zcfux.Translation;
+using zcfux.Translation.Data;
+using zcfux.Translation.LinqtoDB;
+using zcfux.Translation.LinqToDB;
 
 namespace zcfux.Audit.Test.LinqToDB;
 
@@ -53,8 +57,13 @@ sealed class Methods : IDbTestMethods
         db.GetTable<TopicKindRelation>().Delete();
         db.GetTable<AssociationRelation>().Delete();
         db.GetTable<TopicAssociationRelation>().Delete();
+        db.GetTable<LocaleRelation>().Delete();
+        db.GetTable<TextCategoryRelation>().Delete();
     }
 
-    public IAuditDb CreateDb()
+    public IAuditDb CreateAuditDb()
         => new AuditDb();
+    
+    public ITranslationDb CreateTranslationDb()
+        => new TranslationDb();
 }

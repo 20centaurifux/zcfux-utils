@@ -19,84 +19,158 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using System.Net;
+using zcfux.Audit.LinqToPg;
+using zcfux.Translation.Data;
+
 namespace zcfux.Audit.Test.Event;
 
 sealed class Utility
 {
-    readonly IAuditDb _db;
+    readonly IAuditDb _auditDb;
+    readonly ITranslationDb _translationDb;
     readonly object _handle;
 
-    public Utility(IAuditDb db, object handle)
-        => (_db, _handle) = (db, handle);
+    ITextResource _loginEvent = default!;
+    ITextResource _loginFailedEvent = default!;
+    ITextResource _serviceStatusEvent = default!;
+    ITextResource _userCreatedEvent = default!;
+    ITextResource _userDeletedEvent = default!;
+
+    public readonly TextCategory TextCategory = new(1, "Audit");
+    
+    public Utility(IAuditDb db, ITranslationDb translationDb, object handle)
+        => (_auditDb, _translationDb, _handle) = (db, translationDb, handle);
 
     public void InsertDefaultEntries()
     {
-        _db.Events.InsertEventKind(_handle, EventKinds.Security);
-        _db.Events.InsertEventKind(_handle, EventKinds.Service);
+        WriteDefaultAuditEntries();
+        WriteDefaultTranslationEntries();
+    }
 
-        _db.Topics.InsertTopicKind(_handle, TopicKinds.Event);
-        _db.Topics.InsertTopicKind(_handle, TopicKinds.Endpoint);
-        _db.Topics.InsertTopicKind(_handle, TopicKinds.User);
-        _db.Topics.InsertTopicKind(_handle, TopicKinds.Session);
-        _db.Topics.InsertTopicKind(_handle, TopicKinds.Service);
+    void WriteDefaultAuditEntries()
+    {
+        _auditDb.Events.InsertEventKind(_handle, EventKinds.Security);
+        _auditDb.Events.InsertEventKind(_handle, EventKinds.Service);
 
-        _db.Associations.InsertAssociation(_handle, Associations.ConnectedFrom);
-        _db.Associations.InsertAssociation(_handle, Associations.AuthenticatedAs);
-        _db.Associations.InsertAssociation(_handle, Associations.LoginFailed);
-        _db.Associations.InsertAssociation(_handle, Associations.CreatedSession);
-        _db.Associations.InsertAssociation(_handle, Associations.Started);
-        _db.Associations.InsertAssociation(_handle, Associations.Stopped);
-        _db.Associations.InsertAssociation(_handle, Associations.Created);
-        _db.Associations.InsertAssociation(_handle, Associations.Deleted);
+        _auditDb.Topics.InsertTopicKind(_handle, TopicKinds.Event);
+        _auditDb.Topics.InsertTopicKind(_handle, TopicKinds.Endpoint);
+        _auditDb.Topics.InsertTopicKind(_handle, TopicKinds.User);
+        _auditDb.Topics.InsertTopicKind(_handle, TopicKinds.Session);
+        _auditDb.Topics.InsertTopicKind(_handle, TopicKinds.Service);
+
+        _auditDb.Associations.InsertAssociation(_handle, Associations.ConnectedFrom);
+        _auditDb.Associations.InsertAssociation(_handle, Associations.AuthenticatedAs);
+        _auditDb.Associations.InsertAssociation(_handle, Associations.LoginFailed);
+        _auditDb.Associations.InsertAssociation(_handle, Associations.CreatedSession);
+        _auditDb.Associations.InsertAssociation(_handle, Associations.Started);
+        _auditDb.Associations.InsertAssociation(_handle, Associations.Stopped);
+        _auditDb.Associations.InsertAssociation(_handle, Associations.Created);
+        _auditDb.Associations.InsertAssociation(_handle, Associations.Deleted);
+    }
+
+    void WriteDefaultTranslationEntries()
+    {
+        _translationDb.WriteCategory(_handle, TextCategory);
+
+        var deDE = new Locale(1, "de-DE");
+
+        _translationDb.WriteLocale(_handle, deDE);
+
+        var enUS = new Locale(2, "en-US");
+
+        _translationDb.WriteLocale(_handle, enUS);
+
+        _loginEvent = _translationDb.NewTextResource(_handle, TextCategory, "login-succeeded");
+
+        _translationDb.LocalizeText(_handle, _loginEvent, deDE, "Login");
+        _translationDb.LocalizeText(_handle, _loginEvent, enUS, "Login");
+
+        _loginFailedEvent = _translationDb.NewTextResource(_handle, TextCategory, "login-failed");
+
+        _translationDb.LocalizeText(_handle, _loginFailedEvent, deDE, "Login fehlgeschlagen");
+        _translationDb.LocalizeText(_handle, _loginFailedEvent, enUS, "Login failed");
+
+        _userCreatedEvent = _translationDb.NewTextResource(_handle, TextCategory, "user-created");
+
+        _translationDb.LocalizeText(_handle, _userCreatedEvent, deDE, "Benutzer erstellt");
+        _translationDb.LocalizeText(_handle, _userCreatedEvent, enUS, "User created");
+
+        _userDeletedEvent = _translationDb.NewTextResource(_handle, TextCategory, "user-deleted");
+
+        _translationDb.LocalizeText(_handle, _userDeletedEvent, deDE, "Benutzer gelöscht");
+        _translationDb.LocalizeText(_handle, _userDeletedEvent, enUS, "User deleted");
+
+        _serviceStatusEvent = _translationDb.NewTextResource(_handle, TextCategory, "service-status-changed");
+        
+        _translationDb.LocalizeText(_handle, _serviceStatusEvent, deDE, "Servicestatus geändert");
+        _translationDb.LocalizeText(_handle, _serviceStatusEvent, enUS, "Service status changed");
     }
 
     public IEvent InsertLoginEvent(DateTime at, string endpoint, string username, string session)
     {
-        var eventTopic = _db!.Topics.NewTopic(_handle!, TopicKinds.Event, "Login");
+        var eventTopic = _auditDb!.Topics.NewTranslatableTopic(_handle!, TopicKinds.Event, _loginEvent);
 
-        var ev = _db.Events.NewEvent(_handle!, EventKinds.Security, ESeverity.Low, at, eventTopic);
+        var ev = _auditDb.Events.NewEvent(_handle!, EventKinds.Security, ESeverity.Low, at, eventTopic);
 
-        var endpointTopic = _db.Topics.NewTopic(_handle!, TopicKinds.Endpoint, endpoint);
+        var endpointTopic = _auditDb.Topics.NewTopic(
+            _handle!,
+            TopicKinds.Endpoint,
+            _translationDb.GetOrCreateTextResource(_handle, TextCategory, endpoint));
 
-        _db.Associations.Associate(_handle!, eventTopic, Associations.ConnectedFrom, endpointTopic);
+        _auditDb.Associations.Associate(_handle!, eventTopic, Associations.ConnectedFrom, endpointTopic);
 
-        var userTopic = _db.Topics.NewTopic(_handle!, TopicKinds.User, username);
+        var userTopic = _auditDb.Topics.NewTopic(_handle!,
+            TopicKinds.User,
+            _translationDb.GetOrCreateTextResource(_handle, TextCategory, username));
 
-        _db.Associations.Associate(_handle!, eventTopic, Associations.AuthenticatedAs, userTopic);
+        _auditDb.Associations.Associate(_handle!, eventTopic, Associations.AuthenticatedAs, userTopic);
 
-        var sessionTopic = _db.Topics.NewTopic(_handle!, TopicKinds.Session, session);
+        var sessionTopic = _auditDb.Topics.NewTopic(
+            _handle!,
+            TopicKinds.Session,
+            _translationDb.GetOrCreateTextResource(_handle, TextCategory, session));
 
-        _db.Associations.Associate(_handle!, userTopic, Associations.CreatedSession, sessionTopic);
+        _auditDb.Associations.Associate(_handle!, userTopic, Associations.CreatedSession, sessionTopic);
 
         return ev;
     }
 
     public IEvent InsertFailedLoginEvent(DateTime at, string endpoint, string username)
     {
-        var eventTopic = _db!.Topics.NewTopic(_handle!, TopicKinds.Event, "Login failed");
+        var eventTopic = _auditDb!.Topics.NewTranslatableTopic(_handle!, TopicKinds.Event, _loginFailedEvent);
 
-        var ev = _db.Events.NewEvent(_handle!, EventKinds.Security, ESeverity.Critical, at, eventTopic);
+        var ev = _auditDb.Events.NewEvent(_handle!, EventKinds.Security, ESeverity.Critical, at, eventTopic);
 
-        var endpointTopic = _db.Topics.NewTopic(_handle!, TopicKinds.Endpoint, endpoint);
+        var endpointTopic = _auditDb.Topics.NewTopic(
+            _handle!,
+            TopicKinds.Endpoint,
+            _translationDb.GetOrCreateTextResource(_handle, TextCategory, endpoint));
 
-        _db.Associations.Associate(_handle!, eventTopic, Associations.ConnectedFrom, endpointTopic);
+        _auditDb.Associations.Associate(_handle!, eventTopic, Associations.ConnectedFrom, endpointTopic);
 
-        var userTopic = _db.Topics.NewTopic(_handle!, TopicKinds.User, username);
+        var userTopic = _auditDb.Topics.NewTopic(
+            _handle!,
+            TopicKinds.User,
+            _translationDb.GetOrCreateTextResource(_handle, TextCategory, username));
 
-        _db.Associations.Associate(_handle!, eventTopic, Associations.LoginFailed, userTopic);
+        _auditDb.Associations.Associate(_handle!, eventTopic, Associations.LoginFailed, userTopic);
 
         return ev;
     }
 
     public IEvent InsertServiceEvent(DateTime at, bool started, string serviceName)
     {
-        var eventTopic = _db!.Topics.NewTopic(_handle!, TopicKinds.Event, "Service status changed");
+        var eventTopic = _auditDb!.Topics.NewTranslatableTopic(_handle!, TopicKinds.Event, _serviceStatusEvent);
 
-        var ev = _db.Events.NewEvent(_handle!, EventKinds.Service, ESeverity.Medium, at, eventTopic);
+        var ev = _auditDb.Events.NewEvent(_handle!, EventKinds.Service, ESeverity.Medium, at, eventTopic);
 
-        var serviceTopic = _db.Topics.NewTopic(_handle!, TopicKinds.Service, serviceName);
+        var serviceTopic = _auditDb.Topics.NewTopic(
+            _handle!,
+            TopicKinds.Service,
+            _translationDb.GetOrCreateTextResource(_handle, TextCategory, serviceName));
 
-        _db.Associations.Associate(
+        _auditDb.Associations.Associate(
             _handle!,
             eventTopic,
             started
@@ -109,32 +183,38 @@ sealed class Utility
 
     public (IEvent, ITopic) InsertUserCreatedEvent(DateTime at, string username)
     {
-        var eventTopic = _db!.Topics.NewTopic(_handle!, TopicKinds.Event, "User created");
+        var eventTopic = _auditDb!.Topics.NewTranslatableTopic(_handle!, TopicKinds.Event, _userCreatedEvent);
 
-        var ev = _db.Events.NewEvent(_handle!, EventKinds.Security, ESeverity.Medium, at, eventTopic);
+        var ev = _auditDb.Events.NewEvent(_handle!, EventKinds.Security, ESeverity.Medium, at, eventTopic);
 
-        var userTopic = _db.Topics.NewTopic(_handle!, TopicKinds.User, username);
+        var userTopic = _auditDb.Topics.NewTopic(
+            _handle!,
+            TopicKinds.User,
+            _translationDb.GetOrCreateTextResource(_handle, TextCategory, username));
 
-        _db.Associations.Associate(_handle!, eventTopic, Associations.Created, userTopic);
+        _auditDb.Associations.Associate(_handle!, eventTopic, Associations.Created, userTopic);
 
         return (ev, userTopic);
     }
 
     public (IEvent, ITopic) InsertUserDeletedEvent(DateTime at, string username)
     {
-        var eventTopic = _db!.Topics.NewTopic(_handle!, TopicKinds.Event, "User deleted");
+        var eventTopic = _auditDb!.Topics.NewTranslatableTopic(_handle!, TopicKinds.Event, _userDeletedEvent);
 
-        var ev = _db.Events.NewEvent(_handle!, EventKinds.Security, ESeverity.Critical, at, eventTopic);
+        var ev = _auditDb.Events.NewEvent(_handle!, EventKinds.Security, ESeverity.Critical, at, eventTopic);
 
-        var userTopic = _db.Topics.NewTopic(_handle!, TopicKinds.User, username);
+        var userTopic = _auditDb.Topics.NewTopic(
+            _handle!,
+            TopicKinds.User,
+            _translationDb.GetOrCreateTextResource(_handle, TextCategory, username));
 
-        _db.Associations.Associate(_handle!, eventTopic, Associations.Deleted, userTopic);
+        _auditDb.Associations.Associate(_handle!, eventTopic, Associations.Deleted, userTopic);
 
         return (ev, userTopic);
     }
 
     public static bool Equals(
-        IEdge edge,
+        ILocalizedEdge edge,
         ITopicKind leftKind,
         string leftDisplayName,
         IAssociation assoc,

@@ -20,6 +20,7 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using zcfux.Data;
+using zcfux.Translation.Data;
 
 namespace zcfux.Audit.Test;
 
@@ -29,5 +30,7 @@ public interface IDbTestMethods
 
     void DeleteAll(object handle);
 
-    IAuditDb CreateDb();
+    IAuditDb CreateAuditDb();
+
+    ITranslationDb CreateTranslationDb();
 }

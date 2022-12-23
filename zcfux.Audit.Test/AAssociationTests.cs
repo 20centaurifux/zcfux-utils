@@ -20,19 +20,30 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using NUnit.Framework;
+using zcfux.Audit.LinqToPg;
+using zcfux.Translation.Data;
 
 namespace zcfux.Audit.Test;
 
 public abstract class AAssociationTests : ADbTest
 {
+    readonly ICategory _textCategory = new TextCategory(1, "Test");
+
+    public override void Setup()
+    {
+        base.Setup();
+
+        _translationDb!.WriteCategory(_handle!, _textCategory);
+    }
+
     [Test]
     public void InsertAndGetAssociation()
     {
         var association = RandomAssociation();
 
-        _db!.Associations.InsertAssociation(_handle!, association);
+        _auditDb!.Associations.InsertAssociation(_handle!, association);
 
-        var fetched = _db.Associations.GetAssociation(_handle!, association.Id);
+        var fetched = _auditDb.Associations.GetAssociation(_handle!, association.Id);
 
         Assert.AreEqual(association.Id, fetched.Id);
         Assert.AreEqual(association.Name, fetched.Name);
@@ -43,11 +54,11 @@ public abstract class AAssociationTests : ADbTest
     {
         var association = RandomAssociation();
 
-        _db!.Associations.InsertAssociation(_handle!, association);
+        _auditDb!.Associations.InsertAssociation(_handle!, association);
 
         Assert.That(() =>
         {
-            _db.Associations.InsertAssociation(_handle!, association);
+            _auditDb.Associations.InsertAssociation(_handle!, association);
         }, Throws.Exception);
     }
 
@@ -60,7 +71,7 @@ public abstract class AAssociationTests : ADbTest
 
         Assert.That(() =>
         {
-            _db!.Associations.InsertAssociation(_handle!, association);
+            _auditDb!.Associations.InsertAssociation(_handle!, association);
         }, Throws.Exception);
     }
 
@@ -69,7 +80,7 @@ public abstract class AAssociationTests : ADbTest
     {
         Assert.That(() =>
         {
-            _db!.Associations.GetAssociation(_handle!, TestContext.CurrentContext.Random.Next());
+            _auditDb!.Associations.GetAssociation(_handle!, TestContext.CurrentContext.Random.Next());
         }, Throws.Exception);
     }
 
@@ -78,17 +89,17 @@ public abstract class AAssociationTests : ADbTest
     {
         var kind = RandomTopicKind();
 
-        _db!.Topics.InsertTopicKind(_handle!, kind);
+        _auditDb!.Topics.InsertTopicKind(_handle!, kind);
 
-        var first = _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
+        var first = _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
 
         var association = RandomAssociation();
 
-        _db.Associations.InsertAssociation(_handle!, association);
+        _auditDb.Associations.InsertAssociation(_handle!, association);
 
-        var second = _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
+        var second = _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
 
-        var edge = _db.Associations.Associate(_handle!, first, association, second);
+        var edge = _auditDb.Associations.Associate(_handle!, first, association, second);
 
         Assert.AreEqual(first.Id, edge.Left.Id);
         Assert.AreEqual(first.Kind.Id, edge.Left.Kind.Id);
@@ -109,29 +120,29 @@ public abstract class AAssociationTests : ADbTest
     {
         var kind = RandomTopicKind();
 
-        _db!.Topics.InsertTopicKind(_handle!, kind);
+        _auditDb!.Topics.InsertTopicKind(_handle!, kind);
 
-        var first = _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
+        var first = _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
 
         var association = RandomAssociation();
 
-        _db.Associations.InsertAssociation(_handle!, association);
+        _auditDb.Associations.InsertAssociation(_handle!, association);
 
         var second = new Topic
         {
             Id = TestContext.CurrentContext.Random.Next(),
-            DisplayName = TestContext.CurrentContext.Random.GetString(),
+            DisplayName = CreateRandomTextResource(),
             Kind = kind
         };
 
         Assert.That(() =>
         {
-            _db.Associations.Associate(_handle!, first, association, second);
+            _auditDb.Associations.Associate(_handle!, first, association, second);
         }, Throws.Exception);
 
         Assert.That(() =>
         {
-            _db.Associations.Associate(_handle!, second, association, first);
+            _auditDb.Associations.Associate(_handle!, second, association, first);
         }, Throws.Exception);
     }
 
@@ -140,22 +151,22 @@ public abstract class AAssociationTests : ADbTest
     {
         var kind = RandomTopicKind();
 
-        _db!.Topics.InsertTopicKind(_handle!, kind);
+        _auditDb!.Topics.InsertTopicKind(_handle!, kind);
 
-        var topic = _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
+        var topic = _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
 
         var association = RandomAssociation();
 
-        _db.Associations.InsertAssociation(_handle!, association);
+        _auditDb.Associations.InsertAssociation(_handle!, association);
 
         Assert.That(() =>
         {
-            _db.Associations.Associate(_handle!, topic, association, null!);
+            _auditDb.Associations.Associate(_handle!, topic, association, null!);
         }, Throws.Exception);
 
         Assert.That(() =>
         {
-            _db.Associations.Associate(_handle!, null!, association, topic);
+            _auditDb.Associations.Associate(_handle!, null!, association, topic);
         }, Throws.Exception);
     }
 
@@ -164,17 +175,17 @@ public abstract class AAssociationTests : ADbTest
     {
         var kind = RandomTopicKind();
 
-        _db!.Topics.InsertTopicKind(_handle!, kind);
+        _auditDb!.Topics.InsertTopicKind(_handle!, kind);
 
-        var first = _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
+        var first = _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
 
         var association = RandomAssociation();
 
-        var second = _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
+        var second = _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
 
         Assert.That(() =>
         {
-            _db.Associations.Associate(_handle!, first, association, second);
+            _auditDb.Associations.Associate(_handle!, first, association, second);
         }, Throws.Exception);
     }
 
@@ -183,24 +194,31 @@ public abstract class AAssociationTests : ADbTest
     {
         var kind = RandomTopicKind();
 
-        _db!.Topics.InsertTopicKind(_handle!, kind);
+        _auditDb!.Topics.InsertTopicKind(_handle!, kind);
 
-        var first = _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
+        var first = _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
 
-        var second = _db.Topics.NewTopic(_handle!, kind, TestContext.CurrentContext.Random.GetString());
+        var second = _auditDb.Topics.NewTopic(_handle!, kind, CreateRandomTextResource());
 
         Assert.That(() =>
         {
-            _db.Associations.Associate(_handle!, first, null!, second);
+            _auditDb.Associations.Associate(_handle!, first, null!, second);
         }, Throws.Exception);
     }
 
-    IAssociation RandomAssociation()
+    ITextResource CreateRandomTextResource()
+    {
+        var msgid = TestContext.CurrentContext.Random.GetString();
+
+        return _translationDb!.NewTextResource(_handle!, _textCategory, msgid);
+    }
+
+    static IAssociation RandomAssociation()
         => new Association(
             TestContext.CurrentContext.Random.Next(),
             TestContext.CurrentContext.Random.GetString());
 
-    ITopicKind RandomTopicKind()
+    static ITopicKind RandomTopicKind()
         => new TopicKind(
             TestContext.CurrentContext.Random.Next(),
             TestContext.CurrentContext.Random.GetString());

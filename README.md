@@ -109,6 +109,12 @@ This is a collection of various utilities and abstractions I use in .NET project
 ## Tracking
 * Track state changes to objects.
 
+## Translation
+* Translation abstractions.
+
+## Translation.LinqToDB
+* Data.LinqToDB Translation provider.
+
 ## User
 * User, group & permission management.
 

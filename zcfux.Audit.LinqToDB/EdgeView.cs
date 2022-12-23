@@ -45,5 +45,29 @@ sealed class EdgeView
     public int RightTopicKindId { get; set; }
 
     public string RightTopicKind { get; set; }
+
+    public int? LocaleId { get; set; }
+
+    public ILocalizedEdge ToLocalizedEdge()
+        => new LocalizedEdge
+        {
+            Left = new LocalizedTopic
+            {
+                Id = LeftTopicId,
+                Kind = new TopicKind(LeftTopicKindId, LeftTopicKind),
+                DisplayName = LeftTopic
+            },
+            Association = new AssociationRelation
+            {
+                Id = AssociationId,
+                Name = Association
+            },
+            Right = new LocalizedTopic
+            {
+                Id = RightTopicId,
+                Kind = new TopicKind(RightTopicKindId, RightTopicKind),
+                DisplayName = RightTopic
+            }
+        };
 }
 #pragma warning restore CS8618

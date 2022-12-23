@@ -23,6 +23,7 @@ using LinqToDB;
 using zcfux.Data.LinqToDB;
 using zcfux.Filter;
 using zcfux.Filter.Linq;
+using zcfux.Translation.LinqToDB;
 
 namespace zcfux.Audit.LinqToDB;
 
@@ -30,32 +31,34 @@ sealed class Catalogue : ICatalogue
 {
     readonly object _handle;
     readonly bool _archived;
+    readonly int _localeId;
 
-    public Catalogue(object handle, ECatalogue catalogue)
-        => (_handle, _archived) = (handle, (catalogue == ECatalogue.Archive));
+    public Catalogue(object handle, ECatalogue catalogue, int localeId)
+        => (_handle, _archived, _localeId) = (handle, (catalogue == ECatalogue.Archive), localeId);
 
-    public IEnumerable<(IEvent, IEnumerable<IEdge>)> QueryEvents(Query query)
+    public IEnumerable<(ILocalizedEvent, IEnumerable<ILocalizedEdge>)> QueryEvents(Query query)
     {
         var events = _handle
             .Db()
             .GetTable<EventView>()
-            .Where(v => v.Archived == _archived)
+            .Where(ev => ev.Archived == _archived
+                         && (ev.LocaleId == null || ev.LocaleId == _localeId))
             .Query(query)
             .AsEnumerable()
-            .Select(ToEvent)
+            .Select(ev => ev.ToLocalizedEvent())
             .ToArray();
 
         foreach (var ev in events)
         {
             var edges = EdgeCte(ev.Id)
                 .AsEnumerable()
-                .Select(ToEdge);
+                .Select(e => e.ToLocalizedEdge());
 
             yield return (ev, edges);
         }
     }
 
-    public IEnumerable<(IEvent, IEnumerable<IEdge>)> FindAssociations(Query eventQuery, INode associationFilter)
+    public IEnumerable<(ILocalizedEvent, IEnumerable<ILocalizedEdge>)> FindAssociations(Query eventQuery, INode associationFilter)
     {
         var events = FilterEvents(eventQuery.Filter, eventQuery.Order);
 
@@ -74,12 +77,13 @@ sealed class Catalogue : ICatalogue
         return result;
     }
 
-    IEnumerable<IEvent> FilterEvents(INode? eventFilter, (string, EDirection)[] order)
+    IEnumerable<ILocalizedEvent> FilterEvents(INode? eventFilter, (string, EDirection)[] order)
     {
         var eventsQuery = _handle
             .Db()
             .GetTable<EventView>()
-            .Where(v => v.Archived == _archived);
+            .Where(ev => ev.Archived == _archived
+                         && (ev.LocaleId == null || ev.LocaleId == _localeId));
 
         if (eventFilter?.ToExpression<EventView>() is { } expr)
         {
@@ -89,12 +93,14 @@ sealed class Catalogue : ICatalogue
         var events = eventsQuery
             .Order(order)
             .AsEnumerable()
-            .Select(ToEvent);
+            .Select(ev => ev.ToLocalizedEvent());
 
         return events;
     }
 
-    IEnumerable<(IEvent, IEnumerable<IEdge>)> GetFilteredEdges(IEnumerable<IEvent> events, INode associationFilter)
+    IEnumerable<(ILocalizedEvent, IEnumerable<ILocalizedEdge>)> GetFilteredEdges(
+        IEnumerable<ILocalizedEvent> events,
+        INode associationFilter)
     {
         var expr = associationFilter.ToExpression<EdgeView>();
 
@@ -107,10 +113,87 @@ sealed class Catalogue : ICatalogue
 
                 if (view.AsQueryable().Any(expr))
                 {
-                    yield return (ev, view.Select(ToEdge));
+                    yield return (ev, view.Select(e => e.ToLocalizedEdge()));
                 }
             }
         }
+    }
+
+    IQueryable<EdgeView> EdgeCte(long eventId)
+    {
+        var db = _handle.Db();
+
+        var queryable = db.GetCte<EdgeView>(edge =>
+        {
+            return (
+                    from e in db.GetTable<EventRelation>()
+                    where e.Id == eventId
+                    from ta in db.GetTable<TopicAssociationRelation>()
+                        .InnerJoin(a => a.Topic1 == e.TopicId)
+                    from l in db.GetTable<TopicRelation>()
+                        .InnerJoin(t => ta.Topic1 == t.Id)
+                    from lk in db.GetTable<TopicKindRelation>()
+                        .InnerJoin(k => l.KindId == k.Id)
+                    from lres in db.GetTable<TextResourceRelation>()
+                        .InnerJoin(res => res.Id == l.TextId)
+                    from ltrans in db.GetTable<TranslatedTextRelation>()
+                        .LeftJoin(trans => l.Translatable && trans.ResourceId == l.TextId && trans.LocaleId == _localeId)
+                    from a in db.GetTable<AssociationRelation>()
+                        .InnerJoin(assoc => ta.AssociationId == assoc.Id)
+                    from r in db.GetTable<TopicRelation>()
+                        .InnerJoin(t => ta.Topic2 == t.Id)
+                    from rk in db.GetTable<TopicKindRelation>()
+                        .InnerJoin(k => r.KindId == k.Id)
+                    from rres in db.GetTable<TextResourceRelation>()
+                        .InnerJoin(res => res.Id == r.TextId)
+                    from rtrans in db.GetTable<TranslatedTextRelation>()
+                        .LeftJoin(trans => r.Translatable && trans.ResourceId == r.TextId && trans.LocaleId == _localeId)
+                    select new EdgeView
+                    {
+                        EventId = e.Id,
+                        LeftTopicId = ta.Topic1,
+                        LeftTopic = ltrans.Translation ?? lres.MsgId,
+                        LeftTopicKindId = l.KindId,
+                        LeftTopicKind = lk.Name,
+                        AssociationId = ta.AssociationId,
+                        Association = a.Name,
+                        RightTopicId = ta.Topic2,
+                        RightTopic = rtrans.Translation ?? rres.MsgId,
+                        RightTopicKindId = r.KindId,
+                        RightTopicKind = rk.Name
+                    }
+                )
+                .Concat(
+                    from ta in db.GetTable<TopicAssociationRelation>()
+                    from a in db.GetTable<AssociationRelation>()
+                        .InnerJoin(assoc => ta.AssociationId == assoc.Id)
+                    from r in db.GetTable<TopicRelation>()
+                        .InnerJoin(t => ta.Topic2 == t.Id)
+                    from rk in db.GetTable<TopicKindRelation>()
+                        .InnerJoin(k => r.KindId == k.Id)
+                    from p in edge.InnerJoin(e => e.RightTopicId == ta.Topic1)
+                    from rres in db.GetTable<TextResourceRelation>()
+                        .InnerJoin(res => res.Id == r.TextId)
+                    from rtrans in db.GetTable<TranslatedTextRelation>()
+                        .LeftJoin(trans => r.Translatable && trans.ResourceId == r.TextId && trans.LocaleId == _localeId)
+                    select new EdgeView
+                    {
+                        EventId = p.EventId,
+                        LeftTopicId = p.RightTopicId,
+                        LeftTopic = p.RightTopic,
+                        LeftTopicKindId = p.RightTopicKindId,
+                        LeftTopicKind = p.RightTopicKind,
+                        AssociationId = ta.AssociationId,
+                        Association = a.Name,
+                        RightTopicId = ta.Topic2,
+                        RightTopic = rtrans.Translation ?? rres.MsgId,
+                        RightTopicKindId = r.KindId,
+                        RightTopicKind = rk.Name
+                    }
+                );
+        });
+
+        return queryable;
     }
 
     public void Delete(INode filter)
@@ -182,115 +265,4 @@ sealed class Catalogue : ICatalogue
 
         queryable.Delete();
     }
-
-    Event ToEvent(EventView view)
-    {
-        var ev = new Event
-        {
-            Id = view.Id,
-            Kind = new EventKind(view.KindId, view.Kind),
-            Severity = view.Severity,
-            CreatedAt = view.CreatedAt,
-            Archived = _archived
-        };
-
-        if (view.TopicId.HasValue)
-        {
-            ev.Topic = new Topic
-            {
-                Id = view.TopicId.Value,
-                DisplayName = view.DisplayName!,
-                Kind = new TopicKind(view.TopicKindId, view.TopicKind)
-            };
-        }
-
-        return ev;
-    }
-
-    IQueryable<EdgeView> EdgeCte(long eventId)
-    {
-        var db = _handle.Db();
-
-        var queryable = db.GetCte<EdgeView>(edge =>
-        {
-            return (
-                    from e in db.GetTable<EventRelation>()
-                    where e.Id == eventId
-                    from ta in db.GetTable<TopicAssociationRelation>()
-                        .InnerJoin(a => a.Topic1 == e.TopicId)
-                    from l in db.GetTable<TopicRelation>()
-                        .InnerJoin(t => ta.Topic1 == t.Id)
-                    from lk in db.GetTable<TopicKindRelation>()
-                        .InnerJoin(k => l.KindId == k.Id)
-                    from a in db.GetTable<AssociationRelation>()
-                        .InnerJoin(assoc => ta.AssociationId == assoc.Id)
-                    from r in db.GetTable<TopicRelation>()
-                        .InnerJoin(t => ta.Topic2 == t.Id)
-                    from rk in db.GetTable<TopicKindRelation>()
-                        .InnerJoin(k => r.KindId == k.Id)
-                    select new EdgeView
-                    {
-                        EventId = e.Id,
-                        LeftTopicId = ta.Topic1,
-                        LeftTopic = l.DisplayName,
-                        LeftTopicKindId = l.KindId,
-                        LeftTopicKind = lk.Name,
-                        AssociationId = ta.AssociationId,
-                        Association = a.Name,
-                        RightTopicId = ta.Topic2,
-                        RightTopic = r.DisplayName,
-                        RightTopicKindId = r.KindId,
-                        RightTopicKind = rk.Name
-                    }
-                )
-                .Concat(
-                    from ta in db.GetTable<TopicAssociationRelation>()
-                    from a in db.GetTable<AssociationRelation>()
-                        .InnerJoin(assoc => ta.AssociationId == assoc.Id)
-                    from r in db.GetTable<TopicRelation>()
-                        .InnerJoin(t => ta.Topic2 == t.Id)
-                    from rk in db.GetTable<TopicKindRelation>()
-                        .InnerJoin(k => r.KindId == k.Id)
-                    from p in edge.InnerJoin(e => e.RightTopicId == ta.Topic1)
-                    select new EdgeView
-                    {
-                        EventId = p.EventId,
-                        LeftTopicId = p.RightTopicId,
-                        LeftTopic = p.RightTopic,
-                        LeftTopicKindId = p.RightTopicKindId,
-                        LeftTopicKind = p.RightTopicKind,
-                        AssociationId = ta.AssociationId,
-                        Association = a.Name,
-                        RightTopicId = ta.Topic2,
-                        RightTopic = r.DisplayName,
-                        RightTopicKindId = r.KindId,
-                        RightTopicKind = rk.Name
-                    }
-                );
-        });
-
-        return queryable;
-    }
-
-    static IEdge ToEdge(EdgeView view)
-        => new Edge
-        {
-            Left = new Topic
-            {
-                Id = view.LeftTopicId,
-                Kind = new TopicKind(view.LeftTopicKindId, view.LeftTopicKind),
-                DisplayName = view.LeftTopic
-            },
-            Association = new AssociationRelation
-            {
-                Id = view.AssociationId,
-                Name = view.Association
-            },
-            Right = new Topic
-            {
-                Id = view.RightTopicId,
-                Kind = new TopicKind(view.RightTopicKindId, view.RightTopicKind),
-                DisplayName = view.RightTopic
-            }
-        };
 }

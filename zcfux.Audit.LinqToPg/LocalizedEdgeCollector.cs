@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Audit.LinqToPg;
 
-sealed class EdgeCollector<TEventView>
+sealed class LocalizedEdgeCollector<TEventView>
     where TEventView : IEventView
 {
     public sealed record EventEdgePair(TEventView Event, EdgeView? Edge);
@@ -32,7 +32,7 @@ sealed class EdgeCollector<TEventView>
     ILocalizedEvent? _event;
     readonly List<ILocalizedEdge> _edges = new();
 
-    public EdgeCollector(ECatalogue catalogue)
+    public LocalizedEdgeCollector(ECatalogue catalogue)
         => _catalogue = catalogue;
 
     public IEnumerable<(ILocalizedEvent, IEnumerable<ILocalizedEdge>)> Collect(IQueryable<EventEdgePair> pairs)

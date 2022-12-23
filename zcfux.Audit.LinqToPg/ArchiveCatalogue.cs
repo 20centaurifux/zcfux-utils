@@ -27,14 +27,15 @@ using zcfux.Filter.Linq;
 
 namespace zcfux.Audit.LinqToPg;
 
-class ArchiveCatalogue : ICatalogue
+sealed class ArchiveCatalogue : ICatalogue
 {
     readonly Handle _handle;
+    readonly int _localeId;
 
-    public ArchiveCatalogue(Handle handle)
-        => _handle = handle;
+    public ArchiveCatalogue(Handle handle, int localeId)
+        => (_handle, _localeId) = (handle, localeId);
 
-    public IEnumerable<(IEvent, IEnumerable<IEdge>)> QueryEvents(Query query)
+    public IEnumerable<(ILocalizedEvent, IEnumerable<ILocalizedEdge>)> QueryEvents(Query query)
     {
         var db = _handle.Db();
 
@@ -42,17 +43,20 @@ class ArchiveCatalogue : ICatalogue
             from e in db.GetTable<EdgeView>()
                 .TableName("ArchivedEdgeView")
                 .SchemaName("audit")
+                .Where(e => e.LocaleId == null || e.LocaleId == _localeId)
                 .LeftJoin(edge => edge.EventId == ev.Id)
-            select new EdgeCollector<EventView>.EventEdgePair(ev, e);
+            select new LocalizedEdgeCollector<EventView>.EventEdgePair(ev, e);
 
         pairs = OrderBy(pairs, query.Order);
 
-        var collector = new EdgeCollector<EventView>(ECatalogue.Archive);
-
+        var collector = new LocalizedEdgeCollector<EventView>(ECatalogue.Archive);
+        
         return collector.Collect(pairs);
     }
 
-    public IEnumerable<(IEvent, IEnumerable<IEdge>)> FindAssociations(Query eventQuery, INode associationFilter)
+    public IEnumerable<(ILocalizedEvent, IEnumerable<ILocalizedEdge>)> FindAssociations(
+        Query eventQuery,
+        INode associationFilter)
     {
         var db = _handle.Db();
 
@@ -60,28 +64,29 @@ class ArchiveCatalogue : ICatalogue
 
         var edges = db.GetTable<EdgeView>()
             .TableName("ArchivedEdgeView")
-            .SchemaName("audit");
+            .SchemaName("audit")
+            .Where(e => e.LocaleId == _localeId);
 
         var pairs = from ev in QueryEvents(db, eventQuery)
             from e in edges
                 .LeftJoin(edge => edge.EventId == ev.Id)
             where edges.Where(expr).Any(edge => edge.EventId == ev.Id)
-            select new EdgeCollector<EventView>.EventEdgePair(ev, e);
+            select new LocalizedEdgeCollector<EventView>.EventEdgePair(ev, e);
 
         pairs = OrderBy(pairs, eventQuery.Order);
 
-        var collector = new EdgeCollector<EventView>(ECatalogue.Archive);
+        var collector = new LocalizedEdgeCollector<EventView>(ECatalogue.Archive);
 
         return collector.Collect(pairs);
     }
 
-    static IQueryable<EdgeCollector<EventView>.EventEdgePair> OrderBy(
-        IQueryable<EdgeCollector<EventView>.EventEdgePair> queryable,
-        IEnumerable<(string, EDirection)> columns)
+    static IQueryable<LocalizedEdgeCollector<EventView>.EventEdgePair> OrderBy(
+        IQueryable<LocalizedEdgeCollector<EventView>.EventEdgePair> queryable,
+        (string, EDirection)[] columns)
     {
         if (columns.Any())
         {
-            IOrderedEnumerable<EdgeCollector<EventView>.EventEdgePair> orderedQueryable;
+            IOrderedEnumerable<LocalizedEdgeCollector<EventView>.EventEdgePair> orderedQueryable;
 
             var (column1, direction1) = columns.First();
 
@@ -89,11 +94,11 @@ class ArchiveCatalogue : ICatalogue
 
             if (direction1 == EDirection.Ascending)
             {
-                orderedQueryable = queryable.OrderBy(expr);
+                orderedQueryable = queryable.AsEnumerable().OrderBy(expr);
             }
             else
             {
-                orderedQueryable = queryable.OrderByDescending(expr);
+                orderedQueryable = queryable.AsEnumerable().OrderByDescending(expr);
             }
 
             foreach (var (column2, direction2) in columns.Skip(1))
@@ -116,7 +121,7 @@ class ArchiveCatalogue : ICatalogue
         return queryable;
     }
 
-    static Func<EdgeCollector<EventView>.EventEdgePair, dynamic> NewOrderExpr(string column)
+    static Func<LocalizedEdgeCollector<EventView>.EventEdgePair, dynamic> NewOrderExpr(string column)
         => column switch
         {
             "Id" => p => p.Event.Id,
@@ -128,10 +133,11 @@ class ArchiveCatalogue : ICatalogue
             _ => throw new ArgumentException($"Unexpected column: `{column}'")
         };
 
-    static IQueryable<EventView> QueryEvents(DataConnection db, Query query)
+    IQueryable<EventView> QueryEvents(DataConnection db, Query query)
         => db.GetTable<EventView>()
             .SchemaName("audit")
             .TableName("ArchivedEventView")
+            .Where(ev => ev.LocaleId == null ||  ev.LocaleId == _localeId)
             .Query(query);
 
     public void Delete(INode filter)

@@ -25,43 +25,18 @@ namespace zcfux.Audit.LinqToDB;
 
 #pragma warning disable CS8618
 [Table(Schema = "audit", Name = "Topic")]
-sealed class TopicRelation : ITopic
+sealed class TopicRelation
 {
-    public TopicRelation()
-    {
-    }
-
-    public TopicRelation(ITopicKind kind, string displayName)
-    {
-        KindId = kind.Id;
-        Kind = new TopicKindRelation(kind);
-        DisplayName = displayName;
-    }
-
-    public TopicRelation(ITopic topic)
-    {
-        Id = topic.Id;
-        KindId = topic.Kind.Id;
-        Kind = new TopicKindRelation(topic.Kind);
-        DisplayName = topic.DisplayName;
-    }
-
     [Column(Name = "Id"), PrimaryKey, Identity]
     public long Id { get; set; }
-
-    long ITopic.Id => Id;
 
     [Column(Name = "KindId")]
     public int KindId { get; set; }
 
-    [Association(ThisKey = "KindId", OtherKey = "Id")]
-    public TopicKindRelation Kind { get; set; }
+    [Column(Name = "TextId")]
+    public int TextId { get; set; }
 
-    ITopicKind ITopic.Kind => Kind;
-
-    [Column(Name = "DisplayName")]
-    public string DisplayName { get; set; }
-
-    string ITopic.DisplayName => DisplayName;
+    [Column(Name = "Translatable")]
+    public bool Translatable { get; set; }
 }
 #pragma warning restore CS8618

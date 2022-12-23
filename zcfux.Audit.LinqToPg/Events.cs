@@ -22,6 +22,7 @@
 using LinqToDB;
 using LinqToDB.Data;
 using zcfux.Data.LinqToDB;
+using zcfux.Translation.LinqToDB;
 
 namespace zcfux.Audit.LinqToPg;
 
@@ -43,13 +44,32 @@ sealed class Events : IEvents
 
         ev.Id = Convert.ToInt64(handle.Db().InsertWithIdentity(ev));
 
-        return ev;
+        return new Event
+        {
+            Id = ev.Id,
+            Kind = kind,
+            Severity = severity,
+            CreatedAt = createdAt,
+            Topic = topic
+        };
     }
 
-    public ICatalogue CreateCatalogue(object handle, ECatalogue catalogue)
-        => (catalogue == ECatalogue.Recent)
-            ? new RecentCatalogue((handle as Handle)!)
-            : new ArchiveCatalogue((handle as Handle)!);
+    public ICatalogue CreateCatalogue(object handle, ECatalogue catalogue, string locale)
+    {
+        var localeId = handle
+            .Db()
+            .GetTable<LocaleRelation>()
+            .Single(l => l.Name == locale)
+            .Id;
+        
+        var dbHandle = (handle as Handle)!;
+
+        return (catalogue == ECatalogue.Recent)
+            ? new RecentCatalogue(dbHandle, localeId)
+            : new ArchiveCatalogue(dbHandle, localeId);
+    }
+
+    public ICatalogue CreateCatalogue(object handle, ECatalogue catalogue) => throw new NotImplementedException();
 
     public void ArchiveEvents(object handle, DateTime before)
     {

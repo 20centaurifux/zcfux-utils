@@ -13,6 +13,7 @@
     <ItemGroup>
       <ProjectReference Include="..\zcfux.Audit\zcfux.Audit.csproj" />
       <ProjectReference Include="..\zcfux.Data.LinqToDB\zcfux.Data.LinqToDB.csproj" />
+      <ProjectReference Include="..\zcfux.Translation.LinqtoDB\zcfux.Translation.LinqtoDB.csproj" />
     </ItemGroup>
 
   <ItemGroup>

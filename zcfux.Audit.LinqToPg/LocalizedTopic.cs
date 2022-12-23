@@ -19,51 +19,17 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using LinqToDB.Mapping;
+using zcfux.Translation.Data;
 
 namespace zcfux.Audit.LinqToPg;
 
 #pragma warning disable CS8618
-[Table(Schema = "audit", Name = "TopicView")]
-sealed class TopicView
+sealed class LocalizedTopic : ILocalizedTopic
 {
-    [Column(Name = "Id")]
     public long Id { get; set; }
 
-    [Column(Name = "KindId")]
-    public int KindId { get; set; }
+    public ITopicKind Kind { get; set; }
 
-    [Column(Name = "Kind")]
-    public string Kind { get; set; }
-
-    [Column(Name = "TextId")]
-    public int TextId { get; set; }
-
-    [Column(Name = "MsgId")]
-    public string MsgId { get; set; }
-
-    [Column(Name = "TextCategoryId")]
-    public int TextCategoryId { get; set; }
-
-    [Column(Name = "TextCategory")]
-    public string TextCategory { get; set; }
-
-    [Column(Name = "Translatable")]
-    public bool Translatable { get; set; }
-
-    public ITopic ToTopic()
-    {
-        return new Topic
-        {
-            Id = Id,
-            Kind = new TopicKind(KindId, Kind),
-            DisplayName = new TextResource(
-                TextId,
-                new TextCategory(TextCategoryId, TextCategory),
-                MsgId
-            ),
-            Translatable = Translatable
-        };
-    }
+    public string DisplayName { get; set; }
 }
 #pragma warning restore CS8618

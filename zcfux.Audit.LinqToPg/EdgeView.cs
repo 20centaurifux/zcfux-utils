@@ -45,5 +45,7 @@ sealed class EdgeView
     public int RightTopicKindId { get; set; }
 
     public string RightTopicKind { get; set; }
+
+    public int? LocaleId { get; set; }
 }
 #pragma warning restore CS8618

@@ -36,19 +36,21 @@ interface IEventView
     long? TopicId { get; set; }
 
     string? DisplayName { get; set; }
+    
+    int? LocaleId { get; set; }
 }
 
 static class EventViewExtensions
 {
-    public static IEvent ToRecentEvent(this IEventView self)
-        => self.ToEvent(archived: false);
+    public static ILocalizedEvent ToRecentLocalizedEvent(this IEventView self)
+        => self.ToLocalizedEvent(archived: false);
 
-    public static IEvent ToArchivedEvent(this IEventView self)
-        => self.ToEvent(archived: true);
+    public static ILocalizedEvent ToArchivedLocalizedEvent(this IEventView self)
+        => self.ToLocalizedEvent(archived: true);
 
-    public static IEvent ToEvent(this IEventView self, bool archived)
+    public static ILocalizedEvent ToLocalizedEvent(this IEventView self, bool archived)
     {
-        var ev = new Event
+        var ev = new LocalizedEvent
         {
             Id = self.Id,
             Kind = new EventKindRelation
@@ -63,7 +65,7 @@ static class EventViewExtensions
 
         if (self.TopicId.HasValue)
         {
-            ev.Topic = new Topic
+            ev.Topic = new LocalizedTopic
             {
                 Id = self.TopicId.Value,
                 DisplayName = self.DisplayName!

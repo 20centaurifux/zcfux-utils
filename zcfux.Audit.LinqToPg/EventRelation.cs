@@ -25,7 +25,7 @@ namespace zcfux.Audit.LinqToPg;
 
 #pragma warning disable CS8618
 [Table(Schema = "audit", Name = "Event")]
-sealed class EventRelation : IEvent
+sealed class EventRelation
 {
     public EventRelation()
     {
@@ -34,51 +34,31 @@ sealed class EventRelation : IEvent
     public EventRelation(IEventKind kind, ESeverity severity, DateTime createdAt, ITopic? topic)
     {
         KindId = kind.Id;
-        Kind = new EventKindRelation(kind);
         Severity = severity;
         CreatedAt = createdAt;
 
         if (topic != null)
         {
             TopicId = topic.Id;
-            Topic = new TopicRelation(topic);
         }
     }
 
     [Column(Name = "Id"), PrimaryKey, Identity]
     public long Id { get; set; }
 
-    long IEvent.Id => Id;
-
     [Column(Name = "KindId")]
     public int KindId { get; set; }
-
-    [Association(ThisKey = "KindId", OtherKey = "Id")]
-    public EventKindRelation Kind { get; set; }
-
-    IEventKind IEvent.Kind => Kind;
 
     [Column("Severity")]
     public ESeverity Severity { get; set; }
 
-    ESeverity IEvent.Severity => Severity;
-
     [Column(Name = "TopicId")]
     public long? TopicId { get; set; }
-
-    [Association(ThisKey = "TopicId", OtherKey = "Id")]
-    public TopicRelation? Topic { get; set; }
-
-    ITopic? IEvent.Topic => Topic;
 
     [Column("Archived")]
     public bool Archived { get; set; }
 
-    bool IEvent.Archived => Archived;
-
     [Column("CreatedAt")]
     public DateTime CreatedAt { get; set; }
-
-    DateTime IEvent.CreatedAt => CreatedAt;
 }
 #pragma warning restore CS8618

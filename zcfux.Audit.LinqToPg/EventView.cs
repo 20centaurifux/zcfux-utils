@@ -46,5 +46,8 @@ class EventView : IEventView
 
     [Column(Name = "DisplayName")]
     public string? DisplayName { get; set; }
+    
+    [Column(Name = "LocaleId")]
+    public int? LocaleId { get; set; }
 }
 #pragma warning restore CS8618

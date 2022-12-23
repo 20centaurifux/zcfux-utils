@@ -24,8 +24,7 @@ using LinqToDB.Mapping;
 namespace zcfux.Audit.LinqToDB;
 
 #pragma warning disable CS8618
-[Table(Schema = "audit", Name = "EventView")]
-sealed class EventView
+class EventView
 {
     [Column(Name = "Id")]
     public long Id { get; set; }
@@ -36,6 +35,9 @@ sealed class EventView
     [Column(Name = "Kind")]
     public string Kind { get; set; }
 
+    [Column(Name = "Archived")]
+    public bool Archived { get; set; }
+    
     [Column(Name = "Severity")]
     public ESeverity Severity { get; set; }
 
@@ -47,14 +49,42 @@ sealed class EventView
 
     [Column(Name = "DisplayName")]
     public string? DisplayName { get; set; }
-
-    [Column(Name = "Archived")]
-    public bool Archived { get; set; }
-
+    
+    [Column(Name = "LocaleId")]
+    public int? LocaleId { get; set; }
+    
     [Column(Name = "TopicKindId")]
-    public int TopicKindId { get; set; }
-
+    public int? TopicKindId { get; set; }
+    
     [Column(Name = "TopicKind")]
-    public string TopicKind { get; set; }
+    public string? TopicKind { get; set; }
+
+    public ILocalizedEvent ToLocalizedEvent()
+        => new LocalizedEvent
+        {
+            Id = Id,
+            Kind = new EventKind(KindId, Kind),
+            Archived = Archived,
+            CreatedAt = CreatedAt,
+            Severity = Severity,
+            Topic = BuildLocalizedTopic()
+        };
+
+    ILocalizedTopic? BuildLocalizedTopic()
+     {
+         ILocalizedTopic? topic = null;
+        
+        if (TopicId.HasValue)
+        {
+            topic = new LocalizedTopic
+            {
+                Id = TopicId.Value,
+                Kind = new TopicKind(TopicKindId!.Value, TopicKind!),
+                DisplayName = DisplayName!
+            };
+        }
+
+        return topic;
+     }
 }
 #pragma warning restore CS8618

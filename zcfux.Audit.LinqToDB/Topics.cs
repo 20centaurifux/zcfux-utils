@@ -23,6 +23,7 @@ using LinqToDB;
 using zcfux.Data.LinqToDB;
 using zcfux.Filter;
 using zcfux.Filter.Linq;
+using zcfux.Translation.Data;
 
 namespace zcfux.Audit.LinqToDB;
 
@@ -36,13 +37,42 @@ sealed class Topics : ITopics
             .GetTable<TopicKindRelation>()
             .Single(kind => kind.Id == id);
 
-    public ITopic NewTopic(object handle, ITopicKind topicKind, string displayName)
+    public ITopic NewTopic(object handle, ITopicKind topicKind, ITextResource displayName)
     {
-        var topic = new TopicRelation(topicKind, displayName);
+        var topic = new TopicRelation
+        {
+            KindId = topicKind.Id,
+            TextId = displayName.Id
+        };
 
         topic.Id = Convert.ToInt64(handle.Db().InsertWithIdentity(topic));
 
-        return topic;
+        return new Topic
+        {
+            Id = topic.Id,
+            Kind = topicKind,
+            DisplayName = displayName
+        };
+    }
+    
+    public ITopic NewTranslatableTopic(object handle, ITopicKind topicKind, ITextResource displayName)
+    {
+        var topic = new TopicRelation
+        {
+            KindId = topicKind.Id,
+            TextId = displayName.Id,
+            Translatable = true
+        };
+
+        topic.Id = Convert.ToInt64(handle.Db().InsertWithIdentity(topic));
+
+        return new Topic
+        {
+            Id = topic.Id,
+            Kind = topicKind,
+            DisplayName = displayName,
+            Translatable = true
+        };
     }
 
     public IEnumerable<ITopic> QueryTopics(object handle, Query query)

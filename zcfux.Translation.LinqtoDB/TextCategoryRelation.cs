@@ -26,7 +26,7 @@ namespace zcfux.Translation.LinqToDB;
 
 #pragma warning disable CS8618
 [Table(Schema = "translation", Name = "TextCategory")]
-sealed class TextCategoryRelation : ICategory
+public sealed class TextCategoryRelation : ICategory
 {
     [Column(Name = "Id"), PrimaryKey]
     public int Id { get; set; }

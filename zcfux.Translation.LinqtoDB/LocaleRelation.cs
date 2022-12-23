@@ -26,7 +26,7 @@ namespace zcfux.Translation.LinqToDB;
 
 #pragma warning disable CS8618
 [Table(Schema = "translation", Name = "Locale")]
-sealed class LocaleRelation : ILocale
+public sealed class LocaleRelation : ILocale
 {
     [Column(Name = "Id"), PrimaryKey]
     public int Id { get; set; }

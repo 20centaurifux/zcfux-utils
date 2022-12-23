@@ -23,7 +23,7 @@ using zcfux.Translation.Data;
 
 namespace zcfux.Translation;
 
-public sealed class Translation
+public sealed class Translation : ITranslation
 {
     readonly Dictionary<string, Dictionary<string, string>> _m = new();
 

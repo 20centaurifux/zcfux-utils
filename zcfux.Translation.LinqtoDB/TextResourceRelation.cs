@@ -26,7 +26,7 @@ namespace zcfux.Translation.LinqToDB;
 
 #pragma warning disable CS8618
 [Table(Schema = "translation", Name = "TextResource")]
-sealed class TextResourceRelation : ITextResource
+public class TextResourceRelation : ITextResource
 {
     [Column(Name = "Id"), PrimaryKey, Identity]
     public int Id { get; set; }

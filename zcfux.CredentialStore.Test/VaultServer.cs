@@ -30,7 +30,6 @@ public sealed class VaultServer
     static extern int kill(int pid, int sig);
 
     Process? _process;
-    readonly AutoResetEvent _started = new(initialState: false);
 
     public void Start()
     {

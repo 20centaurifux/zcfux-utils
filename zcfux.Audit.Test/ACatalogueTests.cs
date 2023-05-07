@@ -612,7 +612,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_LeftTopicId()
+    public void FindAssociation_LeftTopicId()
     {
         var ((ev, topic), _) = CreateAliceAndDeleteBob();
 
@@ -620,7 +620,7 @@ public abstract class ACatalogueTests : ADbTest
 
         var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
             QueryBuilder.All(),
             AssociationFilters.LeftTopicId.EqualTo(ev.Topic!.Id));
 
@@ -628,7 +628,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_LeftTopicKindId()
+    public void FindAssociation_LeftTopicKindId()
     {
         var ((ev, topic), _) = CreateAliceAndDeleteBob();
 
@@ -639,7 +639,7 @@ public abstract class ACatalogueTests : ADbTest
         var qb = new QueryBuilder()
             .WithFilter(LocalizedEventFilters.Severity.EqualTo(ESeverity.Medium));
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
             qb.Build(),
             AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id));
 
@@ -647,7 +647,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_LeftTopicKind()
+    public void FindAssociation_LeftTopicKind()
     {
         var ((ev, topic), _) = CreateAliceAndDeleteBob();
 
@@ -658,7 +658,7 @@ public abstract class ACatalogueTests : ADbTest
         var qb = new QueryBuilder()
             .WithFilter(LocalizedEventFilters.Severity.EqualTo(ESeverity.Medium));
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
             qb.Build(),
             AssociationFilters.LeftTopicKind.EqualTo("Event"));
 
@@ -666,7 +666,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_LeftTopic()
+    public void FindAssociation_LeftTopic()
     {
         var ((ev, topic), _) = CreateAliceAndDeleteBob();
 
@@ -674,7 +674,7 @@ public abstract class ACatalogueTests : ADbTest
 
         var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
             QueryBuilder.All(),
             AssociationFilters.LeftTopic.EqualTo("User created"));
 
@@ -682,7 +682,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_AssociationId()
+    public void FindAssociation_AssociationId()
     {
         var ((ev, topic), _) = CreateAliceAndDeleteBob();
 
@@ -690,7 +690,7 @@ public abstract class ACatalogueTests : ADbTest
 
         var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
             QueryBuilder.All(),
             AssociationFilters.AssociationId.EqualTo(Associations.Created.Id));
 
@@ -698,7 +698,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_Association()
+    public void FindAssociation_Association()
     {
         var ((ev, topic), _) = CreateAliceAndDeleteBob();
 
@@ -706,7 +706,7 @@ public abstract class ACatalogueTests : ADbTest
 
         var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
             QueryBuilder.All(),
             AssociationFilters.Association.EqualTo("created"));
 
@@ -714,7 +714,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_RightTopicId()
+    public void FindAssociation_RightTopicId()
     {
         var ((ev, topic), _) = CreateAliceAndDeleteBob();
 
@@ -722,7 +722,7 @@ public abstract class ACatalogueTests : ADbTest
 
         var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
             QueryBuilder.All(),
             AssociationFilters.RightTopicId.EqualTo(topic.Id));
 
@@ -730,7 +730,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_RightTopicKindId()
+    public void FindAssociation_RightTopicKindId()
     {
         var ((ev, topic), _) = CreateAliceAndDeleteBob();
 
@@ -743,7 +743,7 @@ public abstract class ACatalogueTests : ADbTest
         var qb = new QueryBuilder()
             .WithFilter(LocalizedEventFilters.Severity.EqualTo(ESeverity.Medium));
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
             qb.Build(),
             AssociationFilters.RightTopicKindId.EqualTo(TopicKinds.User.Id));
 
@@ -751,7 +751,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_RightTopicKind()
+    public void FindAssociation_RightTopicKind()
     {
         var ((ev, topic), _) = CreateAliceAndDeleteBob();
 
@@ -764,7 +764,7 @@ public abstract class ACatalogueTests : ADbTest
         var qb = new QueryBuilder()
             .WithFilter(LocalizedEventFilters.Severity.EqualTo(ESeverity.Medium));
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
             qb.Build(),
             AssociationFilters.RightTopicKind.EqualTo("User"));
 
@@ -772,7 +772,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_RightTopic()
+    public void FindAssociation_RightTopic()
     {
         var ((ev, topic), _) = CreateAliceAndDeleteBob();
 
@@ -780,7 +780,7 @@ public abstract class ACatalogueTests : ADbTest
 
         var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
             QueryBuilder.All(),
             AssociationFilters.RightTopic.EqualTo("Alice"));
 
@@ -788,7 +788,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_FilterEventId()
+    public void FindAssociation_FilterEventId()
     {
         var ((ev, topic), _) = CreateAliceAndBob();
 
@@ -799,7 +799,7 @@ public abstract class ACatalogueTests : ADbTest
         var qb = new QueryBuilder()
             .WithFilter(LocalizedEventFilters.Id.EqualTo(ev.Id));
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
             qb.Build(),
             AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id));
 
@@ -807,7 +807,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_FilterEventCreatedAt()
+    public void FindAssociation_FilterEventCreatedAt()
     {
         var ((ev1, topic1), (ev2, topic2)) = CreateAliceAndBob();
 
@@ -818,7 +818,7 @@ public abstract class ACatalogueTests : ADbTest
         var qb = new QueryBuilder()
             .WithFilter(LocalizedEventFilters.CreatedAt.LessThanOrEqualTo(DateTime.UtcNow));
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
                 qb.Build(),
                 AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id))
             .ToArray();
@@ -840,7 +840,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_FilterEventSeverity()
+    public void FindAssociation_FilterEventSeverity()
     {
         var (_, (ev, topic)) = CreateAliceAndDeleteBob();
 
@@ -851,7 +851,7 @@ public abstract class ACatalogueTests : ADbTest
         var qb = new QueryBuilder()
             .WithFilter(LocalizedEventFilters.Severity.EqualTo(ESeverity.Critical));
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
             qb.Build(),
             AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id));
 
@@ -859,7 +859,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_FilterEventKindIdOrKind()
+    public void FindAssociation_FilterEventKindIdOrKind()
     {
         CreateAliceAndDeleteBob();
 
@@ -874,7 +874,7 @@ public abstract class ACatalogueTests : ADbTest
                 LocalizedEventFilters.KindId.EqualTo(EventKinds.Service.Id),
                 LocalizedEventFilters.Kind.EqualTo(EventKinds.Service.Name)));
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
                 qb.Build(),
                 AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id))
             .ToArray();
@@ -905,7 +905,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_FilterDisplayName()
+    public void FindAssociation_FilterDisplayName()
     {
         var (_, (ev, topic)) = CreateAliceAndDeleteBob();
 
@@ -916,7 +916,7 @@ public abstract class ACatalogueTests : ADbTest
         var qb = new QueryBuilder()
             .WithFilter(LocalizedEventFilters.DisplayName.EqualTo("User deleted"));
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
             qb.Build(),
             AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id));
 
@@ -924,7 +924,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_WithSkip()
+    public void FindAssociation_WithSkip()
     {
         var (_, (ev, topic)) = CreateAliceAndDeleteBob();
 
@@ -936,7 +936,7 @@ public abstract class ACatalogueTests : ADbTest
             .WithSkip(1)
             .WithOrderBy(LocalizedEventFilters.CreatedAt);
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
             qb.Build(),
             AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id));
 
@@ -944,7 +944,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_WithLimit()
+    public void FindAssociation_WithLimit()
     {
         var ((ev, topic), _) = CreateAliceAndDeleteBob();
 
@@ -956,7 +956,7 @@ public abstract class ACatalogueTests : ADbTest
             .WithLimit(1)
             .WithOrderBy(LocalizedEventFilters.CreatedAt);
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
             qb.Build(),
             AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id));
 
@@ -964,7 +964,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_WithSkipAndLimit()
+    public void FindAssociation_WithSkipAndLimit()
     {
         var (_, (ev, topic)) = CreateAliceAndDeleteBob();
 
@@ -979,7 +979,7 @@ public abstract class ACatalogueTests : ADbTest
             .WithLimit(1)
             .WithOrderBy(LocalizedEventFilters.CreatedAt);
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
             qb.Build(),
             AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id));
 
@@ -987,7 +987,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_OrderByEventId()
+    public void FindAssociation_OrderByEventId()
     {
         CreateAliceAndDeleteBob();
 
@@ -998,7 +998,7 @@ public abstract class ACatalogueTests : ADbTest
         var qb = new QueryBuilder()
             .WithOrderByDescending(LocalizedEventFilters.Id);
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
                 qb.Build(),
                 AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id))
             .ToArray();
@@ -1009,7 +1009,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_OrderByCreatedAt()
+    public void FindAssociation_OrderByCreatedAt()
     {
         CreateAliceAndDeleteBob();
 
@@ -1020,7 +1020,7 @@ public abstract class ACatalogueTests : ADbTest
         var qb = new QueryBuilder()
             .WithOrderByDescending(LocalizedEventFilters.CreatedAt);
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
                 qb.Build(),
                 AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id))
             .ToArray();
@@ -1031,7 +1031,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_OrderBySeverity()
+    public void FindAssociation_OrderBySeverity()
     {
         CreateAliceAndDeleteBob();
 
@@ -1042,7 +1042,7 @@ public abstract class ACatalogueTests : ADbTest
         var qb = new QueryBuilder()
             .WithOrderByDescending(LocalizedEventFilters.Severity);
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
                 qb.Build(),
                 AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id))
             .ToArray();
@@ -1053,7 +1053,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_OrderByKindId()
+    public void FindAssociation_OrderByKindId()
     {
         _utility!.InsertLoginEvent(DateTime.UtcNow, "::1", "Alice", TestContext.CurrentContext.Random.GetString());
         _utility.InsertServiceEvent(DateTime.UtcNow, started: true, serviceName: "Mail");
@@ -1065,7 +1065,7 @@ public abstract class ACatalogueTests : ADbTest
         var qb = new QueryBuilder()
             .WithOrderByDescending(LocalizedEventFilters.KindId);
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
                 qb.Build(),
                 AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id))
             .ToArray();
@@ -1076,7 +1076,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_OrderByKind()
+    public void FindAssociation_OrderByKind()
     {
         _utility!.InsertServiceEvent(DateTime.UtcNow, started: true, serviceName: "Mail");
         _utility.InsertLoginEvent(DateTime.UtcNow, "::1", "Alice", TestContext.CurrentContext.Random.GetString());
@@ -1088,7 +1088,7 @@ public abstract class ACatalogueTests : ADbTest
         var qb = new QueryBuilder()
             .WithOrderByDescending(LocalizedEventFilters.Kind);
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
                 qb.Build(),
                 AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id))
             .ToArray();
@@ -1099,7 +1099,7 @@ public abstract class ACatalogueTests : ADbTest
     }
 
     [Test]
-    public void FindAssociations_OrderByDisplayName()
+    public void FindAssociation_OrderByDisplayName()
     {
         _utility!.InsertServiceEvent(DateTime.UtcNow, started: true, serviceName: "Mail");
         _utility.InsertLoginEvent(DateTime.UtcNow, "::1", "Alice", TestContext.CurrentContext.Random.GetString());
@@ -1111,7 +1111,7 @@ public abstract class ACatalogueTests : ADbTest
         var qb = new QueryBuilder()
             .WithOrderByDescending(LocalizedEventFilters.DisplayName);
 
-        var result = catalogue.FindAssociations(
+        var result = catalogue.FindAssociation(
                 qb.Build(),
                 AssociationFilters.LeftTopicKindId.EqualTo(TopicKinds.Event.Id))
             .ToArray();
@@ -1119,6 +1119,32 @@ public abstract class ACatalogueTests : ADbTest
         Assert.AreEqual(2, result.Length);
 
         Assert.Greater(result[0].Item1.Topic!.DisplayName, result[1].Item1.Topic!.DisplayName);
+    }
+
+    [Test]
+    public void FindAssociation_MultipleAssociationFilters()
+    {
+        var ev = _utility!.InsertServiceRestartEvent(DateTime.UtcNow, serviceName: "IRC");
+
+        _utility!.InsertServiceRestartEvent(DateTime.UtcNow, serviceName: "ICB");
+
+        MoveEvents();
+
+        var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, "en-US");
+
+        var qb = new QueryBuilder()
+            .WithFilter(LocalizedEventFilters.DisplayName.EqualTo("Service restarted"));
+
+        var (receivedEvent, edges) = catalogue.FindAssociation(
+                qb.Build(),
+                AssociationFilters.RightTopic.EqualTo("foo"),
+                AssociationFilters.RightTopic.EqualTo("bar"),
+                AssociationFilters.RightTopic.EqualTo("IRC"))
+            .Single();
+
+        TestEquals(ev, receivedEvent, "en-US");
+        TestContains(edges, TopicKinds.Event, "Service restarted", Associations.Stopped, TopicKinds.Service, "IRC");
+        TestContains(edges, TopicKinds.Event, "Service restarted", Associations.Started, TopicKinds.Service, "IRC");
     }
 
     ((IEvent, ITopic), (IEvent, ITopic)) CreateAliceAndDeleteBob()
@@ -1216,7 +1242,7 @@ public abstract class ACatalogueTests : ADbTest
 
         Assert.IsTrue(found);
     }
-    
+
     [Test]
     public void QueryEvents_MultipleLanguages()
     {
@@ -1238,9 +1264,9 @@ public abstract class ACatalogueTests : ADbTest
             TestSingleLoginEventQuery(catalogue, qb.Build(), ev, "::1", "Alice", session, locale);
         }
     }
-    
+
     [Test]
-    public void FindAssociations_MultipleLanguages()
+    public void FindAssociation_MultipleLanguages()
     {
         var ((ev, topic), _) = CreateAliceAndDeleteBob();
 
@@ -1250,7 +1276,7 @@ public abstract class ACatalogueTests : ADbTest
         {
             var catalogue = _auditDb!.Events.CreateCatalogue(_handle!, Catalogue, locale);
 
-            var result = catalogue.FindAssociations(
+            var result = catalogue.FindAssociation(
                 QueryBuilder.All(),
                 AssociationFilters.Association.EqualTo("created"));
 

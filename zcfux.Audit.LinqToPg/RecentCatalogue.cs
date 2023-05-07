@@ -61,9 +61,9 @@ sealed class RecentCatalogue : ICatalogue
         return collector.Collect(pairs);
     }
 
-    public IEnumerable<(ILocalizedEvent, IEnumerable<ILocalizedEdge>)> FindAssociations(
+    public IEnumerable<(ILocalizedEvent, IEnumerable<ILocalizedEdge>)> FindAssociation(
         Query eventQuery,
-        INode associationFilter)
+        params INode[] associationFilters)
     {
         var db = _handle.Db();
 
@@ -71,7 +71,10 @@ sealed class RecentCatalogue : ICatalogue
 
         var edges = FindEdges(db, events);
 
-        var expr = associationFilter.ToExpression<EdgeView>();
+        var expr = ExpressionBuilder.Or(
+            associationFilters
+                .Select(f => f.ToExpression<EdgeView>())
+                .ToArray());
 
         var pairs = (from ev in events
                 from e in edges

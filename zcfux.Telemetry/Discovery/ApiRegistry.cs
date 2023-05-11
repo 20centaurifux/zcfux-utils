@@ -55,7 +55,8 @@ public sealed class ApiRegistry
         {
             var api = _apis
                 .Where(api =>
-                    (api.Major == major) && (api.Minor <= minor))
+                    api.Topic.Equals(topic)
+                    && (api.Major == major) && (api.Minor <= minor))
                 .MinBy(api => api.Minor);
 
             return api?.Type

@@ -19,8 +19,6 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using System.Net;
-using zcfux.Audit.LinqToPg;
 using zcfux.Translation.Data;
 
 namespace zcfux.Audit.Test.Event;
@@ -34,6 +32,7 @@ sealed class Utility
     ITextResource _loginEvent = default!;
     ITextResource _loginFailedEvent = default!;
     ITextResource _serviceStatusEvent = default!;
+    ITextResource _serviceRestartEvent = default!;
     ITextResource _userCreatedEvent = default!;
     ITextResource _userDeletedEvent = default!;
 
@@ -102,9 +101,14 @@ sealed class Utility
         _translationDb.LocalizeText(_handle, _userDeletedEvent, enUS, "User deleted");
 
         _serviceStatusEvent = _translationDb.NewTextResource(_handle, TextCategory, "service-status-changed");
-        
+
         _translationDb.LocalizeText(_handle, _serviceStatusEvent, deDE, "Servicestatus geändert");
         _translationDb.LocalizeText(_handle, _serviceStatusEvent, enUS, "Service status changed");
+        
+        _serviceRestartEvent = _translationDb.NewTextResource(_handle, TextCategory, "service-restarted");
+        
+        _translationDb.LocalizeText(_handle, _serviceRestartEvent, deDE, "Service neugestartet");
+        _translationDb.LocalizeText(_handle, _serviceRestartEvent, enUS, "Service restarted");
     }
 
     public IEvent InsertLoginEvent(DateTime at, string endpoint, string username, string session)
@@ -176,6 +180,32 @@ sealed class Utility
             started
                 ? Associations.Started
                 : Associations.Stopped,
+            serviceTopic);
+
+        return ev;
+    }
+    
+    public IEvent InsertServiceRestartEvent(DateTime at, string serviceName)
+    {
+        var eventTopic = _auditDb!.Topics.NewTranslatableTopic(_handle!, TopicKinds.Event, _serviceRestartEvent);
+
+        var ev = _auditDb.Events.NewEvent(_handle!, EventKinds.Service, ESeverity.Medium, at, eventTopic);
+
+        var serviceTopic = _auditDb.Topics.NewTopic(
+            _handle!,
+            TopicKinds.Service,
+            _translationDb.GetOrCreateTextResource(_handle, TextCategory, serviceName));
+
+        _auditDb.Associations.Associate(
+            _handle!,
+            eventTopic,
+            Associations.Stopped,
+            serviceTopic);
+        
+        _auditDb.Associations.Associate(
+            _handle!,
+            eventTopic,
+            Associations.Started,
             serviceTopic);
 
         return ev;

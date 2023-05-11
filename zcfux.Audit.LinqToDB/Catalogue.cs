@@ -58,11 +58,13 @@ sealed class Catalogue : ICatalogue
         }
     }
 
-    public IEnumerable<(ILocalizedEvent, IEnumerable<ILocalizedEdge>)> FindAssociations(Query eventQuery, INode associationFilter)
+    public IEnumerable<(ILocalizedEvent, IEnumerable<ILocalizedEdge>)> FindAssociation(
+        Query eventQuery,
+        params INode[] associationFilters)
     {
         var events = FilterEvents(eventQuery.Filter, eventQuery.Order);
 
-        var result = GetFilteredEdges(events, associationFilter);
+        var result = GetFilteredEdges(events, associationFilters);
 
         if (eventQuery.Range.Skip.HasValue)
         {
@@ -100,20 +102,29 @@ sealed class Catalogue : ICatalogue
 
     IEnumerable<(ILocalizedEvent, IEnumerable<ILocalizedEdge>)> GetFilteredEdges(
         IEnumerable<ILocalizedEvent> events,
-        INode associationFilter)
+        INode[] associationFilters)
     {
-        var expr = associationFilter.ToExpression<EdgeView>();
-
         foreach (var ev in events)
         {
-            if (ev.Topic is { })
+            if (ev.Topic is not null)
             {
                 var view = EdgeCte(ev.Id)
                     .ToArray();
 
-                if (view.AsQueryable().Any(expr))
+                var match = false;
+
+                for (var i = 0; !match && (i < associationFilters.Length); i++)
                 {
-                    yield return (ev, view.Select(e => e.ToLocalizedEdge()));
+                    var associationFilter = associationFilters[i];
+
+                    var expr = associationFilter.ToExpression<EdgeView>();
+
+                    match = view.AsQueryable().Any(expr);
+
+                    if (match)
+                    {
+                        yield return (ev, view.Select(e => e.ToLocalizedEdge()));
+                    }
                 }
             }
         }

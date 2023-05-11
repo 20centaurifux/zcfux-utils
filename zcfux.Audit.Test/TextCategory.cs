@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,17 +19,10 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using zcfux.Filter;
+using zcfux.Translation.Data;
 
-namespace zcfux.Audit;
+namespace zcfux.Audit.Test;
 
-public interface ICatalogue
-{
-    IEnumerable<(ILocalizedEvent, IEnumerable<ILocalizedEdge>)> QueryEvents(Query query);
-
-    IEnumerable<(ILocalizedEvent, IEnumerable<ILocalizedEdge>)> FindAssociation(
-        Query eventQuery,
-        params INode[] associationFilters);
-
-    void Delete(INode filter);
-}
+internal sealed record TextCategory (
+    int Id,
+    string Name) : ICategory;

@@ -50,17 +50,21 @@ sealed class ArchiveCatalogue : ICatalogue
         pairs = OrderBy(pairs, query.Order);
 
         var collector = new LocalizedEdgeCollector<EventView>(ECatalogue.Archive);
-        
+
         return collector.Collect(pairs);
     }
 
-    public IEnumerable<(ILocalizedEvent, IEnumerable<ILocalizedEdge>)> FindAssociations(
+    public IEnumerable<(ILocalizedEvent, IEnumerable<ILocalizedEdge>)> FindAssociation(
         Query eventQuery,
-        INode associationFilter)
+        params INode[] associationFilters)
     {
         var db = _handle.Db();
 
-        var expr = associationFilter.ToExpression<EdgeView>();
+        var expr = ExpressionBuilder.Or(
+            associationFilters
+                .Select(f => f.ToExpression<EdgeView>())
+                .ToArray());
+
 
         var edges = db.GetTable<EdgeView>()
             .TableName("ArchivedEdgeView")
@@ -137,7 +141,7 @@ sealed class ArchiveCatalogue : ICatalogue
         => db.GetTable<EventView>()
             .SchemaName("audit")
             .TableName("ArchivedEventView")
-            .Where(ev => ev.LocaleId == null ||  ev.LocaleId == _localeId)
+            .Where(ev => ev.LocaleId == null || ev.LocaleId == _localeId)
             .Query(query);
 
     public void Delete(INode filter)

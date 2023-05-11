@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,17 +19,28 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using zcfux.Filter;
+using System.Linq.Expressions;
 
-namespace zcfux.Audit;
+namespace zcfux.Audit.LinqToPg;
 
-public interface ICatalogue
+static class ExpressionBuilder
 {
-    IEnumerable<(ILocalizedEvent, IEnumerable<ILocalizedEdge>)> QueryEvents(Query query);
+    public static Expression<Func<EdgeView, bool>> Or(Expression<Func<EdgeView, bool>>[] exprs)
+    {
+        var expr = exprs[0];
+        
+        var tail = exprs
+            .Skip(1)
+            .ToArray();
+        
+        if (tail.Any())
+        {
+            var invoked = Expression.Invoke(Or(tail), expr.Parameters);
 
-    IEnumerable<(ILocalizedEvent, IEnumerable<ILocalizedEdge>)> FindAssociation(
-        Query eventQuery,
-        params INode[] associationFilters);
+            expr = Expression.Lambda<Func<EdgeView, bool>>(
+                Expression.OrElse(expr.Body, invoked), expr.Parameters);
+        }
 
-    void Delete(INode filter);
+        return expr;
+    }
 }

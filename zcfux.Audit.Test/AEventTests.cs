@@ -20,10 +20,8 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using NUnit.Framework;
-using zcfux.Audit.LinqToPg;
 using zcfux.Audit.Test.Event;
 using zcfux.Filter;
-using zcfux.Translation;
 using zcfux.Translation.Data;
 
 namespace zcfux.Audit.Test;

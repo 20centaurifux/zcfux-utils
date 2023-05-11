@@ -27,21 +27,18 @@ public static class ProxyFactory
 {
     static readonly ProxyGenerator Generator = new();
 
-    public static TApi CreateApiProxy<TApi>(Options options)
-        where TApi : class
-    {
-        var interceptor = new ApiInterceptor(typeof(TApi), options);
-
-        var proxy = Generator.CreateInterfaceProxyWithoutTarget<TApi>(interceptor);
-
-        return proxy!;
-    }
+    public static T CreateApiProxy<T>(Options options)
+        where T : class
+        => (CreateApiProxy(typeof(T), options) as T)!;
 
     public static object CreateApiProxy(Type type, Options options)
     {
         var interceptor = new ApiInterceptor(type, options);
 
-        var proxy = Generator.CreateInterfaceProxyWithoutTarget(type, interceptor);
+        var proxy = Generator.CreateInterfaceProxyWithoutTarget(
+            type,
+            new Type[] { typeof(IProxy) },
+            interceptor);
 
         return proxy!;
     }

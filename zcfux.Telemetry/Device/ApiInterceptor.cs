@@ -27,7 +27,7 @@ using zcfux.Logging;
 
 namespace zcfux.Telemetry.Device;
 
-sealed class ApiInterceptor : IInterceptor
+sealed class ApiInterceptor : IInterceptor, IProxy
 {
     sealed record Command(string Topic, uint TimeToLive, uint ResponseTimeout);
 
@@ -69,8 +69,6 @@ sealed class ApiInterceptor : IInterceptor
 
     readonly object _detectedVersionLock = new();
     string? _detectedVersion;
-
-    readonly CancellationTokenSource _cancellationTokenSource = new();
 
     public ApiInterceptor(Type type, Options options)
     {
@@ -380,7 +378,11 @@ sealed class ApiInterceptor : IInterceptor
 
     public void Intercept(IInvocation invocation)
     {
-        if (invocation.Method.Name.StartsWith("get_"))
+        if (invocation.Method.Name.Equals("ReleaseProxy"))
+        {
+            ReleaseProxy();
+        }
+        else if (invocation.Method.Name.StartsWith("get_"))
         {
             InterceptGetter(invocation);
         }
@@ -688,5 +690,15 @@ sealed class ApiInterceptor : IInterceptor
 
             return ++_messageId;
         }
+    }
+
+    public void ReleaseProxy()
+    {
+        _connection.Connected -= Connected;
+        _connection.Disconnected -= Disconnected;
+        _connection.DeviceStatusReceived -= DeviceStatusReceived;
+        _connection.ApiInfoReceived -= ApiInfoReceived;
+        _connection.ApiMessageReceived -= ApiMessageReceived;
+        _connection.ResponseReceived -= ResponseReceived;
     }
 }

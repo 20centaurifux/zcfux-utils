@@ -59,6 +59,11 @@ sealed class DiscoveredDevice : IDiscoveredDevice
                 {
                     lock(_proxiesLock)
                     {
+                        foreach(var (_, proxy) in _proxies)
+                        {
+                            (proxy.Instance as Device.IProxy)!.ReleaseProxy();
+                        }
+
                         _proxies.Clear();
                     }
                 }

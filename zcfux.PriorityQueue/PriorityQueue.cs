@@ -19,9 +19,11 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using System.Collections;
+
 namespace zcfux.PriorityQueue;
 
-public sealed class PriorityQueue<T>
+public sealed class PriorityQueue<T> : IEnumerable<T>
     where T : IComparable
 {
     readonly SortedSet<Item<T>> _items = new();
@@ -99,4 +101,13 @@ public sealed class PriorityQueue<T>
 
     public int RemoveWhere(Predicate<T> pred)
         => _items.RemoveWhere(item => pred(item.Value));
+
+    public IEnumerator<T> GetEnumerator()
+        => _items
+            .Select(item => item.Value)
+            .Reverse()
+            .GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator()
+        => GetEnumerator();
 }

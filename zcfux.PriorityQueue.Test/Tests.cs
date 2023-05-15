@@ -219,4 +219,16 @@ public sealed class Tests
         Assert.AreEqual(1, q.Count);
         Assert.AreEqual(11, q.Pop());
     }
+
+    [Test]
+    public void Enumerate()
+    {
+        var q = new PriorityQueue<int>();
+
+        q.Enqueue(3);
+        q.Enqueue(11);
+
+        Assert.AreEqual(11, q.First());
+        Assert.AreEqual(3, q.Last());
+    }
 }

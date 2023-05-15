@@ -23,7 +23,7 @@ using zcfux.Translation.Data;
 
 namespace zcfux.Audit.LinqToPg;
 
-internal sealed record TextResource(
+sealed record TextResource(
     int Id,
     ICategory Category,
     string MsgId) : ITextResource;

@@ -23,6 +23,6 @@ using zcfux.Translation.Data;
 
 namespace zcfux.Audit.Test;
 
-internal sealed record Locale(
+sealed record Locale(
     int Id,
     string Name) : ILocale;

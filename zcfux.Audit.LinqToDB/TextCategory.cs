@@ -23,6 +23,6 @@ using zcfux.Translation.Data;
 
 namespace zcfux.Audit.LinqToDB;
 
-internal sealed record TextCategory (
+sealed record TextCategory (
     int Id,
     string Name) : ICategory;

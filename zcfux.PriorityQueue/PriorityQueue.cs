@@ -23,7 +23,7 @@ using System.Collections;
 
 namespace zcfux.PriorityQueue;
 
-public sealed class PriorityQueue<T> : IEnumerable<T>
+public sealed class PriorityQueue<T> : IPriorityQueue<T>
     where T : IComparable
 {
     readonly SortedSet<Item<T>> _items = new();

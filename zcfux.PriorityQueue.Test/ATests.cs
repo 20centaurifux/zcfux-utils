@@ -23,12 +23,12 @@ using NUnit.Framework;
 
 namespace zcfux.PriorityQueue.Test;
 
-public sealed class Tests
+public abstract class ATests
 {
     [Test]
     public void Enqueue_Pop()
     {
-        var q = new PriorityQueue<int>();
+        var q = CreatePriorityQueue<int>();
 
         q.Enqueue(7);
         q.Enqueue(3);
@@ -40,7 +40,7 @@ public sealed class Tests
     [Test]
     public void Enqueue_TryPop()
     {
-        var q = new PriorityQueue<int>();
+        var q = CreatePriorityQueue<int>();
 
         q.Enqueue(7);
         q.Enqueue(3);
@@ -59,7 +59,7 @@ public sealed class Tests
     [Test]
     public void Enqueue_Pop_Count()
     {
-        var q = new PriorityQueue<int>();
+        var q = CreatePriorityQueue<int>();
 
         Assert.AreEqual(0, q.Count);
         
@@ -75,7 +75,7 @@ public sealed class Tests
     [Test]
     public void Enqueue_TryPop_Count()
     {
-        var q = new PriorityQueue<int>();
+        var q = CreatePriorityQueue<int>();
 
         Assert.AreEqual(0, q.Count);
         
@@ -91,7 +91,7 @@ public sealed class Tests
     [Test]
     public void Pop_Empty()
     {
-        var q = new PriorityQueue<int>();
+        var q = CreatePriorityQueue<int>();
 
         Assert.Throws<InvalidOperationException>(() => q.Pop());
     }
@@ -99,7 +99,7 @@ public sealed class Tests
     [Test]
     public void TryPop_Empty()
     {
-        var q = new PriorityQueue<int>();
+        var q = CreatePriorityQueue<int>();
 
         Assert.IsFalse(q.TryPop(out _));
     }
@@ -107,7 +107,7 @@ public sealed class Tests
     [Test]
     public void Enqueue_Peek()
     {
-        var q = new PriorityQueue<int>();
+        var q = CreatePriorityQueue<int>();
 
         q.Enqueue(7);
         q.Enqueue(3);
@@ -118,7 +118,7 @@ public sealed class Tests
     [Test]
     public void Enqueue_TryPeek()
     {
-        var q = new PriorityQueue<int>();
+        var q = CreatePriorityQueue<int>();
 
         q.Enqueue(7);
         q.Enqueue(3);
@@ -132,7 +132,7 @@ public sealed class Tests
     [Test]
     public void Enqueue_Peek_Count()
     {
-        var q = new PriorityQueue<int>();
+        var q = CreatePriorityQueue<int>();
 
         Assert.AreEqual(0, q.Count);
         
@@ -148,7 +148,7 @@ public sealed class Tests
     [Test]
     public void Enqueue_TryPeek_Count()
     {
-        var q = new PriorityQueue<int>();
+        var q = CreatePriorityQueue<int>();
 
         Assert.AreEqual(0, q.Count);
         
@@ -164,7 +164,7 @@ public sealed class Tests
     [Test]
     public void Peek_Empty()
     {
-        var q = new PriorityQueue<int>();
+        var q = CreatePriorityQueue<int>();
 
         Assert.Throws<InvalidOperationException>(() => q.Peek());
     }
@@ -172,7 +172,7 @@ public sealed class Tests
     [Test]
     public void TryPeek_Empty()
     {
-        var q = new PriorityQueue<int>();
+        var q = CreatePriorityQueue<int>();
 
         Assert.IsFalse(q.TryPeek(out _));
     }
@@ -180,7 +180,7 @@ public sealed class Tests
     [Test]
     public void Enqueue_Clear_Count()
     {
-        var q = new PriorityQueue<int>();
+        var q = CreatePriorityQueue<int>();
 
         Assert.AreEqual(0, q.Count);
         
@@ -196,7 +196,7 @@ public sealed class Tests
     [Test]
     public void Enqueue_SameItem()
     {
-        var q = new PriorityQueue<int>();
+        var q = CreatePriorityQueue<int>();
         
         q.Enqueue(11);
         q.Enqueue(11);
@@ -209,7 +209,7 @@ public sealed class Tests
     [Test]
     public void RemoveWhere()
     {
-        var q = new PriorityQueue<int>();
+        var q = CreatePriorityQueue<int>();
         
         q.Enqueue(3);
         q.Enqueue(11);
@@ -223,7 +223,7 @@ public sealed class Tests
     [Test]
     public void Enumerate()
     {
-        var q = new PriorityQueue<int>();
+        var q = CreatePriorityQueue<int>();
 
         q.Enqueue(3);
         q.Enqueue(11);
@@ -231,4 +231,7 @@ public sealed class Tests
         Assert.AreEqual(11, q.First());
         Assert.AreEqual(3, q.Last());
     }
+
+    protected abstract IPriorityQueue<T> CreatePriorityQueue<T>()
+        where T : IComparable;
 }

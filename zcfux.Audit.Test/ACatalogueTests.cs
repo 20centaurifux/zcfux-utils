@@ -1143,8 +1143,11 @@ public abstract class ACatalogueTests : ADbTest
             .Single();
 
         TestEquals(ev, receivedEvent, "en-US");
-        TestContains(edges, TopicKinds.Event, "Service restarted", Associations.Stopped, TopicKinds.Service, "IRC");
-        TestContains(edges, TopicKinds.Event, "Service restarted", Associations.Started, TopicKinds.Service, "IRC");
+
+        var edgesArray = edges.ToArray();
+        
+        TestContains(edgesArray, TopicKinds.Event, "Service restarted", Associations.Stopped, TopicKinds.Service, "IRC");
+        TestContains(edgesArray, TopicKinds.Event, "Service restarted", Associations.Started, TopicKinds.Service, "IRC");
     }
 
     ((IEvent, ITopic), (IEvent, ITopic)) CreateAliceAndDeleteBob()

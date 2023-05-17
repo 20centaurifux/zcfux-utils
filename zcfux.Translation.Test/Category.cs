@@ -23,6 +23,6 @@ using zcfux.Translation.Data;
 
 namespace zcfux.Translation.Test;
 
-internal sealed record Category(
+sealed record Category(
     int Id,
     string Name) : ICategory;

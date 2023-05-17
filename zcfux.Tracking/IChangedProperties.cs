@@ -23,7 +23,7 @@ using System.Collections.ObjectModel;
 
 namespace zcfux.Tracking;
 
-internal interface IChangedProperties
+interface IChangedProperties
 {
     internal void ChangeProperty(string propertyName, object? value);
 

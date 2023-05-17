@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Tracking;
 
-internal interface ITouchedProperties
+interface ITouchedProperties
 {
     internal void TouchProperty(string propertyName);
 

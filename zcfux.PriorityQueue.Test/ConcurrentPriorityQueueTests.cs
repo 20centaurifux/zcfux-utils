@@ -20,10 +20,28 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 
+using NUnit.Framework;
+
 namespace zcfux.PriorityQueue.Test;
 
 public sealed class ConcurrentPriorityQueueTests : ATests
 {
+    [Test]
+    public void WaitOne()
+    {
+        var q = new ConcurrentPriorityQueue<int>(new PriorityQueue<int>());
+
+        Assert.IsFalse(q.WaitOne(TimeSpan.FromMilliseconds(50)));
+        
+        q.Enqueue(23);
+        
+        Assert.IsTrue(q.WaitOne(TimeSpan.FromMilliseconds(50)));
+
+        q.Pop();
+        
+        Assert.IsFalse(q.WaitOne(TimeSpan.FromMilliseconds(50)));
+    }
+    
     protected override IPriorityQueue<T> CreatePriorityQueue<T>()
         => new ConcurrentPriorityQueue<T>(new PriorityQueue<T>());
 }

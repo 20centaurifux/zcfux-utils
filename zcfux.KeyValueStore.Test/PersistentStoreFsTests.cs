@@ -105,7 +105,7 @@ public sealed class PersistentStoreFsTests : ATests
             store.Remove(key);
 
             // write lock can not be acquired if the read lock is held by same thread
-            Task.Factory.StartNew(() => (store as Store)!.CollectGarbage()).Wait();
+            Task.Run(() => (store as Store)!.CollectGarbage()).Wait();
 
             var blobsPath = Path.Combine(BuildStoragePath(), "blobs");
 

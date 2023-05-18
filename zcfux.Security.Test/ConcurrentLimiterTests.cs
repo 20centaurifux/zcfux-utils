@@ -32,8 +32,8 @@ public sealed class ConcurrentLimiterTests
         var child = new BucketLimiter<string>(capacity: 2, leakRate: TimeSpan.FromMilliseconds(500));
         var parent = new ConcurrentRateLimiter<string>(child);
 
-        var t1 = Task.Factory.StartNew(() => parent.Throttle("a"));
-        var t2 = Task.Factory.StartNew(() => parent.Throttle("a"));
+        var t1 = Task.Run(() => parent.Throttle("a"));
+        var t2 = Task.Run(() => parent.Throttle("a"));
 
         Task.WaitAll(t1, t2);
 

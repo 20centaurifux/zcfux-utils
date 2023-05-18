@@ -90,7 +90,7 @@ public abstract class AJobQueue
         }
         else
         {
-            Task.Factory.StartNew(() => _event.WaitOne(millis), CancellationToken.None)
+            Task.Run(() => _event.WaitOne(millis), CancellationToken.None)
                 .Wait(millis, token);
         }
     }

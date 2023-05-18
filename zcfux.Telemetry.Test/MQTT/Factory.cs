@@ -19,6 +19,7 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using System.Security.Authentication;
 using MQTTnet;
 using MQTTnet.Server;
 using zcfux.Telemetry.MQTT;
@@ -34,6 +35,8 @@ public static class Factory
         var options = new MqttServerOptionsBuilder()
             .WithDefaultEndpoint()
             .WithDefaultEndpointPort(port)
+            .WithEncryptionSslProtocol(SslProtocols.None)
+            .WithPersistentSessions()
             .Build();
 
         return new MqttFactory().CreateMqttServer(options);
@@ -46,7 +49,7 @@ public static class Factory
         var opts = new ConnectionOptionsBuilder()
             .WithClientOptions(new ClientOptionsBuilder()
                 .WithPort(port)
-                .WithSessionTimeout(5)
+                .WithSessionTimeout(30)
                 .Build())
             .WithMessageQueue(new MemoryMessageQueue(50))
             .Build();
@@ -61,7 +64,7 @@ public static class Factory
         var opts = new ConnectionOptionsBuilder()
             .WithClientOptions(new ClientOptionsBuilder()
                 .WithPort(port)
-                .WithSessionTimeout(5)
+                .WithSessionTimeout(30)
                 .WithLastWill(new LastWillOptionsBuilder()
                     .WithDomain(domain)
                     .WithKind(kind)

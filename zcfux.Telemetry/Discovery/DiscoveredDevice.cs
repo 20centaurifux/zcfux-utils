@@ -19,6 +19,8 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using zcfux.Telemetry.Device;
+
 namespace zcfux.Telemetry.Discovery;
 
 sealed class DiscoveredDevice : IDiscoveredDevice
@@ -54,19 +56,6 @@ sealed class DiscoveredDevice : IDiscoveredDevice
             if (Interlocked.Exchange(ref _status, (long)value) != (long)value)
             {
                 StatusChanged?.Invoke(this, new StatusEventArgs(value));
-
-                if (value == EDeviceStatus.Offline)
-                {
-                    lock(_proxiesLock)
-                    {
-                        foreach(var (_, proxy) in _proxies)
-                        {
-                            (proxy.Instance as Device.IProxy)!.ReleaseProxy();
-                        }
-
-                        _proxies.Clear();
-                    }
-                }
             }
         }
     }
@@ -76,30 +65,40 @@ sealed class DiscoveredDevice : IDiscoveredDevice
 
     internal void RegisterApi(string topic, string version, Func<object> createProxy)
     {
-        Proxy? match;
-        RegistrationEventArgs? registeredEventArgs = null;
+        Proxy? addedProxy = null;
+        Proxy? droppedProxy = null;
 
         lock (_proxiesLock)
         {
-            if (!_proxies.TryGetValue(topic, out match)
-                || !match.Version.Equals(version))
+            _proxies.TryGetValue(topic, out var match);
+
+            if (match is null || !match.Version.Equals(version))
             {
-                var proxy = createProxy();
+                addedProxy = new Proxy(createProxy(), version);
 
-                registeredEventArgs = new RegistrationEventArgs(topic, version, proxy);
+                _proxies[topic] = addedProxy;
 
-                _proxies[topic] = new Proxy(proxy, version);
+                if (match is not null)
+                {
+                    droppedProxy = match;
+                }
             }
         }
 
-        if (registeredEventArgs is { })
+        if (droppedProxy is not null)
         {
-            if (match is { })
-            {
-                Dropped?.Invoke(this, new RegistrationEventArgs(topic, match.Version, match.Instance));
-            }
+            Dropped?.Invoke(
+                this,
+                new RegistrationEventArgs(topic, droppedProxy.Version, droppedProxy.Instance));
+            
+            (droppedProxy.Instance as IProxy)!.ReleaseProxy();
+        }
 
-            Registered?.Invoke(this, registeredEventArgs);
+        if (addedProxy is not null)
+        {
+            Registered?.Invoke(
+                this,
+                new RegistrationEventArgs(topic, addedProxy.Version, addedProxy.Instance));
         }
     }
 

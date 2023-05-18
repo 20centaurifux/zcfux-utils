@@ -29,7 +29,8 @@ public sealed class Producer<T> : IAsyncEnumerable<T>, IProducer
     readonly HashSet<Enumerator> _enumerators = new();
     bool _enabled;
     CancellationTokenSource? _cancellationTokenSource;
-
+    readonly Queue<T> _queuedValues = new();
+    
     sealed class Enumerator : IAsyncEnumerator<T>
     {
         public event EventHandler? Disposed;
@@ -38,7 +39,7 @@ public sealed class Producer<T> : IAsyncEnumerable<T>, IProducer
 
         readonly object _lock = new();
 
-        readonly CancellationToken _externalCancellactionToken;
+        readonly CancellationToken _externalCancellationToken;
         readonly CancellationTokenSource _cancellationTokenSource;
         T _value = default!;
 
@@ -46,7 +47,7 @@ public sealed class Producer<T> : IAsyncEnumerable<T>, IProducer
             CancellationToken internalCancellationToken,
             CancellationToken externalCancellationToken)
         {
-            _externalCancellactionToken = externalCancellationToken;
+            _externalCancellationToken = externalCancellationToken;
 
             _cancellationTokenSource = CancellationTokenSource
                 .CreateLinkedTokenSource(
@@ -73,7 +74,7 @@ public sealed class Producer<T> : IAsyncEnumerable<T>, IProducer
                 }
             }
 
-            _externalCancellactionToken.ThrowIfCancellationRequested();
+            _externalCancellationToken.ThrowIfCancellationRequested();
 
             if (success)
             {
@@ -166,6 +167,13 @@ public sealed class Producer<T> : IAsyncEnumerable<T>, IProducer
 
                 _enumerators.Add(enumerator);
 
+                foreach (var value in _queuedValues)
+                {
+                    enumerator.Write(value);
+                }
+
+                _queuedValues.Clear();
+
                 return enumerator;
             }
             else
@@ -174,14 +182,21 @@ public sealed class Producer<T> : IAsyncEnumerable<T>, IProducer
             }
         }
     }
-
+    
     public void Write(T value)
     {
         lock (_lock)
         {
-            foreach (var e in _enumerators)
+            if (_enumerators.Any())
             {
-                e.Write(value);
+                foreach (var e in _enumerators)
+                {
+                    e.Write(value);
+                }
+            }
+            else
+            {
+                _queuedValues.Enqueue(value);
             }
         }
     }

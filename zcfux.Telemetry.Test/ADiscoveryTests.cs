@@ -41,12 +41,20 @@ public abstract class ADiscoveryTests
     {
         [Command(Topic = "add")]
         Task<int> AddAsync(Tuple<int, int> numbers);
+
+        [Event(Topic = "rnd")]
+        IAsyncEnumerable<int> Random { get; }
     }
 
     sealed class TestApiV1_0_Impl : ITestApiV1_0
     {
+        readonly Producer<int> _producer = new();
+
         public Task<int> AddAsync(Tuple<int, int> numbers)
             => Task.FromResult(numbers.Item1 + numbers.Item2);
+
+        [Event(Topic = "rnd")]
+        public IAsyncEnumerable<int> Random => _producer;
     }
 
     sealed class ClientV1_0 : Client
@@ -67,11 +75,16 @@ public abstract class ADiscoveryTests
 
     sealed class TestApiV1_1_Impl : ITestApiV1_1
     {
+        readonly Producer<int> _producer = new();
+
         public Task<int> AddAsync(Tuple<int, int> numbers)
             => Task.FromResult(numbers.Item1 + numbers.Item2);
 
         public Task<int> SubAsync(Tuple<int, int> numbers)
             => Task.FromResult(numbers.Item1 - numbers.Item2);
+
+        [Event(Topic = "rnd")]
+        public IAsyncEnumerable<int> Random => _producer;
     }
 
     sealed class ClientV1_1 : Client
@@ -228,7 +241,73 @@ public abstract class ADiscoveryTests
     }
 
     [Test]
-    public async Task RegisterMatchingApiVersion()
+    public async Task DeviceStatusesReceived()
+    {
+        using (var connection = CreateConnection())
+        {
+            var opts = new OptionsBuilder()
+                .WithConnection(connection)
+                .WithFilter(new DeviceFilter(DeviceFilter.All, DeviceFilter.All, DeviceFilter.All))
+                .WithSerializer(CreateSerializer())
+                .WithApiRegistry(new ApiRegistry())
+                .Build();
+
+            var discoverer = new Discoverer(opts);
+
+            var connectingEvent = new ManualResetEventSlim();
+            var onlineEvent = new ManualResetEventSlim();
+            var offlineEvent = new ManualResetEventSlim();
+
+            discoverer.Discovered += (_, e1) =>
+            {
+                e1.Device.StatusChanged += (_, e2) =>
+                {
+                    switch (e2.Status)
+                    {
+                        case EDeviceStatus.Connecting:
+                            connectingEvent.Set();
+                            break;
+
+                        case EDeviceStatus.Online:
+                            onlineEvent.Set();
+                            break;
+
+                        case EDeviceStatus.Offline:
+                            offlineEvent.Set();
+                            break;
+                    }
+                };
+            };
+
+            await connection.ConnectAsync();
+
+            var device = new DeviceDetails("d", "test", TestContext.CurrentContext.Random.Next());
+
+            using (var deviceConnection = CreateDeviceConnection(device))
+            {
+                var deviceOpts = new Device.OptionsBuilder()
+                    .WithConnection(deviceConnection)
+                    .WithDevice(device)
+                    .WithSerializer(CreateSerializer())
+                    .Build();
+
+                using (new SimpleClient(deviceOpts))
+                {
+                    await deviceConnection.ConnectAsync();
+
+                    Assert.IsTrue(connectingEvent.Wait(TimeSpan.FromSeconds(5))
+                                  && onlineEvent.Wait(TimeSpan.FromSeconds(5)));
+
+                    await deviceConnection.DisconnectAsync();
+
+                    Assert.IsTrue(offlineEvent.Wait(TimeSpan.FromSeconds(5)));
+                }
+            }
+        }
+    }
+
+    [Test]
+    public async Task RegisterMatchingApiVersionAndCallMethod()
     {
         using (var connection = CreateConnection())
         {
@@ -280,7 +359,7 @@ public abstract class ADiscoveryTests
     }
 
     [Test]
-    public async Task RegisterCompatibleApiVersion()
+    public async Task RegisterCompatibleApiVersionAndCallMethod()
     {
         using (var connection = CreateConnection())
         {
@@ -332,6 +411,209 @@ public abstract class ADiscoveryTests
     }
 
     [Test]
+    public async Task DropReplacedApiVersion()
+    {
+        using (var connection = CreateConnection())
+        {
+            var registry = new ApiRegistry();
+
+            registry.Register<ITestApiV1_0>();
+            registry.Register<ITestApiV2_0>();
+
+            var opts = new OptionsBuilder()
+                .WithConnection(connection)
+                .WithFilter(new DeviceFilter(DeviceFilter.All, DeviceFilter.All, DeviceFilter.All))
+                .WithSerializer(CreateSerializer())
+                .WithApiRegistry(registry)
+                .Build();
+
+            var discoverer = new Discoverer(opts);
+
+            var discoveredDeviceTcs = new TaskCompletionSource<IDiscoveredDevice>();
+            var v1RegisteredTcs = new TaskCompletionSource();
+            var v1DroppedTcs = new TaskCompletionSource();
+            var v2RegisteredTcs = new TaskCompletionSource();
+
+            discoverer.Discovered += (_, e1) =>
+            {
+                discoveredDeviceTcs.SetResult(e1.Device);
+
+                e1.Device.Registered += (_, e2) =>
+                {
+                    switch (e2.Version)
+                    {
+                        case "1.0":
+                            v1RegisteredTcs.SetResult();
+                            break;
+
+                        case "2.0":
+                            v2RegisteredTcs.SetResult();
+                            break;
+                    }
+                };
+
+                e1.Device.Dropped += (_, e2) =>
+                {
+                    if (e2.Version.Equals("1.0"))
+                    {
+                        v1DroppedTcs.SetResult();
+                    }
+                };
+            };
+
+            await connection.ConnectAsync();
+
+            var cancellationTokenSource = new CancellationTokenSource();
+
+            var clientId = TestContext.CurrentContext.Random.Next();
+
+            var clientV1Task = StartClientAsync<ClientV1_0>(clientId, cancellationTokenSource.Token);
+
+            var discoveredDevice = await discoveredDeviceTcs.Task;
+
+            await v1RegisteredTcs.Task;
+
+            Assert.IsTrue(discoveredDevice.HasApi<ITestApiV1_0>());
+            Assert.IsFalse(discoveredDevice.HasApi<ITestApiV2_0>());
+
+            var clientV2Task = StartClientAsync<ClientV2_0>(clientId, cancellationTokenSource.Token);
+
+            await v1DroppedTcs.Task;
+            await v2RegisteredTcs.Task;
+
+            Assert.IsTrue(discoveredDevice.HasApi<ITestApiV2_0>());
+            Assert.IsFalse(discoveredDevice.HasApi<ITestApiV1_0>());
+
+            cancellationTokenSource.Cancel();
+
+            await Task.WhenAll(clientV1Task, clientV2Task);
+        }
+    }
+    
+    [Test]
+    public async Task TryGetApiFromOfflineDevice()
+    {
+        using (var connection = CreateConnection())
+        {
+            var registry = new ApiRegistry();
+
+            registry.Register<ITestApiV1_1>();
+
+            var opts = new OptionsBuilder()
+                .WithConnection(connection)
+                .WithFilter(new DeviceFilter(DeviceFilter.All, DeviceFilter.All, DeviceFilter.All))
+                .WithSerializer(CreateSerializer())
+                .WithApiRegistry(registry)
+                .Build();
+
+            var discoverer = new Discoverer(opts);
+
+            var taskCompletionSource = new TaskCompletionSource<IDiscoveredDevice>();
+
+            var offlineEvent = new ManualResetEventSlim();
+
+            discoverer.Discovered += (_, e1) =>
+            {
+                e1.Device.Registered += (_, _) =>
+                {
+                    taskCompletionSource.SetResult(e1.Device);
+                };
+
+                e1.Device.StatusChanged += (_, e2) =>
+                {
+                    if (e2.Status == EDeviceStatus.Offline)
+                    {
+                        offlineEvent.Set();
+                    }
+                };
+            };
+
+            await connection.ConnectAsync();
+
+            var cancellationTokenSource = new CancellationTokenSource();
+
+            var clientTask = StartClientAsync<ClientV1_1>(cancellationTokenSource.Token);
+
+            var discoveredDevice = await taskCompletionSource.Task;
+
+            var api = discoveredDevice.TryGetApi<ITestApiV1_1>();
+
+            Assert.IsInstanceOf<ITestApiV1_1>(api);
+
+            cancellationTokenSource.Cancel();
+
+            await clientTask;
+
+            Assert.IsTrue(offlineEvent.Wait(TimeSpan.FromSeconds(5)));
+
+            api = discoveredDevice.TryGetApi<ITestApiV1_1>();
+
+            Assert.IsInstanceOf<ITestApiV1_1>(api);
+        }
+    }
+
+    [Test]
+    public async Task SendCommandToOfflineDevice()
+    {
+        using (var connection = CreateConnection())
+        {
+            var registry = new ApiRegistry();
+
+            registry.Register<ITestApiV1_1>();
+
+            var opts = new OptionsBuilder()
+                .WithConnection(connection)
+                .WithFilter(new DeviceFilter(DeviceFilter.All, DeviceFilter.All, DeviceFilter.All))
+                .WithSerializer(CreateSerializer())
+                .WithApiRegistry(registry)
+                .Build();
+
+            var discoverer = new Discoverer(opts);
+
+            var taskCompletionSource = new TaskCompletionSource<IDiscoveredDevice>();
+
+            var offlineEvent = new ManualResetEventSlim();
+
+            discoverer.Discovered += (_, e1) =>
+            {
+                e1.Device.Registered += (_, _) =>
+                {
+                    taskCompletionSource.SetResult(e1.Device);
+                };
+
+                e1.Device.StatusChanged += (_, e2) =>
+                {
+                    if (e2.Status == EDeviceStatus.Offline)
+                    {
+                        offlineEvent.Set();
+                    }
+                };
+            };
+
+            await connection.ConnectAsync();
+
+            var cancellationTokenSource = new CancellationTokenSource();
+
+            var clientTask = StartClientAsync<ClientV1_1>(cancellationTokenSource.Token);
+
+            var discoveredDevice = await taskCompletionSource.Task;
+
+            var api = discoveredDevice.TryGetApi<ITestApiV1_1>();
+
+            Assert.IsInstanceOf<ITestApiV1_1>(api);
+
+            cancellationTokenSource.Cancel();
+
+            await clientTask;
+
+            Assert.ThrowsAsync<OperationCanceledException>(async () =>
+            {
+                await api!.AddAsync(new Tuple<int, int>(1, 1));
+            });
+        }
+    }
+
+    [Test]
     public async Task DontRegisterIncompatibleApiVersion()
     {
         using (var connection = CreateConnection())
@@ -377,10 +659,14 @@ public abstract class ADiscoveryTests
 
     Task StartClientAsync<T>(CancellationToken cancellationToken)
         where T : Client
+        => StartClientAsync<T>(TestContext.CurrentContext.Random.Next(), cancellationToken);
+
+    Task StartClientAsync<T>(int clientId, CancellationToken cancellationToken)
+        where T : Client
     {
         return Task.Factory.StartNew(async () =>
         {
-            var device = new DeviceDetails("d", "test", TestContext.CurrentContext.Random.Next());
+            var device = new DeviceDetails("d", "test", clientId);
 
             using (var deviceConnection = CreateDeviceConnection(device))
             {
@@ -394,17 +680,17 @@ public abstract class ADiscoveryTests
 
                 using (client)
                 {
-                    await deviceConnection.ConnectAsync(cancellationToken);
+                    await deviceConnection.ConnectAsync(CancellationToken.None);
 
                     while (!cancellationToken.IsCancellationRequested)
                     {
-                        await Task.Delay(500, cancellationToken);
+                        await Task.Delay(500, CancellationToken.None);
                     }
 
-                    await deviceConnection.DisconnectAsync(cancellationToken);
+                    await deviceConnection.DisconnectAsync(CancellationToken.None);
                 }
             }
-        }, TaskCreationOptions.LongRunning);
+        }, TaskCreationOptions.LongRunning).Unwrap();
     }
 
     protected abstract IConnection CreateConnection();

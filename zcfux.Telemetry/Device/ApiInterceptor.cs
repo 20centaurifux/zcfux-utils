@@ -238,6 +238,20 @@ sealed class ApiInterceptor : IInterceptor, IProxy
                 _logger?.Error(ex);
             }
         }
+        else
+        {
+            try
+            {
+                foreach (var ev in _events.Values)
+                {
+                    ev.Producer.Enable();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.Error(ex);
+            }
+        }
     }
 
     void Disconnected(object? sender, EventArgs e)
@@ -256,7 +270,7 @@ sealed class ApiInterceptor : IInterceptor, IProxy
             _logger?.Error(ex);
         }
 
-        WriteState(_ => EFlag.None);
+        WriteState(state => (state & ~EFlag.Online));
     }
 
     void DeviceStatusReceived(object? sender, DeviceStatusEventArgs e)
@@ -292,6 +306,10 @@ sealed class ApiInterceptor : IInterceptor, IProxy
                         _apiTopic,
                         EDirection.Out)
                     .Wait();
+            }
+            else
+            {
+                WriteState(state => (state & ~EFlag.Compatible));
             }
 
             DetectedVersion = e.Version;

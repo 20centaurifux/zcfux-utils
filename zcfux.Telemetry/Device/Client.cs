@@ -323,7 +323,7 @@ public class Client : IDisposable
             {
                 _logger?.Error(ex);
             }
-        }, TaskCreationOptions.LongRunning);
+        }, TaskCreationOptions.LongRunning).Unwrap();
 
         _logger?.Debug(
             "Waiting for asynchronous enumerable task (api=`{0}', topic=`{1}') to start.",
@@ -573,7 +573,7 @@ public class Client : IDisposable
                     }
                 }
             }
-        }, TaskCreationOptions.LongRunning);
+        }, TaskCreationOptions.LongRunning).Unwrap();
     }
 
     public virtual void Dispose()

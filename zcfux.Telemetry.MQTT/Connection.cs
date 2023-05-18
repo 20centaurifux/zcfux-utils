@@ -167,8 +167,21 @@ public sealed class Connection : IConnection
 
         Interlocked.Exchange(ref _connectivity, GracefulDisconnect);
 
+        if (!string.IsNullOrEmpty(_clientOptions.WillTopic))
+        {
+            var builder = new MqttApplicationMessageBuilder()
+                .WithTopic(_clientOptions.WillTopic)
+                .WithPayload(_clientOptions.WillPayload)
+                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
+                .WithRetainFlag(_clientOptions.WillRetain);
+
+            var lastWillMessage = builder.Build();
+
+            await _client.PublishAsync(lastWillMessage, cancellationToken);
+        }
+
         var opts = Factory.CreateClientDisconnectOptionsBuilder()
-            .WithReason(MqttClientDisconnectReason.DisconnectWithWillMessage)
+            .WithReason(MqttClientDisconnectOptionsReason.DisconnectWithWillMessage)
             .Build();
 
         await _client.DisconnectAsync(opts, cancellationToken);
@@ -257,7 +270,7 @@ public sealed class Connection : IConnection
                             "Client `{0}' sends message to topic `{1}' (size={2}).",
                             ClientId,
                             message.Topic,
-                            message.Payload.Length);
+                            message.PayloadSegment.Count);
 
                         _logger?.Trace(
                             "Sending message (client=`{0}', topic=`{1}'): `{2}'",
@@ -285,7 +298,7 @@ public sealed class Connection : IConnection
             }
         }, TaskCreationOptions.LongRunning);
 
-        return task;
+        return task.Unwrap();
     }
 
     Task ClientDisconnected(MqttClientDisconnectedEventArgs e)
@@ -382,7 +395,7 @@ public sealed class Connection : IConnection
             "Client `{0}' received message in `{1}' (size={2}): `{3}'",
             ClientId,
             e.ApplicationMessage.Topic,
-            e.ApplicationMessage.Payload?.Length ?? 0,
+            e.ApplicationMessage.PayloadSegment.Count,
             e.ApplicationMessage.ConvertPayloadToString());
 
         var _ = TryProcessDeviceStatus(e.ApplicationMessage)
@@ -397,7 +410,7 @@ public sealed class Connection : IConnection
     {
         var success = false;
 
-        if (message.Payload is { })
+        if (message.PayloadSegment.Any())
         {
             var m = DeviceStatusRegex.Match(message.Topic);
 
@@ -410,7 +423,7 @@ public sealed class Connection : IConnection
                             m.Groups[1].Value,
                             m.Groups[2].Value,
                             Convert.ToInt32(m.Groups[3].Value)),
-                        Serializer.Deserialize<EDeviceStatus>(message.Payload)));
+                        Serializer.Deserialize<EDeviceStatus>(message.PayloadSegment.ToArray())));
                 }
                 catch (Exception ex)
                 {
@@ -428,7 +441,7 @@ public sealed class Connection : IConnection
     {
         var success = false;
 
-        if (message.Payload is { })
+        if (message.PayloadSegment.Any())
         {
             var m = ApiVersionRegex.Match(message.Topic);
 
@@ -494,7 +507,7 @@ public sealed class Connection : IConnection
                         Convert.ToInt32(m.Groups[3].Value)),
                     m.Groups[4].Value,
                     m.Groups[6].Value,
-                    message.Payload,
+                    message.PayloadSegment.ToArray(),
                     (m.Groups[5].Value == ">")
                         ? EDirection.Out
                         : EDirection.In,
@@ -524,7 +537,7 @@ public sealed class Connection : IConnection
     {
         var success = false;
 
-        if (message.Payload is { }
+        if (message.PayloadSegment.Any()
             && message.CorrelationData is { Length: 4 })
         {
             var m = ResponseRegex.Match(message.Topic);
@@ -550,7 +563,7 @@ public sealed class Connection : IConnection
                             m.Groups[2].Value,
                             Convert.ToInt32(m.Groups[3].Value)),
                         messageId,
-                        message.Payload));
+                        message.PayloadSegment.ToArray()));
                 }
                 catch (Exception ex)
                 {

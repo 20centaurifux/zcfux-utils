@@ -26,6 +26,8 @@ namespace zcfux.Telemetry.Test;
 
 public abstract class AProxyTests
 {
+    static readonly TimeSpan SendNumberDelay = TimeSpan.FromSeconds(1);
+    
     [Api(Topic = "test", Version = "1.0")]
     public interface ITestApiV1
     {
@@ -55,11 +57,11 @@ public abstract class AProxyTests
             return true;
         }
 
-        public Task SendNumberAsync(long number)
+        public async Task SendNumberAsync(long number)
         {
-            _producer.Write(number);
+            await Task.Delay(SendNumberDelay);
 
-            return Task.CompletedTask;
+            _producer.Write(number);
         }
 
         public Task<long> DoubleAsync(long number)
@@ -192,6 +194,84 @@ public abstract class AProxyTests
     }
 
     [Test]
+    public async Task ReceiveEvents()
+    {
+        var device = new DeviceDetails("d", "test", TestContext.CurrentContext.Random.Next());
+
+        using (IConnection deviceConnection = CreateDeviceConnection(device),
+               proxyConnection = CreateProxyConnection())
+        {
+            await Task.WhenAll(
+                deviceConnection.ConnectAsync(),
+                proxyConnection.ConnectAsync());
+
+            var deviceOptions = CreateDeviceOptions(device, deviceConnection);
+
+            using (var _ = new TestV1(deviceOptions))
+            {
+                var proxyOpts = CreateDeviceOptions(device, proxyConnection);
+
+                var proxy = ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
+
+                var value = TestContext.CurrentContext.Random.Next();
+
+                await using (var reader = proxy.Number.GetAsyncEnumerator())
+                {
+#pragma warning disable CS4014
+                    proxy.SendNumberAsync(value);
+#pragma warning restore CS4014
+
+                    var success = await reader.MoveNextAsync();
+
+                    Assert.IsTrue(success);
+                    Assert.AreEqual(value, reader.Current);
+                }
+            }
+        }
+    }
+
+    [Test]
+    public async Task ReceiveEventsAfterProxyReconnect()
+    {
+        var device = new DeviceDetails("d", "test", TestContext.CurrentContext.Random.Next());
+
+        using (IConnection deviceConnection = CreateDeviceConnection(device),
+               proxyConnection = CreateProxyConnection())
+        {
+            await Task.WhenAll(
+                deviceConnection.ConnectAsync(),
+                proxyConnection.ConnectAsync());
+
+            var deviceOptions = CreateDeviceOptions(device, deviceConnection);
+
+            using (var _ = new TestV1(deviceOptions))
+            {
+                var proxyOpts = CreateDeviceOptions(device, proxyConnection);
+
+                var proxy = ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
+
+                var value = TestContext.CurrentContext.Random.Next();
+
+                // trigger event & disconnect proxy
+                await proxy.SendNumberAsync(value);
+                await proxyConnection.DisconnectAsync();
+
+                // reconnect proxy *after* device has sent event
+                await Task.Delay(SendNumberDelay);
+                await proxyConnection.ConnectAsync();
+
+                await using (var reader = proxy.Number.GetAsyncEnumerator())
+                {
+                    var success = await reader.MoveNextAsync();
+
+                    Assert.IsTrue(success);
+                    Assert.AreEqual(value, reader.Current);
+                }
+            }
+        }
+    }
+
+    [Test]
     public async Task EmptyEventsWhenDisconnected()
     {
         using (var proxyConnection = CreateProxyConnection())
@@ -261,6 +341,47 @@ public abstract class AProxyTests
                 var success = await reader.MoveNextAsync();
 
                 Assert.IsFalse(success);
+            }
+        }
+    }
+
+    [Test]
+    public async Task ReceiveEventsAfterReconnect()
+    {
+        var device = new DeviceDetails("d", "test", TestContext.CurrentContext.Random.Next());
+
+        using (IConnection deviceConnection = CreateDeviceConnection(device),
+               proxyConnection = CreateProxyConnection())
+        {
+            await Task.WhenAll(
+                deviceConnection.ConnectAsync(),
+                proxyConnection.ConnectAsync());
+
+            var deviceOptions = CreateDeviceOptions(device, deviceConnection);
+
+            using (var _ = new TestV1(deviceOptions))
+            {
+                var proxyOpts = CreateDeviceOptions(device, proxyConnection);
+
+                var proxy = ProxyFactory.CreateApiProxy<ITestApiV1>(proxyOpts);
+
+                var value = TestContext.CurrentContext.Random.Next();
+
+                await proxy.SendNumberAsync(value);
+
+                await deviceConnection.DisconnectAsync();
+
+                await using (var reader = proxy.Number.GetAsyncEnumerator())
+                {
+#pragma warning disable CS4014
+                    deviceConnection.ConnectAsync();
+#pragma warning restore CS4014
+
+                    var success = await reader.MoveNextAsync();
+
+                    Assert.IsTrue(success);
+                    Assert.AreEqual(value, reader.Current);
+                }
             }
         }
     }

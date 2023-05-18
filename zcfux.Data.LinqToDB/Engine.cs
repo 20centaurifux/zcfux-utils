@@ -19,6 +19,7 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using System.Diagnostics;
 using LinqToDB.Configuration;
 using LinqToDB.Data;
 
@@ -26,6 +27,8 @@ namespace zcfux.Data.LinqToDB;
 
 public class Engine : IEngine
 {
+    static long _initialized = 0;
+
     public Engine(LinqToDBConnectionOptions options)
         => Options = options;
 
@@ -33,6 +36,17 @@ public class Engine : IEngine
 
     public virtual void Setup()
     {
+#if DEBUG
+        if (Interlocked.CompareExchange(ref _initialized, 1, 0) == 0)
+        {
+            DataConnection.TurnTraceSwitchOn();
+
+            DataConnection.WriteTraceLine = (message, category, level) =>
+            {
+                Debug.Write($"{category}: {message}");
+            };
+        }
+#endif
     }
 
     public Transaction NewTransaction()

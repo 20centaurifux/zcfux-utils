@@ -171,7 +171,9 @@ sealed class QueueDb : IQueueDb
             q = q.Where(expr);
         }
 
-        var tempTable = q
+        var tempTable = db.CreateTempTable<TemporaryFoundQueueItemRelation>();
+
+        q
             .Order(query.Order)
             .Select(flatMessage => new TemporaryFoundQueueItemRelation
             {
@@ -184,7 +186,8 @@ sealed class QueueDb : IQueueDb
                 Errors = flatMessage.Errors
             })
             .Distinct()
-            .IntoTempTable();
+            .Into(tempTable)
+            .Insert();
 
         var records = tempTable
             .InnerJoin(db.GetTable<MessageRelation>(), (e, m) => e.MessageId == m.Id, (e, m) => new TemporaryQueuedMessageRelation

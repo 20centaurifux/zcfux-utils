@@ -20,6 +20,7 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using LinqToDB;
+using LinqToDB.Tools;
 using zcfux.Data;
 using zcfux.Data.LinqToDB;
 using zcfux.Filter;
@@ -199,7 +200,9 @@ sealed class StoreDb : IStoreDb
             q = q.Where(expr);
         }
 
-        var tempTable = q
+        var tempTable = db.CreateTempTable<TemporaryDirectoryEntryRelation>();
+
+        q
             .Order(query.Order)
             .Select(flatMessage => new TemporaryDirectoryEntryRelation
             {
@@ -209,7 +212,8 @@ sealed class StoreDb : IStoreDb
                 MessageId = flatMessage.Id
             })
             .Distinct()
-            .IntoTempTable();
+            .Into(tempTable)
+            .Insert();
 
         var records = tempTable
             .InnerJoin(db.GetTable<MessageRelation>(), (e, m) => e.MessageId == m.Id, (e, m) => new TemporaryStoredMessageRelation

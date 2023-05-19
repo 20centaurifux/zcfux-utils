@@ -20,7 +20,6 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using LinqToDB;
-using LinqToDB.Configuration;
 using Microsoft.Data.Sqlite;
 
 namespace zcfux.KeyValueStore.Persistent;
@@ -34,7 +33,7 @@ sealed class Db : IDisposable
     readonly string _connectionString;
     readonly object _writerLock = new();
     readonly SqliteConnection _writerConnection;
-    readonly LinqToDBConnectionOptions _linqToDbConnection;
+    readonly DataOptions _linqToDbConnection;
 
     public Db(string directory)
     {
@@ -45,16 +44,8 @@ sealed class Db : IDisposable
         _linqToDbConnection = BuildLinqToDBConnectionOptions(_connectionString);
     }
 
-    static LinqToDBConnectionOptions BuildLinqToDBConnectionOptions(string connectionString)
-    {
-        var builder = new LinqToDBConnectionOptionsBuilder();
-
-        builder.UseSQLite(connectionString);
-
-        var opts = builder.Build();
-
-        return opts;
-    }
+    static DataOptions BuildLinqToDBConnectionOptions(string connectionString)
+        =>  new DataOptions().UseSQLite(connectionString);
 
     internal static string BuildConnectionString(string directory)
     {

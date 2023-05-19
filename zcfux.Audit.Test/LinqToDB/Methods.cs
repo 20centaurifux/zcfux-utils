@@ -20,11 +20,9 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using LinqToDB;
-using LinqToDB.Configuration;
 using zcfux.Audit.LinqToDB;
 using zcfux.Data;
 using zcfux.Data.LinqToDB;
-using zcfux.Translation;
 using zcfux.Translation.Data;
 using zcfux.Translation.LinqtoDB;
 using zcfux.Translation.LinqToDB;
@@ -40,11 +38,8 @@ sealed class Methods : IDbTestMethods
 
     public IEngine NewEngine()
     {
-        var builder = new LinqToDBConnectionOptionsBuilder();
-
-        builder.UseSQLite(_connectionString);
-
-        var opts = builder.Build();
+        var opts = new DataOptions()
+            .UseSQLite(_connectionString);
 
         return new Engine(opts);
     }

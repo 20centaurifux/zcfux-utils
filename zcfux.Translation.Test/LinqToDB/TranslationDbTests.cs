@@ -19,7 +19,7 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using LinqToDB.Configuration;
+using LinqToDB;
 using zcfux.Data;
 using zcfux.Data.LinqToDB;
 using zcfux.Translation.Data;
@@ -35,11 +35,8 @@ public sealed class TranslationDbTests : ATranslationDbTests
 
         db.Create();
 
-        var builder = new LinqToDBConnectionOptionsBuilder();
-
-        builder.UseSQLite(db.ConnectionString!);
-
-        var opts = builder.Build();
+        var opts = new DataOptions()
+            .UseSQLite(db.ConnectionString!);
 
         var engine = new Engine(opts);
 

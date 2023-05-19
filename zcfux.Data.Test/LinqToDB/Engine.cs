@@ -19,14 +19,14 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using LinqToDB.Configuration;
+using LinqToDB;
 using LinqToDB.Mapping;
 
 namespace zcfux.Data.Test.LinqToDB;
 
 public class Engine : Data.LinqToDB.Engine
 {
-    public Engine(LinqToDBConnectionOptions opts)
+    public Engine(DataOptions opts)
         : base(opts)
     {
     }
@@ -34,13 +34,16 @@ public class Engine : Data.LinqToDB.Engine
     public override void Setup()
     {
         var mappingSchema = new MappingSchema();
-        var builder = mappingSchema.GetFluentMappingBuilder();
+
+        var builder = new FluentMappingBuilder(mappingSchema);
 
         builder.Entity<Model>()
             .HasSchemaName("test")
             .HasTableName("Model")
-            .HasPrimaryKey(m => m.ID)
+            .Property(m => m.ID).IsPrimaryKey()
             .Property(m => m.Value);
+
+        builder.Build();
 
         MappingSchema.Default = builder.MappingSchema;
     }

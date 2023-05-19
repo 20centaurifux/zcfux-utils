@@ -20,6 +20,7 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 using zcfux.Telemetry.Device;
 
 namespace zcfux.Telemetry.Test;
@@ -262,10 +263,19 @@ public abstract class AProxyTests
 
                 await using (var reader = proxy.Number.GetAsyncEnumerator())
                 {
-                    var success = await reader.MoveNextAsync();
+                    var moveNextTask = reader
+                        .MoveNextAsync()
+                        .AsTask();
 
-                    Assert.IsTrue(success);
-                    Assert.AreEqual(value, reader.Current);
+                    if (await Task.WhenAny(moveNextTask, Task.Delay(TimeSpan.FromSeconds(5))) == moveNextTask)
+                    {
+                        Assert.IsTrue(moveNextTask.Result);
+                        Assert.AreEqual(value, reader.Current);
+                    }
+                    else
+                    {
+                        throw new TimeoutException();
+                    }
                 }
             }
         }

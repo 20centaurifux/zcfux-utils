@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.PriorityQueue;
 
-public sealed class Item<T>
+sealed class Item<T>
     : IComparable<T>, IComparable<Item<T>>
     where T : IComparable 
 {

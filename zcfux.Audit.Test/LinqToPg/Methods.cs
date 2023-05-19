@@ -20,7 +20,6 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using LinqToDB;
-using LinqToDB.Configuration;
 using zcfux.Audit.LinqToPg;
 using zcfux.Data;
 using zcfux.Data.LinqToDB;
@@ -40,11 +39,8 @@ sealed class Methods : IDbTestMethods
         var connectionString = Environment.GetEnvironmentVariable("PG_TEST_CONNECTIONSTRING")
                                ?? DefaultConnectionString;
 
-        var builder = new LinqToDBConnectionOptionsBuilder();
-
-        builder.UsePostgreSQL(connectionString);
-
-        var opts = builder.Build();
+        var opts = new DataOptions()
+            .UsePostgreSQL(connectionString);
 
         return new Engine(opts);
     }

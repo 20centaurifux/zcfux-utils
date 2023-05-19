@@ -19,7 +19,7 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using LinqToDB.Configuration;
+using LinqToDB;
 using zcfux.Data.Test.LinqToDB;
 
 namespace zcfux.Data.Test;
@@ -34,11 +34,8 @@ public sealed class LinqToDbTests : APureTests
         var connectionString = Environment.GetEnvironmentVariable("PG_TEST_CONNECTIONSTRING")
                                ?? DefaultConnectionString;
 
-        var builder = new LinqToDBConnectionOptionsBuilder();
-
-        builder.UsePostgreSQL(connectionString);
-
-        var opts = builder.Build();
+        var opts = new DataOptions()
+            .UsePostgreSQL(connectionString);
 
         return new Engine(opts);
     }

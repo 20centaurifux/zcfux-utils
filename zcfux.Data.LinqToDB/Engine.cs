@@ -20,7 +20,7 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using System.Diagnostics;
-using LinqToDB.Configuration;
+using LinqToDB;
 using LinqToDB.Data;
 
 namespace zcfux.Data.LinqToDB;
@@ -29,10 +29,10 @@ public class Engine : IEngine
 {
     static long _initialized = 0;
 
-    public Engine(LinqToDBConnectionOptions options)
+    public Engine(DataOptions options)
         => Options = options;
 
-    protected LinqToDBConnectionOptions Options { get; }
+    protected DataOptions Options { get; }
 
     public virtual void Setup()
     {

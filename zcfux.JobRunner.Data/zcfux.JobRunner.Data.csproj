@@ -1,19 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Authors>Sebastian Fedrau</Authors>
-        <Company>Sebastian Fedrau</Company>
-        <PackageVersion>1.2.0</PackageVersion>
-    </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<Authors>Sebastian Fedrau</Authors>
+		<Company>Sebastian Fedrau</Company>
+		<PackageVersion>1.4.0</PackageVersion>
+	</PropertyGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\zcfux.Data\zcfux.Data.csproj" />
-      <ProjectReference Include="..\zcfux.Filter\zcfux.Filter.csproj" />
-      <ProjectReference Include="..\zcfux.JobRunner\zcfux.JobRunner.csproj" />
-    </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\zcfux.Data\zcfux.Data.csproj" />
+		<ProjectReference Include="..\zcfux.Filter\zcfux.Filter.csproj" />
+		<ProjectReference Include="..\zcfux.JobRunner\zcfux.JobRunner.csproj" />
+	</ItemGroup>
 
 </Project>

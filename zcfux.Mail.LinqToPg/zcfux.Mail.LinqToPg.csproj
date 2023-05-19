@@ -1,26 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Authors>Sebastian Fedrau</Authors>
-        <Company>Sebastian Fedrau</Company>
-        <AssemblyName>zcfux.Mail.LinqToPg</AssemblyName>
-        <RootNamespace>zcfux.Mail.LinqToPg</RootNamespace>
-        <PackageId>zcfux.Mail.LinqToPg</PackageId>
-        <PackageVersion>1.2.0</PackageVersion>
-    </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<Authors>Sebastian Fedrau</Authors>
+		<Company>Sebastian Fedrau</Company>
+		<PackageVersion>1.4.0</PackageVersion>
+	</PropertyGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\zcfux.Data.LinqToDB\zcfux.Data.LinqToDB.csproj" />
-      <ProjectReference Include="..\zcfux.Mail\zcfux.Mail.csproj" />
-    </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\zcfux.Data.LinqToDB\zcfux.Data.LinqToDB.csproj" />
+		<ProjectReference Include="..\zcfux.Mail\zcfux.Mail.csproj" />
+	</ItemGroup>
 
-    <ItemGroup>
-      <PackageReference Include="linq2db" Version="5.2.1" />
-      <PackageReference Include="linq2db.PostgreSQL" Version="5.2.1" />
-    </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="linq2db" Version="5.2.1" />
+		<PackageReference Include="linq2db.PostgreSQL" Version="5.2.1" />
+	</ItemGroup>
 
 </Project>

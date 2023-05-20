@@ -27,7 +27,9 @@ namespace zcfux.Data.LinqToDB;
 
 public class Engine : IEngine
 {
+#pragma warning disable CS0414
     static long _initialized = 0;
+#pragma warning restore CS0414
 
     public Engine(DataOptions options)
         => Options = options;

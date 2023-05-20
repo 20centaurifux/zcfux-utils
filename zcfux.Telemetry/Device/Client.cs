@@ -277,7 +277,7 @@ public class Client : IDisposable
 
         var enumeratorCreated = new AutoResetEvent(false);
 
-        var task = Task.Factory.StartNew(async () =>
+        var task = Task.Run(async () =>
         {
             try
             {
@@ -323,7 +323,7 @@ public class Client : IDisposable
             {
                 _logger?.Error(ex);
             }
-        }, TaskCreationOptions.LongRunning).Unwrap();
+        });
 
         _logger?.Debug(
             "Waiting for asynchronous enumerable task (api=`{0}', topic=`{1}') to start.",
@@ -548,9 +548,12 @@ public class Client : IDisposable
                 var pendingTask = await _pendingTasks.WaitAsync(_cancellationTokenSource.Token);
 
                 if (pendingTask.ReturnType != typeof(void)
-                    && pendingTask.ResponseTopic is { }
-                    && pendingTask.MessageId.HasValue
-                    && pendingTask.Task.IsCompleted)
+                    && pendingTask is 
+                    {
+                        ResponseTopic: not null, 
+                        MessageId: not null,
+                        Task.IsCompleted: true
+                    })
                 {
                     try
                     {

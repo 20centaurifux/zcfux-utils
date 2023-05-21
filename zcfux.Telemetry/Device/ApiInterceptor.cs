@@ -326,7 +326,7 @@ sealed class ApiInterceptor : IInterceptor, IProxy
         return (major1 == major2)
                && (minor1 <= minor2);
     }
-
+    
     void ApiMessageReceived(object? sender, ApiMessageEventArgs e)
     {
         if (e.Device.Equals(_device)
@@ -358,8 +358,8 @@ sealed class ApiInterceptor : IInterceptor, IProxy
                         _device.Id,
                         e.Api,
                         e.Topic,
-                        payload!);
-
+                        payload!); 
+                    
                     ev.Producer.Write(payload!);
                 }
                 catch (Exception ex)

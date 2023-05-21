@@ -267,7 +267,7 @@ public class Client : IDisposable
             }
         }
     }
-
+    
     Task SubscribeToAsyncEnumerable<T>(string apiTopic, string topic, MessageOptions options, IAsyncEnumerable<T> source)
     {
         _logger?.Debug(
@@ -294,7 +294,7 @@ public class Client : IDisposable
                         while (!completed)
                         {
                             var current = enumerator.Current;
-
+                            
                             _logger?.Trace(
                                 "Received asynchronous enumerable value (api=`{0}', topic=`{1}', type={2}).",
                                 apiTopic,

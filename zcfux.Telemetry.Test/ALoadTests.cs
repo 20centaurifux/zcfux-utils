@@ -29,8 +29,10 @@ namespace zcfux.Telemetry.Test;
 
 public abstract class ALoadTests
 {
-    const int ClientCount = 2;
-    const int MessageCount = 1000;
+    const int ClientCount = 5;
+    const int MessageCount = 100;
+
+    TaskCompletionSource? _ready;
 
     public sealed record Message(uint Id, string Text, DateTime Timestamp);
 
@@ -83,14 +85,20 @@ public abstract class ALoadTests
                 .WithApiRegistry(registry)
                 .Build();
 
+            _ready = new TaskCompletionSource();
+            
             var discoverer = new Discoverer(opts);
-
 
             discoverer.Discovered += (_, e) =>
             {
                 e.Device.Registered += (_, _) =>
                 {
                     subscriberTasks.Add(Task.Run(() => SubscribeAsync(e.Device)));
+                    
+                    if (subscriberTasks.Count == ClientCount)
+                    {
+                        _ready.SetResult();
+                    }
                 };
             };
 
@@ -104,8 +112,6 @@ public abstract class ALoadTests
             await Task.WhenAll(publisherTasks.ToArray());
             await Task.WhenAll(subscriberTasks.ToArray());
 
-            Assert.AreEqual(ClientCount, subscriberTasks.Count);
-            
             foreach (var subscriberTask in subscriberTasks)
             {
                 Assert.AreEqual(MessageCount, subscriberTask.Result);
@@ -131,10 +137,12 @@ public abstract class ALoadTests
             {
                 await deviceConnection.ConnectAsync(CancellationToken.None);
 
+                await _ready!.Task;
+                
                 for (var i = 0; i < MessageCount; ++i)
                 {
                     client.SendMessage(TestContext.CurrentContext.Random.GetString());
-
+                    
                     await Task.Delay(5, CancellationToken.None);
                 }
 
@@ -161,7 +169,7 @@ public abstract class ALoadTests
                     .MoveNextAsync()
                     .AsTask();
 
-                var winner = await Task.WhenAny(moveNextTask, Task.Delay(TimeSpan.FromSeconds(30)));
+                var winner = await Task.WhenAny(moveNextTask, Task.Delay(TimeSpan.FromSeconds(15)));
 
                 if (winner != moveNextTask)
                 {

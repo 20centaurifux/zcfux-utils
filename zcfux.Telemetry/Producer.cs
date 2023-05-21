@@ -129,8 +129,11 @@ public sealed class Producer<T> : IAsyncEnumerable<T>, IProducer
     {
         lock (_lock)
         {
-            _enabled = true;
-            _cancellationTokenSource = new CancellationTokenSource();
+            if (!_enabled)
+            {
+                _enabled = true;
+                _cancellationTokenSource = new CancellationTokenSource();
+            }
         }
     }
 

@@ -49,7 +49,7 @@ public static class Factory
 
         var opts = new ConnectionOptionsBuilder()
             .WithClientOptions(new ClientOptionsBuilder()
-                .WithClientId("conn-" + TestContext.CurrentContext.Random.GetString())
+                .WithClientId(TestContext.CurrentContext.Random.GetString())
                 .WithPort(port)
                 .WithSessionTimeout(30)
                 .Build())
@@ -63,9 +63,10 @@ public static class Factory
     {
         var port = GetPort();
 
+       
         var opts = new ConnectionOptionsBuilder()
             .WithClientOptions(new ClientOptionsBuilder()
-                .WithClientId("dev-conn-" + TestContext.CurrentContext.Random.GetString())
+                .WithClientId(TestContext.CurrentContext.Random.GetString())
                 .WithPort(port)
                 .WithSessionTimeout(30)
                 .WithLastWill(new LastWillOptionsBuilder()

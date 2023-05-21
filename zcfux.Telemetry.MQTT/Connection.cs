@@ -396,7 +396,9 @@ public sealed class Connection : IConnection
             ClientId,
             e.ApplicationMessage.Topic,
             e.ApplicationMessage.PayloadSegment.Count,
-            e.ApplicationMessage.ConvertPayloadToString());
+            (e.ApplicationMessage.PayloadSegment.Count > 0)
+                ? e.ApplicationMessage.ConvertPayloadToString()
+                : string.Empty);
 
         var _ = TryProcessDeviceStatus(e.ApplicationMessage)
                 || TryProcessApiInfo(e.ApplicationMessage)

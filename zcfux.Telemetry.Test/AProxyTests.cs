@@ -20,6 +20,7 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using NUnit.Framework;
+using zcfux.Logging;
 using zcfux.Telemetry.Device;
 
 namespace zcfux.Telemetry.Test;
@@ -27,7 +28,7 @@ namespace zcfux.Telemetry.Test;
 public abstract class AProxyTests
 {
     static readonly TimeSpan SendNumberDelay = TimeSpan.FromSeconds(1);
-    
+
     [Api(Topic = "test", Version = "1.0")]
     public interface ITestApiV1
     {

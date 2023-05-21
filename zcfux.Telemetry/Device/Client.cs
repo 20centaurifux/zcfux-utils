@@ -311,7 +311,7 @@ public class Client : IDisposable
                                     EDirection.Out,
                                     current);
 
-                                await _connection.SendApiMessageAsync(message, _cancellationTokenSource.Token);
+                                await _connection.SendApiMessageAsync(message, CancellationToken.None);
                             }
 
                             completed = !await enumerator.MoveNextAsync();

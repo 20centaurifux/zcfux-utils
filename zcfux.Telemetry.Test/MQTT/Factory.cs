@@ -22,6 +22,7 @@
 using System.Security.Authentication;
 using MQTTnet;
 using MQTTnet.Server;
+using NUnit.Framework;
 using zcfux.Telemetry.MQTT;
 
 namespace zcfux.Telemetry.Test.MQTT;
@@ -48,6 +49,7 @@ public static class Factory
 
         var opts = new ConnectionOptionsBuilder()
             .WithClientOptions(new ClientOptionsBuilder()
+                .WithClientId("conn-" + TestContext.CurrentContext.Random.GetString())
                 .WithPort(port)
                 .WithSessionTimeout(30)
                 .Build())
@@ -63,6 +65,7 @@ public static class Factory
 
         var opts = new ConnectionOptionsBuilder()
             .WithClientOptions(new ClientOptionsBuilder()
+                .WithClientId("dev-conn-" + TestContext.CurrentContext.Random.GetString())
                 .WithPort(port)
                 .WithSessionTimeout(30)
                 .WithLastWill(new LastWillOptionsBuilder()

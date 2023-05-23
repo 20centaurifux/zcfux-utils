@@ -644,12 +644,7 @@ public sealed class Connection : IConnection
     {
         var ((domain, kind, id), api, topic, options, direction, payload, _, _) = message;
 
-        var json = Array.Empty<byte>();
-
-        if (payload is { })
-        {
-            json = Serializer.Serialize(payload);
-        }
+        var json = Serializer.Serialize(payload);
 
         var builder = new MqttApplicationMessageBuilder()
             .WithTopic($"{domain}/{kind}/{id}/a/{api}/{((direction == EDirection.In) ? "<" : ">")}/{topic}")

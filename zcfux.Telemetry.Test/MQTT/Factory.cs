@@ -29,6 +29,8 @@ namespace zcfux.Telemetry.Test.MQTT;
 
 public static class Factory
 {
+    static readonly MqttFactory MqttFactory = new();
+    
     public static MqttServer CreateServer()
     {
         var port = GetPort();
@@ -40,12 +42,14 @@ public static class Factory
             .WithPersistentSessions()
             .Build();
 
-        return new MqttFactory().CreateMqttServer(options);
+        return MqttFactory.CreateMqttServer(options);
     }
 
     public static IConnection CreateConnection()
     {
         var port = GetPort();
+
+        var factory = new Logging.Factory("Connection");
 
         var opts = new ConnectionOptionsBuilder()
             .WithClientOptions(new ClientOptionsBuilder()
@@ -54,6 +58,7 @@ public static class Factory
                 .WithSessionTimeout(30)
                 .Build())
             .WithMessageQueue(new MemoryMessageQueue(50))
+            .WithLogger(factory.FromName("console"))
             .Build();
 
         return new Connection(opts);
@@ -63,7 +68,8 @@ public static class Factory
     {
         var port = GetPort();
 
-       
+        var factory = new Logging.Factory("device");
+        
         var opts = new ConnectionOptionsBuilder()
             .WithClientOptions(new ClientOptionsBuilder()
                 .WithClientId(TestContext.CurrentContext.Random.GetString())
@@ -78,6 +84,7 @@ public static class Factory
                 .Build())
             .WithMessageQueue(new MemoryMessageQueue(50))
             .WithCleanupRetainedMessages()
+            .WithLogger(factory.FromName("console"))
             .Build();
 
         return new Connection(opts);

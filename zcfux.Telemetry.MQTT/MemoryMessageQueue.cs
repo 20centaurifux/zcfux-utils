@@ -29,6 +29,7 @@ public sealed class MemoryMessageQueue : IMessageQueue
 {
     readonly BlockingCollection<Task<MqttApplicationMessage>> _queue;
     readonly int _limit;
+    readonly SemaphoreSlim _semaphore = new(0);
 
     public MemoryMessageQueue(int limit)
         => (_queue, _limit) = (new BlockingCollection<Task<MqttApplicationMessage>>(limit), limit);
@@ -49,8 +50,10 @@ public sealed class MemoryMessageQueue : IMessageQueue
             var queuedTask = CreateTask(message, secondsToLive, cancellationToken);
 
             _queue.Add(queuedTask, cancellationToken);
-
+            
             task = queuedTask;
+            
+            _semaphore.Release();
         }
 
         return task;
@@ -81,13 +84,19 @@ public sealed class MemoryMessageQueue : IMessageQueue
         return task;
     }
 
-    public Task<MqttApplicationMessage> DequeueAsync(
+    public async Task<MqttApplicationMessage> DequeueAsync(
         CancellationToken cancellationToken)
     {
-        var task = _queue.Take(cancellationToken);
+        while (true)
+        {
+            await _semaphore.WaitAsync(cancellationToken);
 
-        task.Start();
+            if (_queue.TryTake(out var task))
+            {
+                task.Start();
 
-        return task;
+                return await task;
+            }
+        }
     }
 }

@@ -108,7 +108,7 @@ public sealed class Connection : IConnection
         _client.ApplicationMessageReceivedAsync += ApplicationMessageReceivedAsync;
 
         _retrySendingInterval = options.RetrySendingInterval;
-        _sendTask = SendMessagesAsync();
+        _sendTask = SendMessagesAsync(_cancellationTokenSource.Token);
     }
 
     static MqttClientOptions BuildMqttClientOptions(ClientOptions options)
@@ -224,81 +224,76 @@ public sealed class Connection : IConnection
         return Task.CompletedTask;
     }
 
-    Task SendMessagesAsync()
+    async Task SendMessagesAsync(CancellationToken cancellationToken)
     {
-        var task = Task.Factory.StartNew(async () =>
+        MqttApplicationMessage? message = null;
+        TimeSpan? expiryInterval = null;
+        Stopwatch stopwatch = new();
+
+        while (!cancellationToken.IsCancellationRequested)
         {
-            MqttApplicationMessage? message = null;
-            TimeSpan? expiryInterval = null;
-            Stopwatch stopwatch = new();
-
-            while (!_cancellationTokenSource.IsCancellationRequested)
+            try
             {
-                try
+                if (message != null
+                    && expiryInterval.HasValue
+                    && stopwatch.Elapsed > expiryInterval.Value)
                 {
-                    if (message != null
-                        && expiryInterval.HasValue
-                        && stopwatch.Elapsed > expiryInterval.Value)
+                    _logger?.Debug("Message expired (client=`{0}').", ClientId);
+
+                    message = null;
+                }
+
+                if (message == null)
+                {
+                    _logger?.Debug("Client `{0}' is waiting for messages to send.", ClientId);
+
+                    message = await _messageQueue.DequeueAsync(cancellationToken);
+
+                    if (message.MessageExpiryInterval == 0)
                     {
-                        _logger?.Debug("Message expired (client=`{0}').", ClientId);
-
-                        message = null;
-                    }
-
-                    if (message == null)
-                    {
-                        _logger?.Debug("Client `{0}' is waiting for messages to send.", ClientId);
-
-                        message = await _messageQueue.DequeueAsync(_cancellationTokenSource.Token);
-
-                        if (message.MessageExpiryInterval == 0)
-                        {
-                            expiryInterval = null;
-                        }
-                        else
-                        {
-                            expiryInterval = TimeSpan.FromSeconds(message.MessageExpiryInterval);
-
-                            stopwatch.Restart();
-                        }
-                    }
-
-                    if (_client.IsConnected
-                        || _onlineEvent.WaitOne(TimeSpan.FromSeconds(1)))
-                    {
-                        _logger?.Debug(
-                            "Client `{0}' sends message to topic `{1}' (size={2}).",
-                            ClientId,
-                            message.Topic,
-                            message.PayloadSegment.Count);
-
-                        _logger?.Trace(
-                            "Sending message (client=`{0}', topic=`{1}'): `{2}'",
-                            ClientId,
-                            message.Topic,
-                            message.ConvertPayloadToString());
-
-                        await _client.PublishAsync(message, _cancellationTokenSource.Token);
-
-                        message = null;
+                        expiryInterval = null;
                     }
                     else
                     {
-                        _logger?.Debug("Client `{0}' is disconnected, cannot send messages.", ClientId);
+                        expiryInterval = TimeSpan.FromSeconds(message.MessageExpiryInterval);
 
-                        await Task.Delay(_retrySendingInterval, _cancellationTokenSource.Token);
+                        stopwatch.Restart();
                     }
                 }
-                catch (Exception ex)
-                {
-                    _logger?.Warn(ex);
 
-                    await Task.Delay(_retrySendingInterval, _cancellationTokenSource.Token);
+                if (_client.IsConnected
+                    || _onlineEvent.WaitOne(TimeSpan.FromSeconds(1)))
+                {
+                    _logger?.Debug(
+                        "Client `{0}' sends message to topic `{1}' (size={2}).",
+                        ClientId,
+                        message.Topic,
+                        message.PayloadSegment.Count);
+
+                    _logger?.Trace(
+                        "Sending message (client=`{0}', topic=`{1}'): `{2}'",
+                        ClientId,
+                        message.Topic,
+                        message.ConvertPayloadToString());
+
+                    await _client.PublishAsync(message, cancellationToken);
+
+                    message = null;
+                }
+                else
+                {
+                    _logger?.Debug("Client `{0}' is disconnected, cannot send messages.", ClientId);
+
+                    await Task.Delay(_retrySendingInterval, cancellationToken);
                 }
             }
-        }, TaskCreationOptions.LongRunning);
+            catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                _logger?.Warn(ex);
 
-        return task.Unwrap();
+                await Task.Delay(_retrySendingInterval, CancellationToken.None);
+            }
+        }
     }
 
     Task ClientDisconnected(MqttClientDisconnectedEventArgs e)

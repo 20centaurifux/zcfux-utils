@@ -161,15 +161,15 @@ public class Client : IDisposable
 
         (_apis, _subscriptions, _methods) = RegisterApis();
 
-        _connection.Connected += Connected;
-        _connection.Disconnected += Disconnected;
+        _connection.ConnectedAsync += ConnectedAsync;
+        _connection.DisconnectedAsync += DisconnectedAsync;
         _connection.ApiMessageReceived += ApiMessageReceived;
 
         _pendingTaskProcessor = ProcessPendingTasksAsync();
 
         if (_connection.IsConnected)
         {
-            ClientConnected();
+            ClientConnectedAsync().Wait();
         }
     }
 
@@ -267,7 +267,7 @@ public class Client : IDisposable
             }
         }
     }
-    
+
     Task SubscribeToAsyncEnumerable<T>(string apiTopic, string topic, MessageOptions options, IAsyncEnumerable<T> source)
     {
         _logger?.Debug(
@@ -294,7 +294,7 @@ public class Client : IDisposable
                         while (!completed)
                         {
                             var current = enumerator.Current;
-                            
+
                             _logger?.Trace(
                                 "Received asynchronous enumerable value (api=`{0}', topic=`{1}', type={2}).",
                                 apiTopic,
@@ -379,10 +379,10 @@ public class Client : IDisposable
         }
     }
 
-    void Connected(object? sender, EventArgs args)
-        => ClientConnected();
+    Task ConnectedAsync(EventArgs args)
+        => ClientConnectedAsync();
 
-    void ClientConnected()
+    async Task ClientConnectedAsync()
     {
         _logger?.Info("Device (kind=`{0}', id={1}) connected to message broker.", Kind, Id);
 
@@ -392,9 +392,8 @@ public class Client : IDisposable
 
             var token = _cancellationTokenSource.Token;
 
-            _connection
-                .SendDeviceStatusAsync(new DeviceStatusMessage(device, EDeviceStatus.Connecting), token)
-                .Wait(token);
+            await _connection
+                .SendDeviceStatusAsync(new DeviceStatusMessage(device, EDeviceStatus.Connecting), token);
 
             var tasks = _apis
                 .Select(api => _connection
@@ -405,73 +404,74 @@ public class Client : IDisposable
                 .Select(api => _connection
                     .SubscribeToApiMessagesAsync(device, api.Topic, EDirection.In, token)));
 
-            Task.WaitAll(tasks.ToArray());
+            await Task.WhenAll(tasks.ToArray());
 
-            _connection
-                .SendDeviceStatusAsync(new DeviceStatusMessage(device, EDeviceStatus.Online), token)
-                .Wait(token);
+            await _connection
+                .SendDeviceStatusAsync(new DeviceStatusMessage(device, EDeviceStatus.Online), token);
         }
         catch (Exception ex)
         {
             _logger?.Warn(ex);
         }
 
-        InvokeConnectionHandlers();
+        await InvokeConnectionHandlersAsync();
     }
 
-    void InvokeConnectionHandlers()
-    {
-        var l = new List<IConnected>();
-
-        if (this is IConnected c1)
+    Task InvokeConnectionHandlersAsync()
+        => Task.Run(() =>
         {
-            l.Add(c1);
-        }
+            var l = new List<IConnected>();
 
-        l.AddRange(_apis
-            .Select(api => api.Instance)
-            .OfType<IConnected>());
+            if (this is IConnected c1)
+            {
+                l.Add(c1);
+            }
 
-        foreach (var c2 in l)
+            l.AddRange(_apis
+                .Select(api => api.Instance)
+                .OfType<IConnected>());
+
+            foreach (var c2 in l)
+            {
+                try
+                {
+                    c2.Connected();
+                }
+                catch (Exception ex)
+                {
+                    _logger?.Warn(ex);
+                }
+            }
+        });
+
+    Task DisconnectedAsync(EventArgs args)
+        => Task.Run(() =>
         {
-            try
+            _logger?.Info("Device (kind=`{0}', id={1}) disconnected from message broker.", Kind, Id);
+
+            var l = new List<IDisconnected>();
+
+            if (this is IDisconnected d1)
             {
-                c2.Connected();
+                l.Add(d1);
             }
-            catch (Exception ex)
+
+            l.AddRange(_apis
+                .Select(api => api.Instance)
+                .OfType<IDisconnected>());
+
+            foreach (var d2 in l)
             {
-                _logger?.Warn(ex);
+                try
+                {
+                    d2.Disconnected();
+                }
+                catch (Exception ex)
+                {
+                    _logger?.Warn(ex);
+                }
             }
-        }
-    }
-
-    void Disconnected(object? sender, EventArgs args)
-    {
-        _logger?.Info("Device (kind=`{0}', id={1}) disconnected from message broker.", Kind, Id);
-
-        var l = new List<IDisconnected>();
-
-        if (this is IDisconnected d1)
-        {
-            l.Add(d1);
-        }
-
-        l.AddRange(_apis
-            .Select(api => api.Instance)
-            .OfType<IDisconnected>());
-
-        foreach (var d2 in l)
-        {
-            try
-            {
-                d2.Disconnected();
-            }
-            catch (Exception ex)
-            {
-                _logger?.Warn(ex);
-            }
-        }
-    }
+        });
 
     void ApiMessageReceived(object? sender, ApiMessageEventArgs e)
     {
@@ -548,9 +548,9 @@ public class Client : IDisposable
                 var pendingTask = await _pendingTasks.WaitAsync(_cancellationTokenSource.Token);
 
                 if (pendingTask.ReturnType != typeof(void)
-                    && pendingTask is 
+                    && pendingTask is
                     {
-                        ResponseTopic: not null, 
+                        ResponseTopic: not null,
                         MessageId: not null,
                         Task.IsCompleted: true
                     })
@@ -581,8 +581,8 @@ public class Client : IDisposable
 
     public virtual void Dispose()
     {
-        _connection.Connected -= Connected;
-        _connection.Disconnected -= Disconnected;
+        _connection.ConnectedAsync -= ConnectedAsync;
+        _connection.DisconnectedAsync -= DisconnectedAsync;
         _connection.ApiMessageReceived -= ApiMessageReceived;
 
         _cancellationTokenSource.Cancel();

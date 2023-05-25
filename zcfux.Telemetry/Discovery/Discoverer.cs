@@ -43,13 +43,13 @@ public sealed class Discoverer
     {
         (_connection, _filters, _apiRegistry, _serializer, _logger) = options;
 
-        _connection.Connected += ClientConnected;
-        _connection.Disconnected += ClientDisconnected;
+        _connection.ConnectedAsync += ClientConnectedAsync;
+        _connection.DisconnectedAsync += ClientDisconnectedAsync;
         _connection.DeviceStatusReceived += DeviceStatusReceived;
         _connection.ApiInfoReceived += ApiInfoReceived;
     }
 
-    void ClientConnected(object? sender, EventArgs e)
+    async Task ClientConnectedAsync(EventArgs e)
     {
         _logger?.Debug("Discoverer (client=`{0}') connected.", _connection.ClientId);
 
@@ -61,16 +61,18 @@ public sealed class Discoverer
             _filters.Select(f => _connection.SubscribeToApiInfoAsync(
                 new ApiFilter(f, ApiFilter.All))));
 
-        Task.WaitAll(tasks.ToArray());
+        await Task.WhenAll(tasks.ToArray());
 
         Connected?.Invoke(this, EventArgs.Empty);
     }
 
-    void ClientDisconnected(object? sender, EventArgs e)
+    Task ClientDisconnectedAsync(EventArgs e)
     {
         _logger?.Debug("Discoverer (client=`{0}') disconnected.", _connection.ClientId);
 
         Disconnected?.Invoke(this, EventArgs.Empty);
+
+        return Task.CompletedTask;
     }
 
     void DeviceStatusReceived(object? sender, DeviceStatusEventArgs e)

@@ -23,8 +23,8 @@ namespace zcfux.Telemetry;
 
 public interface IConnection : IDisposable
 {
-    event EventHandler? Connected;
-    event EventHandler? Disconnected;
+    event Func<EventArgs, Task>? ConnectedAsync;
+    event Func<EventArgs, Task>? DisconnectedAsync;
     event EventHandler<ApiInfoEventArgs>? ApiInfoReceived;
     event EventHandler<ApiMessageEventArgs>? ApiMessageReceived;
     event EventHandler<DeviceStatusEventArgs>? DeviceStatusReceived;

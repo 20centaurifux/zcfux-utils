@@ -79,8 +79,8 @@ public sealed class Connection : IConnection
 
     readonly ConcurrentBag<MqttApplicationMessage> _retainedMessages = new();
 
-    public event EventHandler? Connected;
-    public event EventHandler? Disconnected;
+    public event Func<EventArgs, Task>? ConnectedAsync;
+    public event Func<EventArgs, Task>? DisconnectedAsync;
     public event EventHandler<ApiInfoEventArgs>? ApiInfoReceived;
     public event EventHandler<ApiMessageEventArgs>? ApiMessageReceived;
     public event EventHandler<DeviceStatusEventArgs>? DeviceStatusReceived;
@@ -103,8 +103,8 @@ public sealed class Connection : IConnection
 
         _client = Factory.CreateMqttClient();
 
-        _client.ConnectedAsync += ClientConnected;
-        _client.DisconnectedAsync += ClientDisconnected;
+        _client.ConnectedAsync += ClientConnectedAsync;
+        _client.DisconnectedAsync += ClientDisconnectedAsync;
         _client.ApplicationMessageReceivedAsync += ApplicationMessageReceivedAsync;
 
         _retrySendingInterval = options.RetrySendingInterval;
@@ -204,7 +204,7 @@ public sealed class Connection : IConnection
         }
     }
 
-    Task ClientConnected(MqttClientConnectedEventArgs e)
+    async Task ClientConnectedAsync(MqttClientConnectedEventArgs e)
     {
         _logger?.Debug("Client `{0}' connected successfully.", ClientId);
 
@@ -212,7 +212,10 @@ public sealed class Connection : IConnection
 
         try
         {
-            Connected?.Invoke(this, EventArgs.Empty);
+            if (ConnectedAsync is not null)
+            {
+                await ConnectedAsync.Invoke(EventArgs.Empty);   
+            }
         }
         catch (Exception ex)
         {
@@ -220,8 +223,6 @@ public sealed class Connection : IConnection
         }
 
         _onlineEvent.Set();
-
-        return Task.CompletedTask;
     }
 
     async Task SendMessagesAsync(CancellationToken cancellationToken)
@@ -296,7 +297,7 @@ public sealed class Connection : IConnection
         }
     }
 
-    Task ClientDisconnected(MqttClientDisconnectedEventArgs e)
+    async Task ClientDisconnectedAsync(MqttClientDisconnectedEventArgs e)
     {
         _logger?.Debug("Client `{0}' disconnected.", ClientId);
 
@@ -304,7 +305,10 @@ public sealed class Connection : IConnection
 
         try
         {
-            Disconnected?.Invoke(this, EventArgs.Empty);
+            if (DisconnectedAsync is not null)
+            {
+                await DisconnectedAsync.Invoke(EventArgs.Empty);
+            }
         }
         catch (Exception ex)
         {
@@ -313,7 +317,7 @@ public sealed class Connection : IConnection
 
         _offlineEvent.Set();
 
-        return InitializeReconnectAsync(previousStatus);
+        await InitializeReconnectAsync(previousStatus);
     }
 
     async Task InitializeReconnectAsync(long previousStatus)

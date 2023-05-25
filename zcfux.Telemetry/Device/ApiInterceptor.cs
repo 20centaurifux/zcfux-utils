@@ -87,8 +87,8 @@ sealed class ApiInterceptor : IInterceptor, IProxy
         RegisterCommands();
         RegisterEvents();
 
-        _connection.Connected += Connected;
-        _connection.Disconnected += Disconnected;
+        _connection.ConnectedAsync += ConnectedAsync;
+        _connection.DisconnectedAsync += DisconnectedAsync;
         _connection.DeviceStatusReceived += DeviceStatusReceived;
         _connection.ApiInfoReceived += ApiInfoReceived;
         _connection.ApiMessageReceived += ApiMessageReceived;
@@ -96,7 +96,7 @@ sealed class ApiInterceptor : IInterceptor, IProxy
 
         if (_connection.IsConnected)
         {
-            InitializeConnection();
+            InitializeConnectionAsync().Wait();
         }
     }
 
@@ -196,14 +196,14 @@ sealed class ApiInterceptor : IInterceptor, IProxy
         _eventGetters = eventGetters;
     }
 
-    void Connected(object? sender, EventArgs e)
+    async Task ConnectedAsync(EventArgs e)
     {
         _logger?.Debug("Proxy (client=`{0}') connected.", _connection.ClientId);
 
-        InitializeConnection();
+        await InitializeConnectionAsync();
     }
 
-    void InitializeConnection()
+    async Task InitializeConnectionAsync()
     {
         if ((State & EFlag.Initialized) == 0)
         {
@@ -224,7 +224,7 @@ sealed class ApiInterceptor : IInterceptor, IProxy
                         .SubscribeResponseAsync(_device)
                 };
 
-                Task.WaitAll(tasks);
+                await Task.WhenAll(tasks.ToArray());
 
                 foreach (var ev in _events.Values)
                 {
@@ -254,7 +254,7 @@ sealed class ApiInterceptor : IInterceptor, IProxy
         }
     }
 
-    void Disconnected(object? sender, EventArgs e)
+    Task DisconnectedAsync(EventArgs e)
     {
         _logger?.Debug("Proxy (client=`{0}') disconnected.", _connection.ClientId);
 
@@ -271,6 +271,8 @@ sealed class ApiInterceptor : IInterceptor, IProxy
         }
 
         WriteState(state => (state & ~EFlag.Online));
+
+        return Task.CompletedTask;
     }
 
     void DeviceStatusReceived(object? sender, DeviceStatusEventArgs e)
@@ -712,8 +714,8 @@ sealed class ApiInterceptor : IInterceptor, IProxy
 
     public void ReleaseProxy()
     {
-        _connection.Connected -= Connected;
-        _connection.Disconnected -= Disconnected;
+        _connection.ConnectedAsync -= ConnectedAsync;
+        _connection.DisconnectedAsync -= DisconnectedAsync;
         _connection.DeviceStatusReceived -= DeviceStatusReceived;
         _connection.ApiInfoReceived -= ApiInfoReceived;
         _connection.ApiMessageReceived -= ApiMessageReceived;

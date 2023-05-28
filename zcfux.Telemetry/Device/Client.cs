@@ -26,7 +26,12 @@ namespace zcfux.Telemetry.Device;
 
 public class Client : IDisposable
 {
-    sealed record Api(Type Type, object Instance, string Topic, string Version, Type[] Interfaces);
+    sealed record Api(
+        Type Type,
+        object Instance,
+        string Topic,
+        string Version,
+        Type[] Interfaces);
 
     sealed class MethodKey
     {
@@ -56,62 +61,60 @@ public class Client : IDisposable
         }
     }
 
-    sealed record Method(object Instance, MethodInfo MethodInfo, Type ParameterType, Type ReturnType);
+    sealed record Method(
+        object Instance,
+        MethodInfo MethodInfo,
+        Type ParameterType,
+        Type ReturnType);
 
-    sealed record PendingTask(Task Task, Type ReturnType, string? ResponseTopic, int? MessageId);
+    sealed record PendingTask(
+        Task Task,
+        Type ReturnType,
+        string? ResponseTopic,
+        int? MessageId);
 
     sealed class PendingTasks
     {
         readonly object _lock = new();
         readonly List<PendingTask> _tasks = new();
-        readonly AutoResetEvent _event = new(false);
+        readonly SemaphoreSlim _semaphore = new(0);
 
         public void Put(PendingTask pendingTask)
         {
             lock (_tasks)
             {
                 _tasks.Add(pendingTask);
-                _event.Set();
-            }
-        }
-
-        public Task<PendingTask> WaitAsync(CancellationToken cancellationToken)
-        {
-            PendingTask? pendingTask = null;
-
-            while (pendingTask == null)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                pendingTask = WaitForTask(cancellationToken);
-
-                if (pendingTask == null)
-                {
-                    _event.WaitOne(500);
-                }
             }
 
-            return Task.FromResult(pendingTask);
+            _semaphore.Release();
         }
 
-        PendingTask? WaitForTask(CancellationToken cancellationToken)
+        public async Task<PendingTask> WaitAsync(CancellationToken cancellationToken)
         {
             PendingTask? pendingTask = null;
-
-            var snapshot = GetSnapshot();
-
-            if (snapshot.Any())
+            
+            while (pendingTask is null)
             {
-                var index = Task.WaitAny(
-                    snapshot.Select(t => t.Task).ToArray(),
-                    500,
-                    cancellationToken);
+                await _semaphore.WaitAsync(cancellationToken);
 
-                if (index != -1)
+                var snapshot = GetSnapshot();
+
+                if (snapshot.Any())
                 {
-                    pendingTask = snapshot[index];
+                    var tasks = snapshot
+                        .Select(p => p.Task)
+                        .ToList();
 
-                    RemovePendingTaskAt(index);
+                    var timeoutTask = Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+
+                    tasks.Add(timeoutTask);
+
+                    var completed = await Task.WhenAny(tasks);
+
+                    if (completed != timeoutTask)
+                    {
+                        pendingTask = RemovePendingTask(completed);
+                    }
                 }
             }
 
@@ -126,11 +129,15 @@ public class Client : IDisposable
             }
         }
 
-        void RemovePendingTaskAt(int index)
+        PendingTask RemovePendingTask(Task task)
         {
             lock (_lock)
             {
-                _tasks.RemoveAt(index);
+                var pendingTask = _tasks.Single(p => p.Task == task);
+
+                _tasks.Remove(pendingTask);
+
+                return pendingTask;
             }
         }
     }
@@ -541,44 +548,41 @@ public class Client : IDisposable
         return Task.CompletedTask;
     }
 
-    Task ProcessPendingTasksAsync()
+    async Task ProcessPendingTasksAsync()
     {
-        return Task.Factory.StartNew(async () =>
+        while (!_cancellationTokenSource.IsCancellationRequested)
         {
-            while (!_cancellationTokenSource.IsCancellationRequested)
-            {
-                var pendingTask = await _pendingTasks.WaitAsync(_cancellationTokenSource.Token);
+            var pendingTask = await _pendingTasks.WaitAsync(_cancellationTokenSource.Token);
 
-                if (pendingTask.ReturnType != typeof(void)
-                    && pendingTask is
-                    {
-                        ResponseTopic: not null,
-                        MessageId: not null,
-                        Task.IsCompleted: true
-                    })
+            if (pendingTask.ReturnType != typeof(void)
+                && pendingTask is
                 {
-                    try
-                    {
-                        var result = pendingTask
-                            .Task
-                            .GetType()
-                            .GetProperty("Result")
-                            ?.GetValue(pendingTask.Task);
+                    ResponseTopic: not null,
+                    MessageId: not null,
+                    Task.IsCompleted: true
+                })
+            {
+                try
+                {
+                    var result = pendingTask
+                        .Task
+                        .GetType()
+                        .GetProperty("Result")
+                        ?.GetValue(pendingTask.Task);
 
-                        var message = new ResponseMessage(
-                            pendingTask.ResponseTopic,
-                            pendingTask.MessageId.Value,
-                            result!);
+                    var message = new ResponseMessage(
+                        pendingTask.ResponseTopic,
+                        pendingTask.MessageId.Value,
+                        result!);
 
-                        await _connection.SendResponseAsync(message, _cancellationTokenSource.Token);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.Error(ex);
-                    }
+                    await _connection.SendResponseAsync(message, _cancellationTokenSource.Token);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.Error(ex);
                 }
             }
-        }, TaskCreationOptions.LongRunning).Unwrap();
+        }
     }
 
     public virtual void Dispose()

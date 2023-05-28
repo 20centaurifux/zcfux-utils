@@ -28,4 +28,6 @@ public interface IMessageQueue
     Task EnqueueAsync(MqttApplicationMessage message, uint secondsToLive, CancellationToken cancellationToken);
 
     Task<MqttApplicationMessage> DequeueAsync(CancellationToken cancellationToken);
+
+    int Count { get; }
 }

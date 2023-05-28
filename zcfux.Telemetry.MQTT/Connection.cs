@@ -163,6 +163,13 @@ public sealed class Connection : IConnection
     {
         _logger?.Debug("Disconnecting client `{0}'.", ClientId);
 
+        while (_messageQueue.Count > 0)
+        {
+            _logger?.Debug("Flushing backlog for client `{0}'...", ClientId);
+
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+        }
+        
         await Task.WhenAny(CancelReconnectAsync(), DeleteRetainedMessagesAsync());
 
         Interlocked.Exchange(ref _connectivity, GracefulDisconnect);

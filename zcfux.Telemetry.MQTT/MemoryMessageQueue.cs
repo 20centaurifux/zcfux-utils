@@ -99,4 +99,6 @@ public sealed class MemoryMessageQueue : IMessageQueue
             }
         }
     }
+
+    public int Count => _queue.Count;
 }

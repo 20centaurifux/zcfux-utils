@@ -25,10 +25,10 @@ public interface IConnection : IDisposable
 {
     event Func<EventArgs, Task>? ConnectedAsync;
     event Func<EventArgs, Task>? DisconnectedAsync;
-    event EventHandler<ApiInfoEventArgs>? ApiInfoReceived;
-    event EventHandler<ApiMessageEventArgs>? ApiMessageReceived;
-    event EventHandler<DeviceStatusEventArgs>? DeviceStatusReceived;
-    event EventHandler<ResponseEventArgs>? ResponseReceived;
+    event Func<ApiInfoEventArgs, Task>? ApiInfoReceivedAsync;
+    event Func<ApiMessageEventArgs, Task>? ApiMessageReceivedAsync;
+    event Func<DeviceStatusEventArgs, Task>? DeviceStatusReceivedAsync;
+    event Func<ResponseEventArgs, Task>? ResponseReceivedAsync;
 
     bool IsConnected { get; }
 

@@ -163,7 +163,7 @@ public class Client : IDisposable
 
         _connection.ConnectedAsync += ConnectedAsync;
         _connection.DisconnectedAsync += DisconnectedAsync;
-        _connection.ApiMessageReceived += ApiMessageReceived;
+        _connection.ApiMessageReceivedAsync += ApiMessageReceivedAsync;
 
         _pendingTaskProcessor = ProcessPendingTasksAsync();
 
@@ -473,7 +473,7 @@ public class Client : IDisposable
             }
         });
 
-    void ApiMessageReceived(object? sender, ApiMessageEventArgs e)
+    Task ApiMessageReceivedAsync(ApiMessageEventArgs e)
     {
         _logger?.Debug(
             "Processing message (device kind=`{0}', id={1}, api=`{2}', topic=`{3}', size={4}).",
@@ -537,6 +537,8 @@ public class Client : IDisposable
                 e.Api,
                 e.Topic);
         }
+
+        return Task.CompletedTask;
     }
 
     Task ProcessPendingTasksAsync()
@@ -583,7 +585,7 @@ public class Client : IDisposable
     {
         _connection.ConnectedAsync -= ConnectedAsync;
         _connection.DisconnectedAsync -= DisconnectedAsync;
-        _connection.ApiMessageReceived -= ApiMessageReceived;
+        _connection.ApiMessageReceivedAsync -= ApiMessageReceivedAsync;
 
         _cancellationTokenSource.Cancel();
 

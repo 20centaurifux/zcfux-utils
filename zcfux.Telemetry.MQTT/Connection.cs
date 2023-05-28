@@ -81,10 +81,10 @@ public sealed class Connection : IConnection
 
     public event Func<EventArgs, Task>? ConnectedAsync;
     public event Func<EventArgs, Task>? DisconnectedAsync;
-    public event EventHandler<ApiInfoEventArgs>? ApiInfoReceived;
-    public event EventHandler<ApiMessageEventArgs>? ApiMessageReceived;
-    public event EventHandler<DeviceStatusEventArgs>? DeviceStatusReceived;
-    public event EventHandler<ResponseEventArgs>? ResponseReceived;
+    public event Func<ApiInfoEventArgs, Task>? ApiInfoReceivedAsync;
+    public event Func<ApiMessageEventArgs, Task>? ApiMessageReceivedAsync;
+    public event Func<DeviceStatusEventArgs, Task>? DeviceStatusReceivedAsync;
+    public event Func<ResponseEventArgs, Task>? ResponseReceivedAsync;
 
     public bool IsConnected
         => Interlocked.Read(ref _connectivity) == Online;
@@ -214,7 +214,7 @@ public sealed class Connection : IConnection
         {
             if (ConnectedAsync is not null)
             {
-                await ConnectedAsync.Invoke(EventArgs.Empty);   
+                await ConnectedAsync.Invoke(EventArgs.Empty);
             }
         }
         catch (Exception ex)
@@ -388,7 +388,7 @@ public sealed class Connection : IConnection
         }
     }
 
-    Task ApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs e)
+    async Task ApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs e)
     {
         _logger?.Trace(
             "Client `{0}' received message in `{1}' (size={2}): `{3}'",
@@ -399,15 +399,14 @@ public sealed class Connection : IConnection
                 ? e.ApplicationMessage.ConvertPayloadToString()
                 : string.Empty);
 
-        var _ = TryProcessDeviceStatus(e.ApplicationMessage)
-                || TryProcessApiInfo(e.ApplicationMessage)
-                || TryProcessApiMessage(e.ApplicationMessage)
-                || TryProcessResponse(e.ApplicationMessage);
-
-        return Task.CompletedTask;
+        await Task.WhenAny(
+            TryProcessDeviceStatusAsync(e.ApplicationMessage),
+            TryProcessApiInfoAsync(e.ApplicationMessage),
+            TryProcessApiMessageAsync(e.ApplicationMessage),
+            TryProcessResponseAsync(e.ApplicationMessage));
     }
 
-    bool TryProcessDeviceStatus(MqttApplicationMessage message)
+    async Task<bool> TryProcessDeviceStatusAsync(MqttApplicationMessage message)
     {
         var success = false;
 
@@ -415,11 +414,11 @@ public sealed class Connection : IConnection
         {
             var m = DeviceStatusRegex.Match(message.Topic);
 
-            if (m.Success)
+            if (m.Success && DeviceStatusReceivedAsync is not null)
             {
                 try
                 {
-                    DeviceStatusReceived?.Invoke(this, new DeviceStatusEventArgs(
+                    await DeviceStatusReceivedAsync.Invoke(new DeviceStatusEventArgs(
                         new DeviceDetails(
                             m.Groups[1].Value,
                             m.Groups[2].Value,
@@ -438,7 +437,7 @@ public sealed class Connection : IConnection
         return success;
     }
 
-    bool TryProcessApiInfo(MqttApplicationMessage message)
+    async Task<bool> TryProcessApiInfoAsync(MqttApplicationMessage message)
     {
         var success = false;
 
@@ -446,11 +445,11 @@ public sealed class Connection : IConnection
         {
             var m = ApiVersionRegex.Match(message.Topic);
 
-            if (m.Success)
+            if (m.Success && ApiInfoReceivedAsync is not null)
             {
                 try
                 {
-                    ApiInfoReceived?.Invoke(this, new ApiInfoEventArgs(
+                    await ApiInfoReceivedAsync.Invoke(new ApiInfoEventArgs(
                         new DeviceDetails(
                             m.Groups[1].Value,
                             m.Groups[2].Value,
@@ -470,7 +469,7 @@ public sealed class Connection : IConnection
         return success;
     }
 
-    bool TryProcessApiMessage(MqttApplicationMessage message)
+    async Task<bool> TryProcessApiMessageAsync(MqttApplicationMessage message)
     {
         var m = ApiTopicRegex.Match(message.Topic);
 
@@ -499,25 +498,28 @@ public sealed class Connection : IConnection
                 messageId = BitConverter.ToInt32(bytes);
             }
 
-            try
+            if (ApiMessageReceivedAsync is not null)
             {
-                ApiMessageReceived?.Invoke(this, new ApiMessageEventArgs(
-                    new DeviceDetails(
-                        m.Groups[1].Value,
-                        m.Groups[2].Value,
-                        Convert.ToInt32(m.Groups[3].Value)),
-                    m.Groups[4].Value,
-                    m.Groups[6].Value,
-                    message.PayloadSegment.ToArray(),
-                    (m.Groups[5].Value == ">")
-                        ? EDirection.Out
-                        : EDirection.In,
-                    responseTopic,
-                    messageId));
-            }
-            catch (Exception ex)
-            {
-                _logger?.Error(ex);
+                try
+                {
+                    await ApiMessageReceivedAsync.Invoke(new ApiMessageEventArgs(
+                        new DeviceDetails(
+                            m.Groups[1].Value,
+                            m.Groups[2].Value,
+                            Convert.ToInt32(m.Groups[3].Value)),
+                        m.Groups[4].Value,
+                        m.Groups[6].Value,
+                        message.PayloadSegment.ToArray(),
+                        (m.Groups[5].Value == ">")
+                            ? EDirection.Out
+                            : EDirection.In,
+                        responseTopic,
+                        messageId));
+                }
+                catch (Exception ex)
+                {
+                    _logger?.Error(ex);
+                }
             }
         }
 
@@ -534,7 +536,7 @@ public sealed class Connection : IConnection
             cancellationToken);
     }
 
-    bool TryProcessResponse(MqttApplicationMessage message)
+    async Task<bool> TryProcessResponseAsync(MqttApplicationMessage message)
     {
         var success = false;
 
@@ -556,19 +558,22 @@ public sealed class Connection : IConnection
 
                 var messageId = BitConverter.ToInt32(bytes);
 
-                try
+                if (ResponseReceivedAsync is not null)
                 {
-                    ResponseReceived?.Invoke(this, new ResponseEventArgs(
-                        new DeviceDetails(
-                            m.Groups[1].Value,
-                            m.Groups[2].Value,
-                            Convert.ToInt32(m.Groups[3].Value)),
-                        messageId,
-                        message.PayloadSegment.ToArray()));
-                }
-                catch (Exception ex)
-                {
-                    _logger?.Error(ex);
+                    try
+                    {
+                        await ResponseReceivedAsync.Invoke(new ResponseEventArgs(
+                            new DeviceDetails(
+                                m.Groups[1].Value,
+                                m.Groups[2].Value,
+                                Convert.ToInt32(m.Groups[3].Value)),
+                            messageId,
+                            message.PayloadSegment.ToArray()));
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.Error(ex);
+                    }
                 }
             }
 

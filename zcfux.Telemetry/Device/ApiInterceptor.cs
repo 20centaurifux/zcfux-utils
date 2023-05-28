@@ -89,10 +89,10 @@ sealed class ApiInterceptor : IInterceptor, IProxy
 
         _connection.ConnectedAsync += ConnectedAsync;
         _connection.DisconnectedAsync += DisconnectedAsync;
-        _connection.DeviceStatusReceived += DeviceStatusReceived;
-        _connection.ApiInfoReceived += ApiInfoReceived;
-        _connection.ApiMessageReceived += ApiMessageReceived;
-        _connection.ResponseReceived += ResponseReceived;
+        _connection.DeviceStatusReceivedAsync += DeviceStatusReceivedAsync;
+        _connection.ApiInfoReceivedAsync += ApiInfoReceivedAsync;
+        _connection.ApiMessageReceivedAsync += ApiMessageReceivedAsync;
+        _connection.ResponseReceivedAsync += ResponseReceivedAsync;
 
         if (_connection.IsConnected)
         {
@@ -275,7 +275,7 @@ sealed class ApiInterceptor : IInterceptor, IProxy
         return Task.CompletedTask;
     }
 
-    void DeviceStatusReceived(object? sender, DeviceStatusEventArgs e)
+    Task DeviceStatusReceivedAsync(DeviceStatusEventArgs e)
     {
         if (e.Device.Equals(_device))
         {
@@ -288,9 +288,11 @@ sealed class ApiInterceptor : IInterceptor, IProxy
                 WriteState(state => (state | EFlag.Online));
             }
         }
+
+        return Task.CompletedTask;
     }
 
-    void ApiInfoReceived(object? sender, ApiInfoEventArgs e)
+    async Task ApiInfoReceivedAsync(ApiInfoEventArgs e)
     {
         if (e.Device.Equals(_device)
             && e.Api.Equals(_apiTopic)
@@ -302,12 +304,11 @@ sealed class ApiInterceptor : IInterceptor, IProxy
 
                 WriteState(state => (state | EFlag.Compatible));
 
-                _connection
+                await _connection
                     .SubscribeToApiMessagesAsync(
                         _device,
                         _apiTopic,
-                        EDirection.Out)
-                    .Wait();
+                        EDirection.Out);
             }
             else
             {
@@ -328,8 +329,8 @@ sealed class ApiInterceptor : IInterceptor, IProxy
         return (major1 == major2)
                && (minor1 <= minor2);
     }
-    
-    void ApiMessageReceived(object? sender, ApiMessageEventArgs e)
+
+    Task ApiMessageReceivedAsync(ApiMessageEventArgs e)
     {
         if (e.Device.Equals(_device)
             && e.Api.Equals(_apiTopic)
@@ -360,8 +361,8 @@ sealed class ApiInterceptor : IInterceptor, IProxy
                         _device.Id,
                         e.Api,
                         e.Topic,
-                        payload!); 
-                    
+                        payload!);
+
                     ev.Producer.Write(payload!);
                 }
                 catch (Exception ex)
@@ -370,9 +371,11 @@ sealed class ApiInterceptor : IInterceptor, IProxy
                 }
             }
         }
+
+        return Task.CompletedTask;
     }
 
-    void ResponseReceived(object? sender, ResponseEventArgs e)
+    Task ResponseReceivedAsync(ResponseEventArgs e)
     {
         if (e.Device.Equals(_device))
         {
@@ -394,6 +397,8 @@ sealed class ApiInterceptor : IInterceptor, IProxy
                 _logger?.Warn("Pending response (message id={0}) not found.", e.MessageId);
             }
         }
+
+        return Task.CompletedTask;
     }
 
     public void Intercept(IInvocation invocation)
@@ -716,9 +721,9 @@ sealed class ApiInterceptor : IInterceptor, IProxy
     {
         _connection.ConnectedAsync -= ConnectedAsync;
         _connection.DisconnectedAsync -= DisconnectedAsync;
-        _connection.DeviceStatusReceived -= DeviceStatusReceived;
-        _connection.ApiInfoReceived -= ApiInfoReceived;
-        _connection.ApiMessageReceived -= ApiMessageReceived;
-        _connection.ResponseReceived -= ResponseReceived;
+        _connection.DeviceStatusReceivedAsync -= DeviceStatusReceivedAsync;
+        _connection.ApiInfoReceivedAsync -= ApiInfoReceivedAsync;
+        _connection.ApiMessageReceivedAsync -= ApiMessageReceivedAsync;
+        _connection.ResponseReceivedAsync -= ResponseReceivedAsync;
     }
 }

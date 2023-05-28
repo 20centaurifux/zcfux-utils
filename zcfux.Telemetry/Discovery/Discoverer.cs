@@ -45,8 +45,8 @@ public sealed class Discoverer
 
         _connection.ConnectedAsync += ClientConnectedAsync;
         _connection.DisconnectedAsync += ClientDisconnectedAsync;
-        _connection.DeviceStatusReceived += DeviceStatusReceived;
-        _connection.ApiInfoReceived += ApiInfoReceived;
+        _connection.DeviceStatusReceivedAsync += DeviceStatusReceivedAsync;
+        _connection.ApiInfoReceivedAsync += ApiInfoReceivedAsync;
     }
 
     async Task ClientConnectedAsync(EventArgs e)
@@ -75,7 +75,7 @@ public sealed class Discoverer
         return Task.CompletedTask;
     }
 
-    void DeviceStatusReceived(object? sender, DeviceStatusEventArgs e)
+    Task DeviceStatusReceivedAsync(DeviceStatusEventArgs e)
     {
         var device = RegisterDeviceIfUnknown(e.Device);
 
@@ -88,6 +88,8 @@ public sealed class Discoverer
             e.Status);
 
         device.Status = e.Status;
+
+        return Task.CompletedTask;
     }
 
     DiscoveredDevice RegisterDeviceIfUnknown(DeviceDetails device)
@@ -123,7 +125,7 @@ public sealed class Discoverer
         return discoveredDevice;
     }
 
-    void ApiInfoReceived(object? sender, ApiInfoEventArgs e)
+    Task ApiInfoReceivedAsync(ApiInfoEventArgs e)
     {
         try
         {
@@ -176,6 +178,8 @@ public sealed class Discoverer
         {
             _logger?.Error(ex);
         }
+
+        return Task.CompletedTask;
     }
 
     DiscoveredDevice? TryGetDiscoveredDevice(DeviceDetails device)

@@ -35,7 +35,7 @@ public interface IDiscoveredDevice
 
     public int Id { get; }
 
-    public EDeviceStatus Status { get; }
+    public ENodeStatus Status { get; }
 
     bool HasApi<TApi>()
         where TApi : class;

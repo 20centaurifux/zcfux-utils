@@ -80,7 +80,7 @@ public abstract class ALoadTests
 
             var opts = new Discovery.OptionsBuilder()
                 .WithConnection(connection)
-                .WithFilter(new DeviceFilter(DeviceFilter.All, DeviceFilter.All, DeviceFilter.All))
+                .WithFilter(new NodeFilter(NodeFilter.All, NodeFilter.All, NodeFilter.All))
                 .WithSerializer(CreateSerializer())
                 .WithApiRegistry(registry)
                 .Build();
@@ -121,7 +121,7 @@ public abstract class ALoadTests
 
     async Task PublishAsync(int clientId)
     {
-        var device = new DeviceDetails("d", "test", clientId);
+        var device = new NodeDetails("d", "test", clientId);
 
         using (var deviceConnection = CreateDeviceConnection(device))
         {
@@ -195,7 +195,7 @@ public abstract class ALoadTests
 
     protected abstract IConnection CreateConnection();
 
-    protected abstract IConnection CreateDeviceConnection(DeviceDetails device);
+    protected abstract IConnection CreateDeviceConnection(NodeDetails node);
 
     protected abstract ISerializer CreateSerializer();
 }

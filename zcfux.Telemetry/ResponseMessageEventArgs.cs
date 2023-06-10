@@ -23,12 +23,12 @@ namespace zcfux.Telemetry;
 
 public sealed class ResponseEventArgs : EventArgs
 {
-    public DeviceDetails Device { get; }
+    public NodeDetails Node { get; }
 
     public int MessageId { get; }
 
     public byte[] Payload { get; }
 
-    public ResponseEventArgs(DeviceDetails device, int messageId, byte[] payload)
-        => (Device, MessageId, Payload) = (device, messageId, payload);
+    public ResponseEventArgs(NodeDetails node, int messageId, byte[] payload)
+        => (Node, MessageId, Payload) = (node, messageId, payload);
 }

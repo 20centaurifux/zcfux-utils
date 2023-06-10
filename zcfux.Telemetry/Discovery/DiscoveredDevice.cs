@@ -31,7 +31,7 @@ sealed class DiscoveredDevice : IDiscoveredDevice
     public event EventHandler<RegistrationEventArgs>? Registered;
     public event EventHandler<RegistrationEventArgs>? Dropped;
 
-    readonly DeviceDetails _device;
+    readonly NodeDetails _node;
 
     long _status;
 
@@ -39,17 +39,17 @@ sealed class DiscoveredDevice : IDiscoveredDevice
     readonly Dictionary<string, Proxy> _proxies = new();
 
     public string Domain
-        => _device.Domain;
+        => _node.Domain;
 
     public string Kind
-        => _device.Kind;
+        => _node.Kind;
 
     public int Id
-        => _device.Id;
+        => _node.Id;
 
-    public EDeviceStatus Status
+    public ENodeStatus Status
     {
-        get => (EDeviceStatus)Interlocked.Read(ref _status);
+        get => (ENodeStatus)Interlocked.Read(ref _status);
 
         internal set
         {
@@ -60,8 +60,8 @@ sealed class DiscoveredDevice : IDiscoveredDevice
         }
     }
 
-    public DiscoveredDevice(DeviceDetails device)
-        => _device = device;
+    public DiscoveredDevice(NodeDetails node)
+        => _node = node;
 
     internal void RegisterApi(string topic, string version, Func<object> createProxy)
     {

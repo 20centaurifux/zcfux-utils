@@ -105,7 +105,7 @@ public abstract class AProxyTests
     {
         using (var proxyConnection = CreateProxyConnection())
         {
-            var device = new DeviceDetails("d", "test", TestContext.CurrentContext.Random.Next());
+            var device = new NodeDetails("d", "test", TestContext.CurrentContext.Random.Next());
 
             var proxyOpts = CreateDeviceOptions(device, proxyConnection);
 
@@ -124,7 +124,7 @@ public abstract class AProxyTests
         {
             await proxyConnection.ConnectAsync();
 
-            var device = new DeviceDetails("d", "test", 1);
+            var device = new NodeDetails("d", "test", 1);
 
             var proxyOpts = CreateDeviceOptions(device, proxyConnection);
 
@@ -139,7 +139,7 @@ public abstract class AProxyTests
     [Test]
     public async Task CommandIsCancelledWhenDeviceIsIncompatible()
     {
-        var device = new DeviceDetails("d", "test", TestContext.CurrentContext.Random.Next());
+        var device = new NodeDetails("d", "test", TestContext.CurrentContext.Random.Next());
 
         using (IConnection deviceConnection = CreateDeviceConnection(device),
                proxyConnection = CreateProxyConnection())
@@ -168,7 +168,7 @@ public abstract class AProxyTests
     [Test]
     public async Task CommandIsEnqueued()
     {
-        var device = new DeviceDetails("d", "test", TestContext.CurrentContext.Random.Next());
+        var device = new NodeDetails("d", "test", TestContext.CurrentContext.Random.Next());
 
         using (IConnection deviceConnection = CreateDeviceConnection(device),
                proxyConnection = CreateProxyConnection())
@@ -197,7 +197,7 @@ public abstract class AProxyTests
     [Test]
     public async Task ReceiveEvents()
     {
-        var device = new DeviceDetails("d", "test", TestContext.CurrentContext.Random.Next());
+        var device = new NodeDetails("d", "test", TestContext.CurrentContext.Random.Next());
 
         using (IConnection deviceConnection = CreateDeviceConnection(device),
                proxyConnection = CreateProxyConnection())
@@ -234,7 +234,7 @@ public abstract class AProxyTests
     [Test]
     public async Task ReceiveEventsAfterProxyReconnect()
     {
-        var device = new DeviceDetails("d", "test", TestContext.CurrentContext.Random.Next());
+        var device = new NodeDetails("d", "test", TestContext.CurrentContext.Random.Next());
 
         using (IConnection deviceConnection = CreateDeviceConnection(device),
                proxyConnection = CreateProxyConnection())
@@ -286,7 +286,7 @@ public abstract class AProxyTests
     {
         using (var proxyConnection = CreateProxyConnection())
         {
-            var device = new DeviceDetails("d", "test", TestContext.CurrentContext.Random.Next());
+            var device = new NodeDetails("d", "test", TestContext.CurrentContext.Random.Next());
 
             var proxyOpts = CreateDeviceOptions(device, proxyConnection);
 
@@ -304,7 +304,7 @@ public abstract class AProxyTests
     [Test]
     public async Task EventsStopWhenConnectionIsClosed()
     {
-        var device = new DeviceDetails("d", "test", TestContext.CurrentContext.Random.Next());
+        var device = new NodeDetails("d", "test", TestContext.CurrentContext.Random.Next());
 
         using (IConnection deviceConnection = CreateDeviceConnection(device),
                proxyConnection = CreateProxyConnection())
@@ -340,7 +340,7 @@ public abstract class AProxyTests
         {
             await proxyConnection.ConnectAsync();
 
-            var device = new DeviceDetails("d", "test", TestContext.CurrentContext.Random.Next());
+            var device = new NodeDetails("d", "test", TestContext.CurrentContext.Random.Next());
 
             var proxyOpts = CreateDeviceOptions(device, proxyConnection);
 
@@ -358,7 +358,7 @@ public abstract class AProxyTests
     [Test]
     public async Task ReceiveEventsAfterReconnect()
     {
-        var device = new DeviceDetails("d", "test", TestContext.CurrentContext.Random.Next());
+        var device = new NodeDetails("d", "test", TestContext.CurrentContext.Random.Next());
 
         using (IConnection deviceConnection = CreateDeviceConnection(device),
                proxyConnection = CreateProxyConnection())
@@ -399,7 +399,7 @@ public abstract class AProxyTests
     [Test]
     public async Task EmptyEventsWhenDeviceIsIncompatible()
     {
-        var device = new DeviceDetails("d", "test", TestContext.CurrentContext.Random.Next());
+        var device = new NodeDetails("d", "test", TestContext.CurrentContext.Random.Next());
 
         using (IConnection deviceConnection = CreateDeviceConnection(device),
                proxyConnection = CreateProxyConnection())
@@ -429,7 +429,7 @@ public abstract class AProxyTests
     [Test]
     public async Task SendCommandAndReceiveEvent()
     {
-        var device = new DeviceDetails("d", "test", TestContext.CurrentContext.Random.Next());
+        var device = new NodeDetails("d", "test", TestContext.CurrentContext.Random.Next());
 
         using (IConnection deviceConnection = CreateDeviceConnection(device),
                proxyConnection = CreateProxyConnection())
@@ -466,7 +466,7 @@ public abstract class AProxyTests
     {
         using (var proxyConnection = CreateProxyConnection())
         {
-            var device = new DeviceDetails("d", "test", TestContext.CurrentContext.Random.Next());
+            var device = new NodeDetails("d", "test", TestContext.CurrentContext.Random.Next());
 
             var proxyOpts = CreateDeviceOptions(device, proxyConnection);
 
@@ -485,7 +485,7 @@ public abstract class AProxyTests
         {
             await proxyConnection.ConnectAsync();
 
-            var device = new DeviceDetails("d", "test", TestContext.CurrentContext.Random.Next());
+            var device = new NodeDetails("d", "test", TestContext.CurrentContext.Random.Next());
 
             var proxyOpts = CreateDeviceOptions(device, proxyConnection);
 
@@ -500,7 +500,7 @@ public abstract class AProxyTests
     [Test]
     public async Task RequestIsCancelledWhenDeviceIsIncompatible()
     {
-        var device = new DeviceDetails("d", "test", TestContext.CurrentContext.Random.Next());
+        var device = new NodeDetails("d", "test", TestContext.CurrentContext.Random.Next());
 
         using (IConnection deviceConnection = CreateDeviceConnection(device),
                proxyConnection = CreateProxyConnection())
@@ -529,7 +529,7 @@ public abstract class AProxyTests
     [Test]
     public async Task RequestResponse()
     {
-        var device = new DeviceDetails("d", "test", TestContext.CurrentContext.Random.Next());
+        var device = new NodeDetails("d", "test", TestContext.CurrentContext.Random.Next());
 
         using (IConnection deviceConnection = CreateDeviceConnection(device),
                proxyConnection = CreateProxyConnection())
@@ -558,7 +558,7 @@ public abstract class AProxyTests
     [Test]
     public async Task ResponseExpires()
     {
-        var device = new DeviceDetails("d", "test", 1);
+        var device = new NodeDetails("d", "test", 1);
 
         using (IConnection deviceConnection = CreateDeviceConnection(device),
                proxyConnection = CreateProxyConnection())
@@ -584,18 +584,18 @@ public abstract class AProxyTests
         }
     }
 
-    Options CreateDeviceOptions(DeviceDetails device, IConnection connection)
+    Options CreateDeviceOptions(NodeDetails node, IConnection connection)
     {
         var opts = new OptionsBuilder()
             .WithConnection(connection)
-            .WithDevice(device)
+            .WithDevice(node)
             .WithSerializer(CreateSerializer())
             .Build();
 
         return opts;
     }
 
-    protected abstract IConnection CreateDeviceConnection(DeviceDetails device);
+    protected abstract IConnection CreateDeviceConnection(NodeDetails node);
 
     protected abstract IConnection CreateProxyConnection();
 

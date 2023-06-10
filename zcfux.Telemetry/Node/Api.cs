@@ -19,12 +19,11 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using zcfux.Logging;
+namespace zcfux.Telemetry.Node;
 
-namespace zcfux.Telemetry.Device;
-
-public sealed record Options(
-    DeviceDetails Device,
-    IConnection Connection,
-    ISerializer Serializer,
-    ILogger? Logger);
+sealed record Api(
+    Type Type,
+    object Instance,
+    string Topic,
+    string Version,
+    Type[] Interfaces);

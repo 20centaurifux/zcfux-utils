@@ -22,17 +22,15 @@
 namespace zcfux.Telemetry;
 
 public sealed record ApiInfoMessage(
-    DeviceDetails Device,
-    string Topic,
-    string Version)
+    NodeDetails Node,
+    ApiInfo[] Apis)
 {
     public ApiInfoMessage(
         string domain,
         string kind,
         int id,
-        string topic,
-        string version)
-        : this(new DeviceDetails(domain, kind, id), topic, version)
+        ApiInfo[] apis)
+        : this(new NodeDetails(domain, kind, id), apis)
     {
     }
 }

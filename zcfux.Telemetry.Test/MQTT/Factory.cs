@@ -23,6 +23,7 @@ using System.Security.Authentication;
 using MQTTnet;
 using MQTTnet.Server;
 using NUnit.Framework;
+using zcfux.Logging;
 using zcfux.Telemetry.MQTT;
 
 namespace zcfux.Telemetry.Test.MQTT;
@@ -49,7 +50,11 @@ public static class Factory
     {
         var port = GetPort();
 
-        var factory = new Logging.Factory("Connection");
+        var factory = new Logging.Factory("connection");
+
+        var logger = factory.FromName("console");
+
+        logger.Verbosity = ESeverity.Trace;
 
         var opts = new ConnectionOptionsBuilder()
             .WithClientOptions(new ClientOptionsBuilder()
@@ -58,17 +63,21 @@ public static class Factory
                 .WithSessionTimeout(30)
                 .Build())
             .WithMessageQueue(new MemoryMessageQueue(50))
-            .WithLogger(factory.FromName("console"))
+            .WithLogger(logger)
             .Build();
 
         return new Connection(opts);
     }
 
-    public static IConnection CreateDeviceConnection(string domain, string kind, int id)
+    public static IConnection CreateClientConnection(string domain, string kind, int id)
     {
         var port = GetPort();
 
-        var factory = new Logging.Factory("device");
+        var factory = new Logging.Factory("node");
+        
+        var logger = factory.FromName("console");
+
+        logger.Verbosity = ESeverity.Trace;
         
         var opts = new ConnectionOptionsBuilder()
             .WithClientOptions(new ClientOptionsBuilder()
@@ -84,7 +93,7 @@ public static class Factory
                 .Build())
             .WithMessageQueue(new MemoryMessageQueue(50))
             .WithCleanupRetainedMessages()
-            .WithLogger(factory.FromName("console"))
+            .WithLogger(logger)
             .Build();
 
         return new Connection(opts);

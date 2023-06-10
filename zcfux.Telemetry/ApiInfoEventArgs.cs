@@ -23,12 +23,10 @@ namespace zcfux.Telemetry;
 
 public sealed class ApiInfoEventArgs : EventArgs
 {
-    public DeviceDetails Device { get; }
+    public NodeDetails Node { get; }
 
-    public string Api { get; }
+    public ApiInfo[] Apis { get; }
 
-    public string Version { get; }
-
-    public ApiInfoEventArgs(DeviceDetails device, string api, string version)
-        => (Device, Api, Version) = (device, api, version);
+    public ApiInfoEventArgs(NodeDetails node, ApiInfo[] apis)
+        => (Node, Apis) = (node, apis);
 }

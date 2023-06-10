@@ -21,12 +21,12 @@
  ***************************************************************************/
 namespace zcfux.Telemetry;
 
-public sealed class DeviceStatusEventArgs : EventArgs
+public sealed class NodeStatusEventArgs : EventArgs
 {
-    public DeviceDetails Device { get; }
+    public NodeDetails Node { get; }
 
-    public EDeviceStatus Status { get; }
+    public ENodeStatus Status { get; }
 
-    public DeviceStatusEventArgs(DeviceDetails device, EDeviceStatus status)
-        => (Device, Status) = (device, status);
+    public NodeStatusEventArgs(NodeDetails node, ENodeStatus status)
+        => (Node, Status) = (node, status);
 }

@@ -7,7 +7,7 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<Authors>Sebastian Fedrau</Authors>
 		<Company>Sebastian Fedrau</Company>
-		<PackageVersion>1.4.0</PackageVersion>
+		<PackageVersion>2.0.0</PackageVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -16,6 +16,21 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\zcfux.Logging\zcfux.Logging.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Remove="Device\**" />
+	  <Compile Remove="Discovery\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Remove="Device\**" />
+	  <EmbeddedResource Remove="Discovery\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="Device\**" />
+	  <None Remove="Discovery\**" />
 	</ItemGroup>
 
 </Project>

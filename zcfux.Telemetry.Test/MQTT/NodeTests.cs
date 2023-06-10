@@ -25,7 +25,7 @@ using zcfux.Telemetry.MQTT;
 
 namespace zcfux.Telemetry.Test.MQTT;
 
-public sealed class ClientTests : AClientTests
+public sealed class NodeTests : AClientTests
 {
     MqttServer _server = default!;
 
@@ -41,8 +41,11 @@ public sealed class ClientTests : AClientTests
     public void Teardown()
         => _server.StopAsync().Wait();
 
-    protected override IConnection CreateDeviceConnection(DeviceDetails device)
-        => Factory.CreateDeviceConnection(device.Domain, device.Kind, device.Id);
+    protected override IConnection CreateConnection()
+        => Factory.CreateConnection();
+
+    protected override IConnection CreateNodeConnection(NodeDetails nodeDetails)
+        => Factory.CreateClientConnection(nodeDetails.Domain, nodeDetails.Kind, nodeDetails.Id);
 
     protected override ISerializer CreateSerializer()
         => new Serializer();

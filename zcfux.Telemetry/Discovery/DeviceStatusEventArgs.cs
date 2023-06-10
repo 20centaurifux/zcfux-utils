@@ -23,8 +23,8 @@ namespace zcfux.Telemetry.Discovery;
 
 public sealed class StatusEventArgs : EventArgs
 {
-    public EDeviceStatus Status { get; }
+    public ENodeStatus Status { get; }
 
-    public StatusEventArgs(EDeviceStatus status)
+    public StatusEventArgs(ENodeStatus status)
         => (Status) = (status);
 }

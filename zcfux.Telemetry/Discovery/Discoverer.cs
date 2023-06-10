@@ -31,13 +31,13 @@ public sealed class Discoverer
     public event EventHandler<DiscoveredEventArgs>? Discovered;
 
     readonly IConnection _connection;
-    readonly IReadOnlyCollection<DeviceFilter> _filters;
+    readonly IReadOnlyCollection<NodeFilter> _filters;
     readonly ApiRegistry _apiRegistry;
     readonly ISerializer _serializer;
     readonly ILogger? _logger;
 
     readonly object _discoveredDevicesLock = new();
-    readonly Dictionary<DeviceDetails, DiscoveredDevice> _discoveredDevices = new();
+    readonly Dictionary<NodeDetails, DiscoveredDevice> _discoveredDevices = new();
 
     public Discoverer(Options options)
     {
@@ -75,9 +75,9 @@ public sealed class Discoverer
         return Task.CompletedTask;
     }
 
-    Task DeviceStatusReceivedAsync(DeviceStatusEventArgs e)
+    Task DeviceStatusReceivedAsync(NodeStatusEventArgs e)
     {
-        var device = RegisterDeviceIfUnknown(e.Device);
+        var device = RegisterDeviceIfUnknown(e.Node);
 
         _logger?.Debug(
             "Discoverer (client=`{0}') received device status (domain=`{1}', kind=`{2}', id=`{3}', status={4}).",
@@ -92,7 +92,7 @@ public sealed class Discoverer
         return Task.CompletedTask;
     }
 
-    DiscoveredDevice RegisterDeviceIfUnknown(DeviceDetails device)
+    DiscoveredDevice RegisterDeviceIfUnknown(NodeDetails node)
     {
         var discovered = false;
 
@@ -100,18 +100,18 @@ public sealed class Discoverer
 
         lock (_discoveredDevicesLock)
         {
-            if (!_discoveredDevices.TryGetValue(device, out discoveredDevice))
+            if (!_discoveredDevices.TryGetValue(node, out discoveredDevice))
             {
                 _logger?.Debug(
                     "Discoverer (client=`{0}') found new device (domain=`{1}', kind=`{2}', id=`{3}').",
                     _connection.ClientId,
-                    device.Domain,
-                    device.Kind,
-                    device.Id);
+                    node.Domain,
+                    node.Kind,
+                    node.Id);
 
-                discoveredDevice = new DiscoveredDevice(device);
+                discoveredDevice = new DiscoveredDevice(node);
 
-                _discoveredDevices[device] = discoveredDevice;
+                _discoveredDevices[node] = discoveredDevice;
 
                 discovered = true;
             }
@@ -129,18 +129,18 @@ public sealed class Discoverer
     {
         try
         {
-            if (TryGetDiscoveredDevice(e.Device) is { } device)
+            if (TryGetDiscoveredDevice(e.Node) is { } device)
             {
-                if (device.Status != EDeviceStatus.Offline
+                if (device.Status != ENodeStatus.Offline
                     && !device.HasApi(e.Api, e.Version))
                 {
                     _logger?.Debug(
                         "Registering api `{0}' (version=`{1}', domain=`{2}', kind=`{3}', id={4}).",
                         e.Api,
                         e.Version,
-                        e.Device.Domain,
-                        e.Device.Kind,
-                        e.Device.Id);
+                        e.Node.Domain,
+                        e.Node.Kind,
+                        e.Node.Id);
 
                     device.RegisterApi(
                         e.Api,
@@ -169,9 +169,9 @@ public sealed class Discoverer
                 _logger?.Warn(
                     "Couldn't register api `{0}', device (domain=`{1}', kind=`{2}', id={3}) not found.",
                     e.Api,
-                    e.Device.Domain,
-                    e.Device.Kind,
-                    e.Device.Id);
+                    e.Node.Domain,
+                    e.Node.Kind,
+                    e.Node.Id);
             }
         }
         catch (Exception ex)
@@ -182,11 +182,11 @@ public sealed class Discoverer
         return Task.CompletedTask;
     }
 
-    DiscoveredDevice? TryGetDiscoveredDevice(DeviceDetails device)
+    DiscoveredDevice? TryGetDiscoveredDevice(NodeDetails node)
     {
         lock (_discoveredDevicesLock)
         {
-            return _discoveredDevices.GetValueOrDefault(device);
+            return _discoveredDevices.GetValueOrDefault(node);
         }
     }
 }

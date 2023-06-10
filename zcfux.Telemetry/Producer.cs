@@ -94,7 +94,7 @@ public sealed class Producer<T> : IAsyncEnumerable<T>, IProducer
                 var value = _queue.Take(_cancellationTokenSource.Token);
 
                 return value;
-            });
+            }, _cancellationTokenSource.Token);
         }
 
         public T Current

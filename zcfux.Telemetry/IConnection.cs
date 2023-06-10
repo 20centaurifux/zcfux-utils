@@ -27,7 +27,7 @@ public interface IConnection : IDisposable
     event Func<EventArgs, Task>? DisconnectedAsync;
     event Func<ApiInfoEventArgs, Task>? ApiInfoReceivedAsync;
     event Func<ApiMessageEventArgs, Task>? ApiMessageReceivedAsync;
-    event Func<DeviceStatusEventArgs, Task>? DeviceStatusReceivedAsync;
+    event Func<NodeStatusEventArgs, Task>? StatusReceivedAsync;
     event Func<ResponseEventArgs, Task>? ResponseReceivedAsync;
 
     bool IsConnected { get; }
@@ -38,20 +38,19 @@ public interface IConnection : IDisposable
 
     Task DisconnectAsync(CancellationToken cancellationToken = default);
 
-    Task SubscribeToDeviceStatusAsync(DeviceFilter filter, CancellationToken cancellationToken = default);
+    Task SubscribeToStatusAsync(NodeFilter filter, CancellationToken cancellationToken = default);
 
-    Task SendDeviceStatusAsync(DeviceStatusMessage message, CancellationToken cancellationToken = default);
+    Task SendStatusAsync(NodeStatusMessage message, CancellationToken cancellationToken = default);
 
-    Task SubscribeToApiInfoAsync(ApiFilter filter, CancellationToken cancellationToken = default);
+    Task SubscribeToApiInfoAsync(NodeFilter filter, CancellationToken cancellationToken = default);
 
     Task SendApiInfoAsync(ApiInfoMessage message, CancellationToken cancellationToken = default);
 
-    Task SubscribeToApiMessagesAsync(DeviceDetails device, string api, EDirection direction,
-        CancellationToken cancellationToken = default);
+    Task SubscribeToApiMessagesAsync(ApiFilter filter, EDirection direction, CancellationToken cancellationToken = default);
 
     Task SendApiMessageAsync(ApiMessage message, CancellationToken cancellationToken = default);
 
-    Task SubscribeResponseAsync(DeviceDetails device, CancellationToken cancellationToken = default);
+    Task SubscribeResponseAsync(NodeDetails node, CancellationToken cancellationToken = default);
 
     Task SendResponseAsync(ResponseMessage message, CancellationToken cancellationToken = default);
 }

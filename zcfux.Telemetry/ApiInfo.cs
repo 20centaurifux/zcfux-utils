@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
     begin........: December 2021
     copyright....: Sebastian Fedrau
     email........: sebastian.fedrau@gmail.com
@@ -19,38 +19,8 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using MQTTnet.Server;
-using NUnit.Framework;
-using zcfux.Telemetry.MQTT;
+namespace zcfux.Telemetry;
 
-namespace zcfux.Telemetry.Test.MQTT;
-
-public sealed class ProxyTests : AProxyTests
-{
-    MqttServer _server = default!;
-
-    [SetUp]
-    public void Setup()
-    {
-        _server = Factory.CreateServer();
-
-        _server
-            .StartAsync()
-            .Wait();
-    }
-
-    [TearDown]
-    public void Teardown()
-        => _server
-            .StopAsync()
-            .Wait();
-
-    protected override IConnection CreateDeviceConnection(NodeDetails node)
-        => Factory.CreateDeviceConnection(node.Domain, node.Kind, node.Id);
-
-    protected override IConnection CreateProxyConnection()
-        => Factory.CreateConnection();
-
-    protected override ISerializer CreateSerializer()
-        => new Serializer();
-}
+public sealed record ApiInfo(
+    string Topic,
+    string Version);

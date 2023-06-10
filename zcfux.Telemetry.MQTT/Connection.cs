@@ -39,7 +39,7 @@ public sealed class Connection : IConnection
         RegexOptions.IgnoreCase);
 
     static readonly Regex ApiVersionRegex = new(
-        "^([a-z0-9-_]+)/([a-z0-9-_]+)/([0-9]+)/a/([a-z0-9-_]+)/version$",
+        "^([a-z0-9-_]+)/([a-z0-9-_]+)/([0-9]+)/apis",
         RegexOptions.IgnoreCase);
 
     static readonly Regex ApiTopicRegex = new(
@@ -66,8 +66,6 @@ public sealed class Connection : IConnection
     readonly bool _cleanupRetainedMessages;
 
     long _connectivity = Offline;
-    readonly ManualResetEvent _onlineEvent = new(false);
-    readonly AutoResetEvent _offlineEvent = new(false);
 
     readonly Task _sendTask;
     readonly TimeSpan _retrySendingInterval;
@@ -83,7 +81,7 @@ public sealed class Connection : IConnection
     public event Func<EventArgs, Task>? DisconnectedAsync;
     public event Func<ApiInfoEventArgs, Task>? ApiInfoReceivedAsync;
     public event Func<ApiMessageEventArgs, Task>? ApiMessageReceivedAsync;
-    public event Func<DeviceStatusEventArgs, Task>? DeviceStatusReceivedAsync;
+    public event Func<NodeStatusEventArgs, Task>? StatusReceivedAsync;
     public event Func<ResponseEventArgs, Task>? ResponseReceivedAsync;
 
     public bool IsConnected
@@ -140,8 +138,8 @@ public sealed class Connection : IConnection
         if (options.LastWill is { } lwt)
         {
             builder = builder
-                .WithWillTopic($"{lwt.Device.Domain}/{lwt.Device.Kind}/{lwt.Device.Id}/status")
-                .WithWillPayload(Convert.ToInt32(EDeviceStatus.Offline).ToString())
+                .WithWillTopic($"{lwt.Node.Domain}/{lwt.Node.Kind}/{lwt.Node.Id}/status")
+                .WithWillPayload(Convert.ToInt32(ENodeStatus.Offline).ToString())
                 .WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
                 .WithWillRetain(lwt.MessageOptions.Retain);
         }
@@ -154,21 +152,20 @@ public sealed class Connection : IConnection
         _logger?.Debug("Connecting client `{0}'.", ClientId);
 
         await _client.ConnectAsync(_clientOptions, cancellationToken);
-
-        _onlineEvent.WaitOne();
-        _onlineEvent.Reset();
     }
 
     public async Task DisconnectAsync(CancellationToken cancellationToken)
     {
         _logger?.Debug("Disconnecting client `{0}'.", ClientId);
 
+        _logger?.Debug("Client `{0}' flushes backlog.", ClientId);
+        
         while (_messageQueue.Count > 0)
         {
-            _logger?.Debug("Flushing backlog for client `{0}'...", ClientId);
-
-            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+            await Task.Delay(500, cancellationToken);
         }
+        
+        _logger?.Debug("Client `{0}' cancels pending tasks and deletes retained messages.", ClientId);
         
         await Task.WhenAny(CancelReconnectAsync(), DeleteRetainedMessagesAsync());
 
@@ -176,6 +173,8 @@ public sealed class Connection : IConnection
 
         if (!string.IsNullOrEmpty(_clientOptions.WillTopic))
         {
+            _logger?.Debug("Client `{0}' sends last will.", ClientId);
+            
             var builder = new MqttApplicationMessageBuilder()
                 .WithTopic(_clientOptions.WillTopic)
                 .WithPayload(_clientOptions.WillPayload)
@@ -192,21 +191,16 @@ public sealed class Connection : IConnection
             .Build();
 
         await _client.DisconnectAsync(opts, cancellationToken);
-
-        _offlineEvent.WaitOne();
     }
 
     async Task DeleteRetainedMessagesAsync()
     {
         if (IsConnected)
         {
-            var tasks = _retainedMessages
-                .Select(msg => _client.PublishAsync(msg, CancellationToken.None))
-                .ToArray();
-
-            if (tasks.Any())
+            if (_retainedMessages.Any())
             {
-                await Task.WhenAll(tasks);
+                await Task.WhenAll(_retainedMessages.Select(msg =>
+                    _client.PublishAsync(msg, CancellationToken.None)));
             }
         }
     }
@@ -228,8 +222,6 @@ public sealed class Connection : IConnection
         {
             _logger?.Error(ex);
         }
-
-        _onlineEvent.Set();
     }
 
     async Task SendMessagesAsync(CancellationToken cancellationToken)
@@ -269,8 +261,7 @@ public sealed class Connection : IConnection
                     }
                 }
 
-                if (_client.IsConnected
-                    || _onlineEvent.WaitOne(TimeSpan.FromSeconds(1)))
+                if (_client.IsConnected)
                 {
                     _logger?.Debug(
                         "Client `{0}' sends message to topic `{1}' (size={2}).",
@@ -321,8 +312,6 @@ public sealed class Connection : IConnection
         {
             _logger?.Error(ex);
         }
-
-        _offlineEvent.Set();
 
         await InitializeReconnectAsync(previousStatus);
     }
@@ -421,16 +410,16 @@ public sealed class Connection : IConnection
         {
             var m = DeviceStatusRegex.Match(message.Topic);
 
-            if (m.Success && DeviceStatusReceivedAsync is not null)
+            if (m.Success && StatusReceivedAsync is not null)
             {
                 try
                 {
-                    await DeviceStatusReceivedAsync.Invoke(new DeviceStatusEventArgs(
-                        new DeviceDetails(
+                    await StatusReceivedAsync.Invoke(new NodeStatusEventArgs(
+                        new NodeDetails(
                             m.Groups[1].Value,
                             m.Groups[2].Value,
                             Convert.ToInt32(m.Groups[3].Value)),
-                        Serializer.Deserialize<EDeviceStatus>(message.PayloadSegment.ToArray())));
+                        Serializer.Deserialize<ENodeStatus>(message.PayloadSegment.ToArray())));
                 }
                 catch (Exception ex)
                 {
@@ -457,12 +446,11 @@ public sealed class Connection : IConnection
                 try
                 {
                     await ApiInfoReceivedAsync.Invoke(new ApiInfoEventArgs(
-                        new DeviceDetails(
+                        new NodeDetails(
                             m.Groups[1].Value,
                             m.Groups[2].Value,
                             Convert.ToInt32(m.Groups[3].Value)),
-                        m.Groups[4].Value,
-                        message.ConvertPayloadToString()));
+                        Serializer.Deserialize<ApiInfo[]>(message.PayloadSegment.ToArray())!));
                 }
                 catch (Exception ex)
                 {
@@ -510,7 +498,7 @@ public sealed class Connection : IConnection
                 try
                 {
                     await ApiMessageReceivedAsync.Invoke(new ApiMessageEventArgs(
-                        new DeviceDetails(
+                        new NodeDetails(
                             m.Groups[1].Value,
                             m.Groups[2].Value,
                             Convert.ToInt32(m.Groups[3].Value)),
@@ -533,7 +521,7 @@ public sealed class Connection : IConnection
         return m.Success;
     }
 
-    public Task SubscribeToDeviceStatusAsync(DeviceFilter filter, CancellationToken cancellationToken)
+    public Task SubscribeToStatusAsync(NodeFilter filter, CancellationToken cancellationToken)
     {
         var (domain, kind, id) = filter;
 
@@ -570,7 +558,7 @@ public sealed class Connection : IConnection
                     try
                     {
                         await ResponseReceivedAsync.Invoke(new ResponseEventArgs(
-                            new DeviceDetails(
+                            new NodeDetails(
                                 m.Groups[1].Value,
                                 m.Groups[2].Value,
                                 Convert.ToInt32(m.Groups[3].Value)),
@@ -590,7 +578,7 @@ public sealed class Connection : IConnection
         return success;
     }
 
-    public Task SendDeviceStatusAsync(DeviceStatusMessage message, CancellationToken cancellationToken)
+    public Task SendStatusAsync(NodeStatusMessage message, CancellationToken cancellationToken)
     {
         var ((domain, kind, id), status) = message;
 
@@ -604,28 +592,30 @@ public sealed class Connection : IConnection
         return _client.PublishAsync(mqttMessage, cancellationToken);
     }
 
-    public Task SubscribeToApiInfoAsync(ApiFilter filter, CancellationToken cancellationToken)
+    public Task SubscribeToApiInfoAsync(NodeFilter filter, CancellationToken cancellationToken)
     {
-        var (domain, kind, id, api) = filter;
+        var (domain, kind, id) = filter;
 
         return _client.SubscribeAsync(
-            $"{domain}/{kind}/{id}/a/{api}/version",
+            $"{domain}/{kind}/{id}/apis",
             MqttQualityOfServiceLevel.AtLeastOnce,
             cancellationToken);
     }
 
     public async Task SendApiInfoAsync(ApiInfoMessage message, CancellationToken cancellationToken)
     {
-        var ((domain, kind, id), topic, version) = message;
+        var ((domain, kind, id), apis) = message;
 
         var builder = new MqttApplicationMessageBuilder()
-            .WithTopic($"{domain}/{kind}/{id}/a/{topic}/version")
+            .WithTopic($"{domain}/{kind}/{id}/apis")
             .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
             .WithRetainFlag();
 
+        var json = Serializer.Serialize(apis);
+        
         await _client.PublishAsync(
             builder
-                .WithPayload(version)
+                .WithPayload(json)
                 .Build(),
             cancellationToken);
 
@@ -638,10 +628,9 @@ public sealed class Connection : IConnection
         }
     }
 
-    public Task SubscribeToApiMessagesAsync(DeviceDetails device, string api, EDirection direction,
-        CancellationToken cancellationToken)
+    public Task SubscribeToApiMessagesAsync(ApiFilter filter, EDirection direction, CancellationToken cancellationToken)
     {
-        var (domain, kind, id) = device;
+        var (domain, kind, id, api) = filter;
 
         var topic = $"{domain}/{kind}/{id}/a/{api}/{((direction == EDirection.In) ? "<" : ">")}/+";
 
@@ -664,7 +653,7 @@ public sealed class Connection : IConnection
             .WithRetainFlag(options.Retain)
             .WithMessageExpiryInterval(options.TimeToLive);
 
-        if (message.ResponseTopic is { })
+        if (message.ResponseTopic is not null)
         {
             builder = builder.WithResponseTopic(message.ResponseTopic);
         }
@@ -688,9 +677,9 @@ public sealed class Connection : IConnection
         return _messageQueue.EnqueueAsync(mqttMessage, message.Options.TimeToLive, cancellationToken);
     }
 
-    public Task SubscribeResponseAsync(DeviceDetails device, CancellationToken cancellationToken)
+    public Task SubscribeResponseAsync(NodeDetails node, CancellationToken cancellationToken)
     {
-        var (domain, kind, id) = device;
+        var (domain, kind, id) = node;
 
         var topic = $"r/{ClientId}/{domain}/{kind}/{id}";
 

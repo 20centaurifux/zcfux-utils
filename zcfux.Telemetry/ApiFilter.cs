@@ -29,12 +29,12 @@ public sealed record ApiFilter(
 {
     public static readonly string All = "+";
 
-    public ApiFilter(DeviceDetails device, string api)
-        : this(device.Domain, device.Kind, device.Id.ToString(), api)
+    public ApiFilter(NodeDetails node, string api)
+        : this(node.Domain, node.Kind, node.Id.ToString(), api)
     {
     }
 
-    public ApiFilter(DeviceFilter filter, string api)
+    public ApiFilter(NodeFilter filter, string api)
         : this(filter.Domain, filter.Kind, filter.Id, api)
     {
     }

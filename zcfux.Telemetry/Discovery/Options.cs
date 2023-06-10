@@ -25,7 +25,7 @@ namespace zcfux.Telemetry.Discovery;
 
 public sealed record Options(
     IConnection Connection,
-    IReadOnlyCollection<DeviceFilter> Filters,
+    IReadOnlyCollection<NodeFilter> Filters,
     ApiRegistry ApiRegistry,
     ISerializer Serializer,
     ILogger? Logger);

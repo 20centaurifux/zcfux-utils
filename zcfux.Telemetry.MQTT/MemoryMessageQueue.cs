@@ -41,19 +41,24 @@ public sealed class MemoryMessageQueue : IMessageQueue
     {
         Task task;
 
-        if (_queue.Count == _limit)
-        {
-            task = Task.FromException(new InvalidOperationException("Message queue is full."));
-        }
-        else
+        try
         {
             var queuedTask = CreateTask(message, secondsToLive, cancellationToken);
 
-            _queue.Add(queuedTask, cancellationToken);
-            
+            if (!_queue.TryAdd(queuedTask))
+            {
+                queuedTask.Dispose();
+                
+                throw new InvalidOperationException("Queue limit reached.");
+            }
+
             task = queuedTask;
-            
+
             _semaphore.Release();
+        }
+        catch (Exception ex)
+        {
+            task = Task.FromException(ex);
         }
 
         return task;

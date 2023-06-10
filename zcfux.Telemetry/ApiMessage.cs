@@ -22,7 +22,7 @@
 namespace zcfux.Telemetry;
 
 public sealed record ApiMessage(
-    DeviceDetails Device,
+    NodeDetails Node,
     string Api,
     string Topic,
     MessageOptions Options,

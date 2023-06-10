@@ -21,7 +21,7 @@
  ***************************************************************************/
 using zcfux.Logging;
 
-namespace zcfux.Telemetry.Device;
+namespace zcfux.Telemetry.Node;
 
 public sealed class OptionsBuilder
 {
@@ -74,18 +74,18 @@ public sealed class OptionsBuilder
         return builder;
     }
 
-    public OptionsBuilder WithDevice(DeviceDetails device)
+    public OptionsBuilder WithNode(NodeDetails node)
     {
         var builder = Clone();
 
-        builder._domain = device.Domain;
-        builder._kind = device.Kind;
-        builder._id = device.Id;
+        builder._domain = node.Domain;
+        builder._kind = node.Kind;
+        builder._id = node.Id;
 
         return builder;
     }
 
-    public OptionsBuilder WithDevice(string domain, string kind, int id)
+    public OptionsBuilder WithNode(string domain, string kind, int id)
     {
         var builder = Clone();
 
@@ -128,7 +128,7 @@ public sealed class OptionsBuilder
         ThrowIfIncomplete();
 
         return new Options(
-            new DeviceDetails(_domain!, _kind!, _id!.Value),
+            new NodeDetails(_domain!, _kind!, _id!.Value),
             _connection!,
             _serializer!,
             _logger);

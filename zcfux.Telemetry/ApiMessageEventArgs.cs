@@ -23,7 +23,7 @@ namespace zcfux.Telemetry;
 
 public sealed class ApiMessageEventArgs : EventArgs
 {
-    public DeviceDetails Device { get; }
+    public NodeDetails Node { get; }
 
     public string Api { get; }
 
@@ -38,13 +38,13 @@ public sealed class ApiMessageEventArgs : EventArgs
     public int? MessageId { get; }
 
     public ApiMessageEventArgs(
-        DeviceDetails device,
+        NodeDetails node,
         string api,
         string topic,
         byte[] payload,
         EDirection direction,
         string? responseTopic,
         int? messageId)
-        => (Device, Api, Topic, Payload, Direction, ResponseTopic, MessageId)
-            = (device, api, topic, payload, direction, responseTopic, messageId);
+        => (Node, Api, Topic, Payload, Direction, ResponseTopic, MessageId)
+            = (node, api, topic, payload, direction, responseTopic, messageId);
 }

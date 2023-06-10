@@ -19,8 +19,9 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Telemetry.MQTT;
+namespace zcfux.Telemetry;
 
-public sealed record LastWillOptions(
-    NodeDetails Node,
-    MessageOptions MessageOptions);
+public sealed record NodeDetails(
+    string Domain,
+    string Kind,
+    int Id);

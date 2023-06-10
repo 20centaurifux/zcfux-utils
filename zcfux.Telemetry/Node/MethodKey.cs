@@ -19,9 +19,36 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Telemetry;
+using System.Diagnostics;
 
-public sealed record DeviceDetails(
-    string Domain,
-    string Kind,
-    int Id);
+namespace zcfux.Telemetry.Node;
+
+sealed class MethodKey
+{
+    readonly string _key;
+    readonly int _hashCode;
+
+    public MethodKey(string api, string topic)
+    {
+        _key = $"{api}/{topic}";
+        _hashCode = _key.GetHashCode();
+    }
+
+    public override string ToString()
+        => _key;
+
+    public override int GetHashCode()
+        => _hashCode;
+
+    public override bool Equals(object? obj)
+    {
+        var equals = false;
+
+        if (obj is MethodKey other)
+        {
+            equals = _key.Equals(other._key);
+        }
+
+        return equals;
+    }
+}

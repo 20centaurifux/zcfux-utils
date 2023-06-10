@@ -19,8 +19,14 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-namespace zcfux.Telemetry.MQTT;
+namespace zcfux.Telemetry;
 
-public sealed record LastWillOptions(
+public sealed record NodeStatusMessage(
     NodeDetails Node,
-    MessageOptions MessageOptions);
+    ENodeStatus Status)
+{
+    public NodeStatusMessage(string domain, string kind, int id, ENodeStatus status)
+        : this(new NodeDetails(domain, kind, id), status)
+    {
+    }
+}

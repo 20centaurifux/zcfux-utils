@@ -19,14 +19,14 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+
 namespace zcfux.Telemetry;
 
-public sealed record DeviceStatusMessage(
-    DeviceDetails Device,
-    EDeviceStatus Status)
+public enum ENodeStatus
 {
-    public DeviceStatusMessage(string domain, string kind, int id, EDeviceStatus status)
-        : this(new DeviceDetails(domain, kind, id), status)
-    {
-    }
+    Offline,
+    Connecting,
+    Online,
+    Warning,
+    Error
 }

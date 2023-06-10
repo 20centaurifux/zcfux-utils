@@ -21,15 +21,15 @@
  ***************************************************************************/
 namespace zcfux.Telemetry;
 
-public sealed record DeviceFilter(
+public sealed record NodeFilter(
     string Domain,
     string Kind,
     string Id)
 {
     public static readonly string All = "+";
 
-    public DeviceFilter(DeviceDetails device)
-        : this(device.Domain, device.Kind, device.Id.ToString())
+    public NodeFilter(NodeDetails node)
+        : this(node.Domain, node.Kind, node.Id.ToString())
     {
     }
 }

@@ -23,4 +23,7 @@ namespace zcfux.Telemetry;
 
 public sealed record MessageOptions(
     bool Retain,
-    uint TimeToLive = 0);
+    uint TimeToLive = 0)
+{
+    public static readonly MessageOptions Default = new(false);
+}

@@ -139,7 +139,7 @@ public abstract class ADiscoveryTests
         {
             var opts = new OptionsBuilder()
                 .WithConnection(connection)
-                .WithFilter(new DeviceFilter(DeviceFilter.All, DeviceFilter.All, DeviceFilter.All))
+                .WithFilter(new NodeFilter(NodeFilter.All, NodeFilter.All, NodeFilter.All))
                 .WithSerializer(CreateSerializer())
                 .WithApiRegistry(new ApiRegistry())
                 .Build();
@@ -168,7 +168,7 @@ public abstract class ADiscoveryTests
         {
             var opts = new OptionsBuilder()
                 .WithConnection(connection)
-                .WithFilter(new DeviceFilter(DeviceFilter.All, DeviceFilter.All, DeviceFilter.All))
+                .WithFilter(new NodeFilter(NodeFilter.All, NodeFilter.All, NodeFilter.All))
                 .WithSerializer(CreateSerializer())
                 .WithApiRegistry(new ApiRegistry())
                 .Build();
@@ -199,7 +199,7 @@ public abstract class ADiscoveryTests
         {
             var opts = new OptionsBuilder()
                 .WithConnection(connection)
-                .WithFilter(new DeviceFilter(DeviceFilter.All, DeviceFilter.All, DeviceFilter.All))
+                .WithFilter(new NodeFilter(NodeFilter.All, NodeFilter.All, NodeFilter.All))
                 .WithSerializer(CreateSerializer())
                 .WithApiRegistry(new ApiRegistry())
                 .Build();
@@ -215,7 +215,7 @@ public abstract class ADiscoveryTests
 
             await connection.ConnectAsync();
 
-            var device = new DeviceDetails("d", "test", TestContext.CurrentContext.Random.Next());
+            var device = new NodeDetails("d", "test", TestContext.CurrentContext.Random.Next());
 
             using (var deviceConnection = CreateDeviceConnection(device))
             {
@@ -247,7 +247,7 @@ public abstract class ADiscoveryTests
         {
             var opts = new OptionsBuilder()
                 .WithConnection(connection)
-                .WithFilter(new DeviceFilter(DeviceFilter.All, DeviceFilter.All, DeviceFilter.All))
+                .WithFilter(new NodeFilter(NodeFilter.All, NodeFilter.All, NodeFilter.All))
                 .WithSerializer(CreateSerializer())
                 .WithApiRegistry(new ApiRegistry())
                 .Build();
@@ -264,15 +264,15 @@ public abstract class ADiscoveryTests
                 {
                     switch (e2.Status)
                     {
-                        case EDeviceStatus.Connecting:
+                        case ENodeStatus.Connecting:
                             connectingEvent.Set();
                             break;
 
-                        case EDeviceStatus.Online:
+                        case ENodeStatus.Online:
                             onlineEvent.Set();
                             break;
 
-                        case EDeviceStatus.Offline:
+                        case ENodeStatus.Offline:
                             offlineEvent.Set();
                             break;
                     }
@@ -281,7 +281,7 @@ public abstract class ADiscoveryTests
 
             await connection.ConnectAsync();
 
-            var device = new DeviceDetails("d", "test", TestContext.CurrentContext.Random.Next());
+            var device = new NodeDetails("d", "test", TestContext.CurrentContext.Random.Next());
 
             using (var deviceConnection = CreateDeviceConnection(device))
             {
@@ -317,7 +317,7 @@ public abstract class ADiscoveryTests
 
             var opts = new OptionsBuilder()
                 .WithConnection(connection)
-                .WithFilter(new DeviceFilter(DeviceFilter.All, DeviceFilter.All, DeviceFilter.All))
+                .WithFilter(new NodeFilter(NodeFilter.All, NodeFilter.All, NodeFilter.All))
                 .WithSerializer(CreateSerializer())
                 .WithApiRegistry(registry)
                 .Build();
@@ -369,7 +369,7 @@ public abstract class ADiscoveryTests
 
             var opts = new OptionsBuilder()
                 .WithConnection(connection)
-                .WithFilter(new DeviceFilter(DeviceFilter.All, DeviceFilter.All, DeviceFilter.All))
+                .WithFilter(new NodeFilter(NodeFilter.All, NodeFilter.All, NodeFilter.All))
                 .WithSerializer(CreateSerializer())
                 .WithApiRegistry(registry)
                 .Build();
@@ -422,7 +422,7 @@ public abstract class ADiscoveryTests
 
             var opts = new OptionsBuilder()
                 .WithConnection(connection)
-                .WithFilter(new DeviceFilter(DeviceFilter.All, DeviceFilter.All, DeviceFilter.All))
+                .WithFilter(new NodeFilter(NodeFilter.All, NodeFilter.All, NodeFilter.All))
                 .WithSerializer(CreateSerializer())
                 .WithApiRegistry(registry)
                 .Build();
@@ -501,7 +501,7 @@ public abstract class ADiscoveryTests
 
             var opts = new OptionsBuilder()
                 .WithConnection(connection)
-                .WithFilter(new DeviceFilter(DeviceFilter.All, DeviceFilter.All, DeviceFilter.All))
+                .WithFilter(new NodeFilter(NodeFilter.All, NodeFilter.All, NodeFilter.All))
                 .WithSerializer(CreateSerializer())
                 .WithApiRegistry(registry)
                 .Build();
@@ -521,7 +521,7 @@ public abstract class ADiscoveryTests
 
                 e1.Device.StatusChanged += (_, e2) =>
                 {
-                    if (e2.Status == EDeviceStatus.Offline)
+                    if (e2.Status == ENodeStatus.Offline)
                     {
                         offlineEvent.Set();
                     }
@@ -563,7 +563,7 @@ public abstract class ADiscoveryTests
 
             var opts = new OptionsBuilder()
                 .WithConnection(connection)
-                .WithFilter(new DeviceFilter(DeviceFilter.All, DeviceFilter.All, DeviceFilter.All))
+                .WithFilter(new NodeFilter(NodeFilter.All, NodeFilter.All, NodeFilter.All))
                 .WithSerializer(CreateSerializer())
                 .WithApiRegistry(registry)
                 .Build();
@@ -583,7 +583,7 @@ public abstract class ADiscoveryTests
 
                 e1.Device.StatusChanged += (_, e2) =>
                 {
-                    if (e2.Status == EDeviceStatus.Offline)
+                    if (e2.Status == ENodeStatus.Offline)
                     {
                         offlineEvent.Set();
                     }
@@ -624,7 +624,7 @@ public abstract class ADiscoveryTests
 
             var opts = new OptionsBuilder()
                 .WithConnection(connection)
-                .WithFilter(new DeviceFilter(DeviceFilter.All, DeviceFilter.All, DeviceFilter.All))
+                .WithFilter(new NodeFilter(NodeFilter.All, NodeFilter.All, NodeFilter.All))
                 .WithSerializer(CreateSerializer())
                 .WithApiRegistry(registry)
                 .Build();
@@ -666,7 +666,7 @@ public abstract class ADiscoveryTests
     {
         return Task.Factory.StartNew(async () =>
         {
-            var device = new DeviceDetails("d", "test", clientId);
+            var device = new NodeDetails("d", "test", clientId);
 
             using (var deviceConnection = CreateDeviceConnection(device))
             {
@@ -695,7 +695,7 @@ public abstract class ADiscoveryTests
 
     protected abstract IConnection CreateConnection();
 
-    protected abstract IConnection CreateDeviceConnection(DeviceDetails device);
+    protected abstract IConnection CreateDeviceConnection(NodeDetails node);
 
     protected abstract ISerializer CreateSerializer();
 }

@@ -27,7 +27,7 @@ namespace zcfux.Telemetry.Discovery;
 public sealed class OptionsBuilder
 {
     IConnection? _connection;
-    ImmutableList<DeviceFilter> _filters = ImmutableList<DeviceFilter>.Empty;
+    ImmutableList<NodeFilter> _filters = ImmutableList<NodeFilter>.Empty;
     ApiRegistry? _apiRegistry;
     ISerializer? _serializer;
     ILogger? _logger;
@@ -55,11 +55,11 @@ public sealed class OptionsBuilder
         return builder;
     }
 
-    public OptionsBuilder WithFilter(DeviceFilter deviceFilter)
+    public OptionsBuilder WithFilter(NodeFilter nodeFilter)
     {
         var builder = Clone();
 
-        builder._filters = builder._filters.Add(deviceFilter);
+        builder._filters = builder._filters.Add(nodeFilter);
 
         return builder;
     }

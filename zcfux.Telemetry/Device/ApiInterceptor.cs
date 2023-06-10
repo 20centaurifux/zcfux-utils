@@ -41,7 +41,7 @@ sealed class ApiInterceptor : IInterceptor, IProxy
     readonly ISerializer _serializer;
     readonly ILogger? _logger;
 
-    readonly DeviceDetails _device;
+    readonly NodeDetails _node;
 
     readonly string _apiTopic;
     readonly string _version;
@@ -74,7 +74,7 @@ sealed class ApiInterceptor : IInterceptor, IProxy
     {
         _apiType = type;
 
-        (_device, _connection, _serializer, _logger) = options;
+        (_node, _connection, _serializer, _logger) = options;
 
         var attr = _apiType
             .GetCustomAttributes(typeof(ApiAttribute), false)
@@ -212,16 +212,16 @@ sealed class ApiInterceptor : IInterceptor, IProxy
                 var tasks = new[]
                 {
                     _connection
-                        .SubscribeToDeviceStatusAsync(new DeviceFilter(_device)),
+                        .SubscribeToDeviceStatusAsync(new NodeFilter(_node)),
 
                     _connection
-                        .SubscribeToApiInfoAsync(new ApiFilter(_device, _apiTopic)),
+                        .SubscribeToApiInfoAsync(new ApiFilter(_node, _apiTopic)),
 
                     _connection
-                        .SubscribeToApiMessagesAsync(_device, _apiTopic, EDirection.Out),
+                        .SubscribeToApiMessagesAsync(_node, _apiTopic, EDirection.Out),
 
                     _connection
-                        .SubscribeResponseAsync(_device)
+                        .SubscribeResponseAsync(_node)
                 };
 
                 await Task.WhenAll(tasks.ToArray());
@@ -275,11 +275,11 @@ sealed class ApiInterceptor : IInterceptor, IProxy
         return Task.CompletedTask;
     }
 
-    Task DeviceStatusReceivedAsync(DeviceStatusEventArgs e)
+    Task DeviceStatusReceivedAsync(NodeStatusEventArgs e)
     {
-        if (e.Device.Equals(_device))
+        if (e.Node.Equals(_node))
         {
-            if (e.Status == EDeviceStatus.Connecting || e.Status == EDeviceStatus.Offline || e.Status == EDeviceStatus.Error)
+            if (e.Status == ENodeStatus.Connecting || e.Status == ENodeStatus.Offline || e.Status == ENodeStatus.Error)
             {
                 WriteState(state => (state & ~EFlag.Online));
             }
@@ -294,7 +294,7 @@ sealed class ApiInterceptor : IInterceptor, IProxy
 
     async Task ApiInfoReceivedAsync(ApiInfoEventArgs e)
     {
-        if (e.Device.Equals(_device)
+        if (e.Node.Equals(_node)
             && e.Api.Equals(_apiTopic)
             && (!e.Version.Equals(DetectedVersion) || (State & EFlag.Compatible) == EFlag.None))
         {
@@ -306,7 +306,7 @@ sealed class ApiInterceptor : IInterceptor, IProxy
 
                 await _connection
                     .SubscribeToApiMessagesAsync(
-                        _device,
+                        _node,
                         _apiTopic,
                         EDirection.Out);
             }
@@ -332,7 +332,7 @@ sealed class ApiInterceptor : IInterceptor, IProxy
 
     Task ApiMessageReceivedAsync(ApiMessageEventArgs e)
     {
-        if (e.Device.Equals(_device)
+        if (e.Node.Equals(_node)
             && e.Api.Equals(_apiTopic)
             && e.Direction == EDirection.Out)
         {
@@ -344,9 +344,9 @@ sealed class ApiInterceptor : IInterceptor, IProxy
                     _logger?.Warn(
                         "Proxy (client=`{0}') publishes message from offline device (domain=`{1}', kind=`{2}', id={3}).",
                         _connection.ClientId,
-                        _device.Domain,
-                        _device.Kind,
-                        _device.Id);
+                        _node.Domain,
+                        _node.Kind,
+                        _node.Id);
                 }
 
                 try
@@ -356,9 +356,9 @@ sealed class ApiInterceptor : IInterceptor, IProxy
                     _logger?.Trace(
                         "Proxy (client=`{0}') produces value (domain=`{1}', kind=`{2}', id={3}, api=`{4}', topic=`{5}'): `{6}'",
                         _connection.ClientId,
-                        _device.Domain,
-                        _device.Kind,
-                        _device.Id,
+                        _node.Domain,
+                        _node.Kind,
+                        _node.Id,
                         e.Api,
                         e.Topic,
                         payload!);
@@ -377,7 +377,7 @@ sealed class ApiInterceptor : IInterceptor, IProxy
 
     Task ResponseReceivedAsync(ResponseEventArgs e)
     {
-        if (e.Device.Equals(_device))
+        if (e.Node.Equals(_node))
         {
             _logger?.Debug("Proxy (client=`{0}') received response (message={1}).", _connection.ClientId, e.MessageId);
 
@@ -435,9 +435,9 @@ sealed class ApiInterceptor : IInterceptor, IProxy
                 _apiTopic,
                 propertyName,
                 _connection.ClientId,
-                _device.Domain,
-                _device.Kind,
-                _device.Id);
+                _node.Domain,
+                _node.Kind,
+                _node.Id);
 
             invocation.ReturnValue = ev.Producer;
         }
@@ -448,9 +448,9 @@ sealed class ApiInterceptor : IInterceptor, IProxy
                 _apiTopic,
                 propertyName,
                 _connection.ClientId,
-                _device.Domain,
-                _device.Kind,
-                _device.Id);
+                _node.Domain,
+                _node.Kind,
+                _node.Id);
 
             var producedType = ev
                 .Producer
@@ -525,14 +525,14 @@ sealed class ApiInterceptor : IInterceptor, IProxy
 
         _logger?.Debug(
             "Sending command (domain=`{0}', kind=`{1}', id={2}, api=`{3}', topic=`{4}').",
-            _device.Domain,
-            _device.Kind,
-            _device.Id,
+            _node.Domain,
+            _node.Kind,
+            _node.Id,
             _apiTopic,
             topic);
 
         var message = new ApiMessage(
-            _device,
+            _node,
             _apiTopic,
             topic,
             new MessageOptions(Retain: false, TimeToLive: timeToLive),
@@ -559,21 +559,21 @@ sealed class ApiInterceptor : IInterceptor, IProxy
 
         _logger?.Debug(
             "Sending request (domain=`{0}', kind=`{1}', id={2}, api=`{3}', topic=`{4}', message id={5}).",
-            _device.Domain,
-            _device.Kind,
-            _device.Id,
+            _node.Domain,
+            _node.Kind,
+            _node.Id,
             _apiTopic,
             topic,
             messageId);
 
         var message = new ApiMessage(
-            _device,
+            _node,
             _apiTopic,
             topic,
             new MessageOptions(Retain: false, TimeToLive: secondsLeft),
             EDirection.In,
             parameter,
-            $"r/{_connection.ClientId}/{_device.Domain}/{_device.Kind}/{_device.Id}",
+            $"r/{_connection.ClientId}/{_node.Domain}/{_node.Kind}/{_node.Id}",
             messageId);
 
         await _connection.SendApiMessageAsync(message);

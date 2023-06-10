@@ -68,13 +68,13 @@ public sealed class LastWillOptionsBuilder
         return builder;
     }
 
-    public LastWillOptionsBuilder WithDevice(DeviceDetails device)
+    public LastWillOptionsBuilder WithDevice(NodeDetails node)
     {
         var builder = Clone();
 
-        builder._domain = device.Domain;
-        builder._kind = device.Kind;
-        builder._id = device.Id;
+        builder._domain = node.Domain;
+        builder._kind = node.Kind;
+        builder._id = node.Id;
 
         return builder;
     }
@@ -93,7 +93,7 @@ public sealed class LastWillOptionsBuilder
         ThrowIfIncomplete();
 
         return new LastWillOptions(
-            new DeviceDetails(_domain!, _kind!, _id!.Value),
+            new NodeDetails(_domain!, _kind!, _id!.Value),
             _messageOptions!);
     }
 

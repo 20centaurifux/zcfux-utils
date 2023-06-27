@@ -23,8 +23,8 @@ namespace zcfux.Telemetry.Discovery;
 
 public sealed class DiscoveredEventArgs : EventArgs
 {
-    public IDiscoveredDevice Device { get; }
+    public IDiscoveredNode Node { get; }
 
-    public DiscoveredEventArgs(IDiscoveredDevice device)
-        => Device = device;
+    public DiscoveredEventArgs(IDiscoveredNode node)
+        => Node = node;
 }

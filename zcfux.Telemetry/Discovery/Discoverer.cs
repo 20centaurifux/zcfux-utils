@@ -19,16 +19,20 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
+using System.Diagnostics;
 using zcfux.Logging;
-using zcfux.Telemetry.Device;
 
 namespace zcfux.Telemetry.Discovery;
 
-public sealed class Discoverer
+public sealed class Discoverer : IDisposable
 {
-    public event EventHandler? Connected;
-    public event EventHandler? Disconnected;
-    public event EventHandler<DiscoveredEventArgs>? Discovered;
+    public event Func<EventArgs, Task>? ConnectedAsync;
+    public event Func<EventArgs, Task>? DisconnectedAsync;
+    public event Func<DiscoveredEventArgs, Task>? DiscoveredAsync;
+
+    static readonly TimeSpan WaitForOnlineStatusTimeout = TimeSpan.FromSeconds(5);
+    static readonly TimeSpan CleanupInterval = TimeSpan.FromSeconds(30);
+    static readonly TimeSpan DanglingQueueTimeout = TimeSpan.FromMinutes(5);
 
     readonly IConnection _connection;
     readonly IReadOnlyCollection<NodeFilter> _filters;
@@ -36,139 +40,205 @@ public sealed class Discoverer
     readonly ISerializer _serializer;
     readonly ILogger? _logger;
 
-    readonly object _discoveredDevicesLock = new();
-    readonly Dictionary<NodeDetails, DiscoveredDevice> _discoveredDevices = new();
+    readonly object _discoveredNodesLock = new();
+    readonly Dictionary<NodeDetails, DiscoveredNode> _discoveredNodes = new();
+
+    readonly object _apiProxiesLock = new();
+    readonly Dictionary<NodeDetails, ApiProxies> _apiProxies = new();
+
+    readonly PendingRequests _pendingRequests;
+    readonly ReceivedEvents _receivedEvents;
+
+    const long No = 0;
+    const long Yes = 1;
+
+    long _initialized = No;
+
+    Task? _cleanupTask;
+    CancellationTokenSource? _cancellationTokenSource;
+
+    bool _disposed;
 
     public Discoverer(Options options)
     {
         (_connection, _filters, _apiRegistry, _serializer, _logger) = options;
 
+        _pendingRequests = new PendingRequests(_serializer);
+
+        _receivedEvents = new ReceivedEvents();
+    }
+
+    public async Task SetupAsync()
+    {
+        if (Interlocked.CompareExchange(ref _initialized, Yes, No) == Yes)
+        {
+            throw new InvalidOperationException();
+        }
+
         _connection.ConnectedAsync += ClientConnectedAsync;
         _connection.DisconnectedAsync += ClientDisconnectedAsync;
-        _connection.DeviceStatusReceivedAsync += DeviceStatusReceivedAsync;
+        _connection.StatusReceivedAsync += StatusReceivedAsync;
         _connection.ApiInfoReceivedAsync += ApiInfoReceivedAsync;
+        _connection.ResponseReceivedAsync += ResponseReceivedAsync;
+        _connection.ApiMessageReceivedAsync += ApiMessageReceivedAsync;
+
+        _receivedEvents.Received += EventReceived;
+
+        if (_connection.IsConnected)
+        {
+            await ClientConnectedAsync(EventArgs.Empty);
+        }
+
+        _cancellationTokenSource = new CancellationTokenSource();
+
+        _cleanupTask = Task.Run(async () => await CleanupAsync(_cancellationTokenSource.Token));
     }
 
     async Task ClientConnectedAsync(EventArgs e)
     {
         _logger?.Debug("Discoverer (client=`{0}') connected.", _connection.ClientId);
 
-        var tasks = _filters
-            .Select(f => _connection.SubscribeToDeviceStatusAsync(f))
-            .ToList();
+        await Task.WhenAll(_filters.Select(f =>
+            _connection.SubscribeToStatusAsync(f)));
 
-        tasks.AddRange(
-            _filters.Select(f => _connection.SubscribeToApiInfoAsync(
-                new ApiFilter(f, ApiFilter.All))));
+        await Task.WhenAll(_filters.Select(f =>
+            _connection.SubscribeToApiInfoAsync(f)));
 
-        await Task.WhenAll(tasks.ToArray());
+        await Task.WhenAll(_filters.Select(f =>
+            _connection.SubscribeToApiMessagesAsync(
+                new ApiFilter(f, ApiFilter.All),
+                EDirection.Out)));
 
-        Connected?.Invoke(this, EventArgs.Empty);
+        if (ConnectedAsync is not null)
+        {
+            await ConnectedAsync.Invoke(e);
+        }
     }
 
-    Task ClientDisconnectedAsync(EventArgs e)
+    async Task ClientDisconnectedAsync(EventArgs e)
     {
         _logger?.Debug("Discoverer (client=`{0}') disconnected.", _connection.ClientId);
 
-        Disconnected?.Invoke(this, EventArgs.Empty);
-
-        return Task.CompletedTask;
+        if (DisconnectedAsync is not null)
+        {
+            await DisconnectedAsync.Invoke(e);
+        }
     }
 
-    Task DeviceStatusReceivedAsync(NodeStatusEventArgs e)
+    async Task StatusReceivedAsync(NodeStatusEventArgs e)
     {
-        var device = RegisterDeviceIfUnknown(e.Node);
-
         _logger?.Debug(
-            "Discoverer (client=`{0}') received device status (domain=`{1}', kind=`{2}', id=`{3}', status={4}).",
+            "Node status received (client=`{0}', domain=`{1}', kind=`{2}', id=`{3}', status={4}).",
             _connection.ClientId,
-            device.Domain,
-            device.Kind,
-            device.Id,
+            e.Node.Domain,
+            e.Node.Kind,
+            e.Node.Id,
             e.Status);
 
-        device.Status = e.Status;
+        var discoveredNode = await LookupOrRegisterNodeAsync(e.Node, e.Status);
 
-        return Task.CompletedTask;
+        await discoveredNode.ChangeStatusAsync(e.Status);
     }
 
-    DiscoveredDevice RegisterDeviceIfUnknown(NodeDetails node)
+    async Task<DiscoveredNode> LookupOrRegisterNodeAsync(NodeDetails node, ENodeStatus status)
     {
-        var discovered = false;
+        DiscoveredNode? discoveredNode = TryGetNode(node);
 
-        DiscoveredDevice? discoveredDevice;
-
-        lock (_discoveredDevicesLock)
+        if (discoveredNode is null)
         {
-            if (!_discoveredDevices.TryGetValue(node, out discoveredDevice))
+            _logger?.Info(
+                "Discovered node (client=`{0}', domain=`{1}', kind=`{2}', id=`{3}', status={4}).",
+                _connection.ClientId,
+                node.Domain,
+                node.Kind,
+                node.Id,
+                status);
+
+            discoveredNode = await RegisterNodeAsync(node, status);
+        }
+
+        return discoveredNode;
+    }
+
+    DiscoveredNode? TryGetNode(NodeDetails node)
+    {
+        lock (_discoveredNodesLock)
+        {
+            _discoveredNodes.TryGetValue(node, out var discoveredNode);
+
+            return discoveredNode;
+        }
+    }
+
+    async Task<DiscoveredNode> RegisterNodeAsync(NodeDetails node, ENodeStatus status)
+    {
+        var discoveredNode = new DiscoveredNode(node);
+
+        await discoveredNode.ChangeStatusAsync(status);
+
+        await _connection.SubscribeResponseAsync(discoveredNode.Node);
+
+        lock (_discoveredNodesLock)
+        {
+            if (!_discoveredNodes.TryAdd(node, discoveredNode))
             {
-                _logger?.Debug(
-                    "Discoverer (client=`{0}') found new device (domain=`{1}', kind=`{2}', id=`{3}').",
+                _logger?.Warn(
+                    "Node (client=`{0}', domain=`{1}', kind=`{2}', id=`{3}') already discovered.",
                     _connection.ClientId,
                     node.Domain,
                     node.Kind,
                     node.Id);
 
-                discoveredDevice = new DiscoveredDevice(node);
-
-                _discoveredDevices[node] = discoveredDevice;
-
-                discovered = true;
+                discoveredNode = _discoveredNodes[node];
             }
         }
 
-        if (discovered)
+        if (DiscoveredAsync is not null)
         {
-            Discovered?.Invoke(this, new DiscoveredEventArgs(discoveredDevice));
+            await DiscoveredAsync.Invoke(new DiscoveredEventArgs(discoveredNode));
         }
 
-        return discoveredDevice;
+        return discoveredNode;
     }
 
-    Task ApiInfoReceivedAsync(ApiInfoEventArgs e)
+    async Task ApiInfoReceivedAsync(ApiInfoEventArgs e)
     {
+        _logger?.Debug(
+            "Discoverer (client=`{0}') received api information (domain=`{1}', kind=`{2}', id=`{3}').",
+            _connection.ClientId,
+            e.Node.Domain,
+            e.Node.Kind,
+            e.Node.Id);
+
         try
         {
-            if (TryGetDiscoveredDevice(e.Node) is { } device)
+            if (TryGetDiscoveredNode(e.Node) is { } discoveredNode)
             {
-                if (device.Status != ENodeStatus.Offline
-                    && !device.HasApi(e.Api, e.Version))
+                var stopwatch = Stopwatch.StartNew();
+
+                while (discoveredNode.Status == ENodeStatus.Offline
+                    && stopwatch.Elapsed < WaitForOnlineStatusTimeout)
                 {
-                    _logger?.Debug(
-                        "Registering api `{0}' (version=`{1}', domain=`{2}', kind=`{3}', id={4}).",
-                        e.Api,
-                        e.Version,
+                    await Task.Delay(250);
+                }
+
+                if (discoveredNode.Status != ENodeStatus.Offline)
+                {
+                    await RegisterApisAsync(discoveredNode, e.Apis);
+                }
+                else
+                {
+                    _logger?.Warn(
+                        "Couldn't register apis, node (domain=`{0}', kind=`{1}', id={2}) is offline.",
                         e.Node.Domain,
                         e.Node.Kind,
                         e.Node.Id);
-
-                    device.RegisterApi(
-                        e.Api,
-                        e.Version,
-                        () =>
-                        {
-                            var proxyType = _apiRegistry.Resolve(e.Api, e.Version);
-
-                            var options = new Device.OptionsBuilder()
-                                .WithDomain(device.Domain)
-                                .WithKind(device.Kind)
-                                .WithId(device.Id)
-                                .WithConnection(_connection)
-                                .WithSerializer(_serializer)
-                                .WithLogger(_logger)
-                                .Build();
-
-                            var proxy = ProxyFactory.CreateApiProxy(proxyType, options);
-
-                            return proxy;
-                        });
                 }
             }
             else
             {
                 _logger?.Warn(
-                    "Couldn't register api `{0}', device (domain=`{1}', kind=`{2}', id={3}) not found.",
-                    e.Api,
+                    "Couldn't register apis, node (domain=`{0}', kind=`{1}', id={2}) not found.",
                     e.Node.Domain,
                     e.Node.Kind,
                     e.Node.Id);
@@ -178,15 +248,204 @@ public sealed class Discoverer
         {
             _logger?.Error(ex);
         }
+    }
+
+    DiscoveredNode? TryGetDiscoveredNode(NodeDetails nodeDetails)
+    {
+        lock (_discoveredNodesLock)
+        {
+            return _discoveredNodes.GetValueOrDefault(nodeDetails);
+        }
+    }
+
+    async Task RegisterApisAsync(DiscoveredNode discoveredNode, ApiInfo[] apis)
+    {
+        var proxies = GetApiProxies(discoveredNode.Node);
+
+        var (dropped, registered) = proxies.Rebuild(apis);
+
+        if (dropped.Any())
+        {
+            foreach (var proxy in dropped)
+            {
+                _receivedEvents.Unsubscribe(discoveredNode.Node, proxy.Api.Topic);
+            }
+
+            await Task.WhenAll(dropped.Select(discoveredNode.DropApiAsync));
+        }
+
+        if (registered.Any())
+        {
+            foreach (var proxy in registered)
+            {
+                if (proxy.Instance is IProxy instance)
+                {
+                    foreach (var (eventTopic, _) in instance.EventTopics)
+                    {
+                        _receivedEvents.Subscribe(discoveredNode.Node, proxy.Api.Topic, eventTopic);
+                    }
+
+                    instance.SendCommandAsync += e =>
+                    {
+                        _logger?.Debug(
+                            "Sending command (api=`{0}', topic=`{1}', ttl={2}) to node (domain=`{3}', kind=`{4}', id={5}).",
+                            e.Api,
+                            e.Topic,
+                            e.TimeToLive,
+                            discoveredNode.Node.Domain,
+                            discoveredNode.Node.Kind,
+                            discoveredNode.Node.Id);
+
+                        return _connection.SendApiMessageAsync(
+                            new ApiMessage(
+                                discoveredNode.Node,
+                                e.Api,
+                                e.Topic,
+                                new MessageOptions(Retain: false, TimeToLive: e.TimeToLive),
+                                EDirection.In,
+                                e.Parameter));
+                    };
+
+                    instance.SendRequestAsync += e =>
+                    {
+                        _logger?.Debug(
+                            "Sending request (api=`{0}', topic=`{1}', ttl={2}, message id={3}) to node (domain=`{4}', kind=`{5}', id={6}).",
+                            e.Api,
+                            e.Topic,
+                            e.TimeToLive,
+                            e.MessageId,
+                            discoveredNode.Node.Domain,
+                            discoveredNode.Node.Kind,
+                            discoveredNode.Node.Id);
+
+                        var pendingRequestTask = _pendingRequests.Add(discoveredNode.Node, e);
+
+                        return _connection
+                            .SendApiMessageAsync(
+                                new ApiMessage(
+                                    discoveredNode.Node,
+                                    e.Api,
+                                    e.Topic,
+                                    new MessageOptions(Retain: false, TimeToLive: e.TimeToLive),
+                                    EDirection.In,
+                                    e.Parameter,
+                                    $"r/{_connection.ClientId}/{discoveredNode.Node.Domain}/{discoveredNode.Node.Kind}/{discoveredNode.Node.Id}",
+                                    e.MessageId))
+                            .ContinueWith(_ => pendingRequestTask)
+                            .Unwrap();
+                    };
+                }
+            }
+
+            await Task.WhenAll(registered.Select(discoveredNode.RegisterApiAsync));
+        }
+    }
+
+    Task ResponseReceivedAsync(ResponseEventArgs e)
+    {
+        _pendingRequests.HandleResponseEvent(e);
 
         return Task.CompletedTask;
     }
 
-    DiscoveredDevice? TryGetDiscoveredDevice(NodeDetails node)
+    Task ApiMessageReceivedAsync(ApiMessageEventArgs e)
     {
-        lock (_discoveredDevicesLock)
+        if (e.Direction == EDirection.Out)
         {
-            return _discoveredDevices.GetValueOrDefault(node);
+            _receivedEvents.Add(
+                e.Node,
+                e.Api,
+                e.Topic,
+                e.Payload,
+                e.TimeToLive);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    void EventReceived(object? sender, ReceivedEventArgs e)
+    {
+        var proxies = GetApiProxies(e.Node);
+
+        var proxy = proxies.GetProxy(e.Api);
+
+        if (proxy.Instance is IProxy instance)
+        {
+            var topicType = instance
+                .EventTopics
+                .SingleOrDefault(t => t.Topic.Equals(e.Topic))
+                .Type;
+
+            if (topicType is not null)
+            {
+                var obj = _serializer.Deserialize(e.Payload, topicType);
+
+                instance.ReceiveEvent(e.Topic, obj!);
+            }
+        }
+    }
+
+    ApiProxies GetApiProxies(NodeDetails nodeDetails)
+    {
+        ApiProxies? proxies;
+
+        lock (_apiProxiesLock)
+        {
+            if (!_apiProxies.TryGetValue(nodeDetails, out proxies))
+            {
+                proxies = new ApiProxies(_apiRegistry);
+
+                _apiProxies[nodeDetails] = proxies;
+            }
+        }
+
+        return proxies;
+    }
+
+    async Task CleanupAsync(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            await Task.Delay(CleanupInterval, cancellationToken);
+
+            _receivedEvents.DropDanglingQueues(DanglingQueueTimeout);
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+
+        GC.SuppressFinalize(this);
+    }
+
+    void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                _connection.ConnectedAsync -= ClientConnectedAsync;
+                _connection.DisconnectedAsync -= ClientDisconnectedAsync;
+                _connection.StatusReceivedAsync -= StatusReceivedAsync;
+                _connection.ApiInfoReceivedAsync -= ApiInfoReceivedAsync;
+                _connection.ResponseReceivedAsync -= ResponseReceivedAsync;
+                _connection.ApiMessageReceivedAsync -= ApiMessageReceivedAsync;
+
+                _receivedEvents.Received -= EventReceived;
+
+                try
+                {
+                    _cancellationTokenSource?.Cancel();
+                    _cleanupTask?.Wait();
+                }
+                catch
+                {
+                    //O\\
+                }
+            }
+
+            _disposed = true;
         }
     }
 }

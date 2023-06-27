@@ -20,17 +20,14 @@
 
 	<ItemGroup>
 	  <Compile Remove="Device\**" />
-	  <Compile Remove="Discovery\**" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <EmbeddedResource Remove="Device\**" />
-	  <EmbeddedResource Remove="Discovery\**" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <None Remove="Device\**" />
-	  <None Remove="Discovery\**" />
 	</ItemGroup>
 
 </Project>

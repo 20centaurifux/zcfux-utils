@@ -23,4 +23,9 @@ namespace zcfux.Telemetry;
 
 public sealed record ApiInfo(
     string Topic,
-    string Version);
+    string Version)
+{
+    public bool IsCompatible(ApiInfo other)
+        => Topic.Equals(other.Topic) 
+           && Telemetry.Version.IsCompatible(Version, other.Version);
+}

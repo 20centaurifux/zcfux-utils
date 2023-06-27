@@ -45,4 +45,12 @@ public static class Version
 
         return (parts[0], parts[1]);
     }
+
+    public static bool IsCompatible(string a, string b)
+    {
+        var (majorA, minorA) = Parse(a);
+        var (majorB, minorB) = Parse(b);
+        
+        return (majorA == majorB) && (minorA >= minorB);
+    }
 }

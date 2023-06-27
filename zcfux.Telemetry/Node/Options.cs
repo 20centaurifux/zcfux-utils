@@ -27,4 +27,5 @@ public sealed record Options(
     NodeDetails Node,
     IConnection Connection,
     ISerializer Serializer,
-    ILogger? Logger);
+    ILogger? Logger,
+    TimeSpan EventSubsriberTimeout);

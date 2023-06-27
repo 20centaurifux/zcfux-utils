@@ -19,10 +19,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Remove="ADiscoveryTests.cs" />
-      <Compile Remove="ALoadTests.cs" />
       <Compile Remove="AProxyTests.cs" />
-      <Compile Remove="MQTT\DiscoveryTests.cs" />
       <Compile Remove="MQTT\LoadTests.cs" />
       <Compile Remove="MQTT\ProxyTests.cs" />
     </ItemGroup>

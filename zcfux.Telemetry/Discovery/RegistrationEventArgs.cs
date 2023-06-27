@@ -21,14 +21,10 @@
  ***************************************************************************/
 namespace zcfux.Telemetry.Discovery;
 
-public sealed class RegistrationEventArgs : EventArgs
+public sealed class ApiRegistrationEventArgs : EventArgs
 {
-    public string Api { get; }
+    public ApiProxy Proxy { get; }
 
-    public string Version { get; }
-
-    public object Proxy { get; }
-
-    public RegistrationEventArgs(string api, string version, object proxy)
-        => (Api, Version, Proxy) = (api, version, proxy);
+    public ApiRegistrationEventArgs(ApiProxy proxy)
+        => Proxy = proxy;
 }

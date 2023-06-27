@@ -31,6 +31,7 @@ public sealed class OptionsBuilder
     IConnection? _connection;
     ISerializer? _serializer;
     ILogger? _logger;
+    TimeSpan _eventSubscriberTimeout = TimeSpan.FromSeconds(5);
 
     OptionsBuilder Clone()
     {
@@ -41,7 +42,8 @@ public sealed class OptionsBuilder
             _id = _id,
             _connection = _connection,
             _serializer = _serializer,
-            _logger = _logger
+            _logger = _logger,
+            _eventSubscriberTimeout = _eventSubscriberTimeout
         };
 
         return builder;
@@ -123,6 +125,15 @@ public sealed class OptionsBuilder
         return builder;
     }
 
+    public OptionsBuilder WithEventSubscriberTimeout(TimeSpan eventSubscriberTimeout)
+    {
+        var builder = Clone();
+
+        builder._eventSubscriberTimeout = eventSubscriberTimeout;
+
+        return builder;
+    }
+
     public Options Build()
     {
         ThrowIfIncomplete();
@@ -131,7 +142,8 @@ public sealed class OptionsBuilder
             new NodeDetails(_domain!, _kind!, _id!.Value),
             _connection!,
             _serializer!,
-            _logger);
+            _logger,
+            _eventSubscriberTimeout);
     }
 
     void ThrowIfIncomplete()

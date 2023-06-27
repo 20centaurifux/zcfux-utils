@@ -19,8 +19,6 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
-using zcfux.Telemetry.Device;
-
 namespace zcfux.Telemetry.Discovery;
 
 public sealed class ApiRegistry
@@ -60,7 +58,7 @@ public sealed class ApiRegistry
                 .MinBy(api => api.Minor);
 
             return api?.Type
-                   ?? throw new ApiNotFoundException();
+                   ?? throw new ApiNotFoundException(topic);
         }
     }
 }

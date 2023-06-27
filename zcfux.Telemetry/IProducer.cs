@@ -23,9 +23,5 @@ namespace zcfux.Telemetry;
 
 public interface IProducer
 {
-    void Enable();
-
-    void Disable();
-
     void Write(object value);
 }

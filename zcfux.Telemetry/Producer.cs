@@ -20,6 +20,7 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ***************************************************************************/
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace zcfux.Telemetry;
 
@@ -27,20 +28,20 @@ public sealed class Producer<T> : IAsyncEnumerable<T>, IProducer
 {
     readonly object _lock = new();
     readonly HashSet<Enumerator> _enumerators = new();
-    bool _enabled;
-    CancellationTokenSource? _cancellationTokenSource;
+    readonly CancellationTokenSource _cancellationTokenSource = new();
     readonly Queue<T> _queuedValues = new();
-    
+
     sealed class Enumerator : IAsyncEnumerator<T>
     {
         public event EventHandler? Disposed;
 
         readonly BlockingCollection<T> _queue = new();
-
-        readonly object _lock = new();
+        readonly SemaphoreSlim _semaphore = new(0);
 
         readonly CancellationToken _externalCancellationToken;
         readonly CancellationTokenSource _cancellationTokenSource;
+        
+        readonly object _valueLock = new();
         T _value = default!;
 
         public Enumerator(
@@ -56,52 +57,51 @@ public sealed class Producer<T> : IAsyncEnumerable<T>, IProducer
         }
 
         public void Write(T value)
-            => _queue.Add(value, _cancellationTokenSource.Token);
+        {
+            _queue.Add(value, _cancellationTokenSource.Token);
+            _semaphore.Release();
+        }
 
         public async ValueTask<bool> MoveNextAsync()
         {
             var success = true;
 
-            if (!_queue.TryTake(out var value))
+            try
             {
-                try
-                {
-                    value = await TakeAsync();
-                }
-                catch (OperationCanceledException)
-                {
-                    success = false;
-                }
+                await TakeAsync();
+            }
+            catch (OperationCanceledException)
+            {
+                success = false;
             }
 
             _externalCancellationToken.ThrowIfCancellationRequested();
 
-            if (success)
-            {
-                lock (_lock)
-                {
-                    _value = value!;
-                }
-            }
-
             return success;
         }
 
-        Task<T> TakeAsync()
+        async Task<T> TakeAsync()
         {
-            return Task.Run(() =>
-            {
-                var value = _queue.Take(_cancellationTokenSource.Token);
+            T? value;
 
-                return value;
-            }, _cancellationTokenSource.Token);
+            while (!_queue.TryTake(out value))
+            {
+                await _semaphore.WaitAsync(_cancellationTokenSource.Token);
+            }
+
+            lock (_valueLock)
+            {
+                _value = value;
+            }
+
+            return value;
         }
 
         public T Current
         {
             get
             {
-                lock (_lock)
+                lock (_valueLock)
                 {
                     return _value;
                 }
@@ -116,91 +116,54 @@ public sealed class Producer<T> : IAsyncEnumerable<T>, IProducer
         }
     }
 
-    public Producer(bool enabled = true)
-    {
-        if (enabled)
-        {
-            _enabled = true;
-            _cancellationTokenSource = new CancellationTokenSource();
-        }
-    }
-
-    public void Enable()
-    {
-        lock (_lock)
-        {
-            if (!_enabled)
-            {
-                _enabled = true;
-                _cancellationTokenSource = new CancellationTokenSource();
-            }
-        }
-    }
-
-    public void Disable()
-    {
-        lock (_lock)
-        {
-            if (_enabled)
-            {
-                _cancellationTokenSource?.Cancel();
-
-                _enumerators.Clear();
-
-                _enabled = false;
-            }
-        }
-    }
-
     public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = new())
     {
+        var enumerator = new Enumerator(_cancellationTokenSource.Token, cancellationToken);
+
+        T[] initialValues;
+
         lock (_lock)
         {
-            if (_enabled)
-            {
-                var enumerator = new Enumerator(_cancellationTokenSource!.Token, cancellationToken);
+            _enumerators.Add(enumerator);
 
-                enumerator.Disposed += (s, _) =>
-                {
-                    lock (_lock)
-                    {
-                        _enumerators.Remove((s as Enumerator)!);
-                    }
-                };
+            initialValues = _queuedValues.ToArray();
 
-                _enumerators.Add(enumerator);
-
-                foreach (var value in _queuedValues)
-                {
-                    enumerator.Write(value);
-                }
-
-                _queuedValues.Clear();
-
-                return enumerator;
-            }
-            else
-            {
-                return EmptyAsyncEnumerator<T>.Instance;
-            }
+            _queuedValues.Clear();
         }
+
+        enumerator.Disposed += (_, _) =>
+        {
+            lock (_lock)
+            {
+                _enumerators.Remove(enumerator);
+            }
+        };
+
+        foreach (var value in initialValues)
+        {
+            enumerator.Write(value);
+        }
+
+        return enumerator;
     }
-    
+
     public void Write(T value)
     {
+        Enumerator[] enumerators;
+
         lock (_lock)
         {
-            if (_enumerators.Any())
-            {
-                foreach (var e in _enumerators)
-                {
-                    e.Write(value);
-                }
-            }
-            else
+            enumerators = _enumerators.ToArray();
+
+            if (enumerators.Length == 0)
             {
                 _queuedValues.Enqueue(value);
             }
+        }
+
+        foreach (var e in enumerators)
+        {
+            e.Write(value);
         }
     }
 

@@ -25,10 +25,8 @@ using zcfux.Logging;
 
 namespace zcfux.Telemetry.Node;
 
-public class Client : IDisposable
+public class Client : IAsyncDisposable
 {
-    static readonly TimeSpan EventSubscriberTimeout = TimeSpan.FromSeconds(5);
-
     protected string Domain { get; }
 
     protected string Kind { get; }
@@ -41,6 +39,7 @@ public class Client : IDisposable
 
     readonly IConnection _connection;
     readonly ISerializer _serializer;
+    readonly TimeSpan _eventSubscriberTimeout;
 
     readonly IReadOnlyCollection<Api> _apis;
     readonly IReadOnlyCollection<Task> _eventSubscriptions;
@@ -60,7 +59,7 @@ public class Client : IDisposable
 
     protected Client(Options options)
     {
-        ((Domain, Kind, Id), _connection, _serializer, Logger) = options;
+        ((Domain, Kind, Id), _connection, _serializer, Logger, _eventSubscriberTimeout) = options;
 
         (_apis, _eventSubscriptions, _methods) = RegisterApis();
     }
@@ -72,6 +71,8 @@ public class Client : IDisposable
             throw new InvalidOperationException();
         }
 
+        Logger?.Debug("Setup started");
+
         _connection.ConnectedAsync += ConnectedAsync;
         _connection.DisconnectedAsync += DisconnectedAsync;
         _connection.ApiMessageReceivedAsync += ApiMessageReceivedAsync;
@@ -82,6 +83,9 @@ public class Client : IDisposable
         {
             await ConnectedAsync(EventArgs.Empty);
         }
+
+        Logger?.Debug("Setup completed");
+
     }
 
     protected EStatus ChangeStatus(EStatus status)
@@ -108,7 +112,7 @@ public class Client : IDisposable
         var subscriptions = new List<Task>();
         var methods = new Dictionary<MethodKey, Method>();
 
-        Logger?.Debug("Discovering node (kind=`{0}', id={1}) apis.", Kind, Id);
+        Logger?.Debug("Discovering client (domain=`{0}', kind=`{1}', id={2}).", Domain, Kind, Id);
 
         foreach (var prop in GetType()
                      .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
@@ -196,7 +200,7 @@ public class Client : IDisposable
             }
         }
     }
-
+    
     Task SubscribeToAsyncEnumerable<T>(string apiTopic, string topic, MessageOptions options, IAsyncEnumerable<T> source)
     {
         Logger?.Debug(
@@ -215,7 +219,7 @@ public class Client : IDisposable
                     enumeratorCreated.Set();
 
                     var moveNextTask = enumerator.MoveNextAsync().AsTask();
-                    var timeoutTask = Task.Delay(EventSubscriberTimeout);
+                    var timeoutTask = Task.Delay(_eventSubscriberTimeout);
 
                     var completed = false;
 
@@ -254,7 +258,7 @@ public class Client : IDisposable
                                 }
 
                                 moveNextTask = enumerator.MoveNextAsync().AsTask();
-                                timeoutTask = Task.Delay(EventSubscriberTimeout, _cancellationTokenSource.Token);
+                                timeoutTask = Task.Delay(_eventSubscriberTimeout, _cancellationTokenSource.Token);
                             }
                             else
                             {
@@ -279,10 +283,14 @@ public class Client : IDisposable
                         }
                         else
                         {
-                            timeoutTask = Task.Delay(EventSubscriberTimeout, _cancellationTokenSource.Token);
+                            timeoutTask = Task.Delay(_eventSubscriberTimeout, _cancellationTokenSource.Token);
                         }
                     }
                 }
+            }
+            catch (TaskCanceledException)
+            {
+                // {-_-}
             }
             catch (Exception ex)
             {
@@ -346,7 +354,11 @@ public class Client : IDisposable
 
     async Task ConnectedAsync(EventArgs e)
     {
-        Logger?.Info("Node (kind=`{0}', id={1}) connected to message broker.", Kind, Id);
+        Logger?.Info(
+            "Node (domain=`{0}', kind=`{1}', id={2}) connected to message broker.",
+            Domain,
+            Kind,
+            Id);
 
         try
         {
@@ -436,7 +448,11 @@ public class Client : IDisposable
     Task DisconnectedAsync(EventArgs args)
         => Task.Run(() =>
         {
-            Logger?.Info("Node (kind=`{0}', id={1}) disconnected from message broker.", Kind, Id);
+            Logger?.Info(
+                "Node (domain=`{0}', kind=`{1}', id={2}) disconnected from message broker.",
+                Domain,
+                Kind,
+                Id);
 
             var l = new List<IDisconnected>();
 
@@ -465,7 +481,7 @@ public class Client : IDisposable
     Task ApiMessageReceivedAsync(ApiMessageEventArgs e)
     {
         Logger?.Debug(
-            "Processing message (node kind=`{0}', id={1}, api=`{2}', topic=`{3}', size={4}).",
+            "Processing message (kind=`{0}', id={1}, api=`{2}', topic=`{3}', size={4}).",
             Kind,
             Id,
             e.Api,
@@ -507,7 +523,7 @@ public class Client : IDisposable
             catch (Exception ex)
             {
                 Logger?.Error(
-                    "Message handler (node kind=`{0}', id={1}, api=`{2}', topic=`{3}') failed: {4}",
+                    "Message handler (kind=`{0}', id={1}, api=`{2}', topic=`{3}') failed: {4}",
                     Kind,
                     Id,
                     e.Api,
@@ -518,7 +534,7 @@ public class Client : IDisposable
         else
         {
             Logger?.Debug(
-                "No message handler found (node kind=`{0}', id={1}, api=`{2}', topic=`{3}').",
+                "No message handler found (kind=`{0}', id={1}, api=`{2}', topic=`{3}').",
                 Kind,
                 Id,
                 e.Api,
@@ -588,18 +604,47 @@ public class Client : IDisposable
             throw new InvalidOperationException("Shutdown already in progress or completed.");
         }
 
+        Logger?.Info(
+            "Gracefully shutting down client (domain=`{0}', kind=`{1}', id={2}).",
+            Domain,
+            Kind,
+            Id);
+
         _connection.ApiMessageReceivedAsync -= ApiMessageReceivedAsync;
         _connection.ConnectedAsync -= ConnectedAsync;
         _connection.DisconnectedAsync -= DisconnectedAsync;
 
-        Logger?.Info("Gracefully shutting down client (node kind=`{0}', id={1}).", Kind, Id);
+        try
+        {
+            await Task.WhenAll(WaitForPendingEventsAsync(), WaitForPendingTasksAsync());
+        }
+        catch (Exception ex)
+        {
+            Logger?.Warn(ex);
+        }
 
-        await Task.WhenAll(WaitForPendingEventsAsync(), WaitForPendingTasksAsync());
+        try
+        {
+            Logger?.Debug("Client is offline (domain=`{0}', kind=`{1}', id={2}).", Domain, Kind, Id);
+
+            await _connection.SendStatusAsync(
+                new NodeStatusMessage(
+                    new NodeDetails(Domain, Kind, Id), ENodeStatus.Offline),
+                _cancellationTokenSource.Token);
+        }
+        catch (Exception ex)
+        {
+            Logger?.Warn(ex);
+        }
     }
 
     async Task WaitForPendingEventsAsync()
     {
-        Logger?.Info("Waiting for last events (node kind=`{0}', id={1})...", Kind, Id);
+        Logger?.Info(
+            "Waiting for last events (domain=`{0}', kind=`{1}', id={2}).",
+            Domain,
+            Kind,
+            Id);
 
         if (_eventSubscriptions.Any())
         {
@@ -609,35 +654,83 @@ public class Client : IDisposable
 
     async Task WaitForPendingTasksAsync()
     {
-        Logger?.Debug("Waiting for pending tasks (node kind=`{0}', id={1})...", Kind, Id);
+        Logger?.Debug(
+            "Waiting for pending tasks (domain=`{0}', kind=`{1}', id={2}).",
+            Domain,
+            Kind,
+            Id);
 
         var count = _pendingCommands.Count;
 
         while (count > 0 && _connection.IsConnected)
         {
-            Logger?.Trace("{0} pending task(s) left (node kind=`{1}', id={2}).", count, Kind, Id);
+            Logger?.Trace(
+                "{0} pending task(s) left (domain=`{1}', kind=`{2}', id={3}).",
+                count,
+                Domain,
+                Kind,
+                Id);
 
             await Task.Delay(500);
         }
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
         _connection.ConnectedAsync -= ConnectedAsync;
         _connection.DisconnectedAsync -= DisconnectedAsync;
         _connection.ApiMessageReceivedAsync -= ApiMessageReceivedAsync;
 
-        Logger?.Debug("Cancelling pending tasks (node kind=`{0}', id={1}).", Kind, Id);
-
         _cancellationTokenSource.Cancel();
 
-        Logger?.Debug("Waiting for pending tasks (node kind=`{0}', id={1}).", Kind, Id);
-
-        if (_eventSubscriptions.Any())
+        try
         {
-            Task.WhenAll(_eventSubscriptions).Wait();
+            Logger?.Debug(
+                "Disposing client, waiting for events (domain=`{0}', kind=`{1}', id={2}).",
+                Domain,
+                Kind,
+                Id);
+
+            if (_eventSubscriptions.Any())
+            {
+                await Task.WhenAll(_eventSubscriptions);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger?.Warn(ex);
         }
 
-        _pendingCommandsProcessor?.Wait();
+        try
+        {
+            Logger?.Debug(
+                "Disposing client, cancelling pending tasks (domain=`{0}', kind=`{1}', id={2}).",
+                Domain,
+                Kind,
+                Id);
+
+            if (_pendingCommandsProcessor is not null)
+            {
+                await _pendingCommandsProcessor;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger?.Warn(ex);
+        }
+
+        try
+        {
+            if (_connection.IsConnected)
+            {
+                await _connection.SendStatusAsync(
+                        new NodeStatusMessage(
+                            new NodeDetails(Domain, Kind, Id), ENodeStatus.Offline));
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger?.Warn(ex);
+        }
     }
 }

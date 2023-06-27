@@ -33,6 +33,8 @@ public sealed class ApiMessageEventArgs : EventArgs
 
     public EDirection Direction { get; }
 
+    public TimeSpan TimeToLive { get; }
+
     public string? ResponseTopic { get; }
 
     public int? MessageId { get; }
@@ -43,8 +45,9 @@ public sealed class ApiMessageEventArgs : EventArgs
         string topic,
         byte[] payload,
         EDirection direction,
+        TimeSpan timeToLive,
         string? responseTopic,
         int? messageId)
-        => (Node, Api, Topic, Payload, Direction, ResponseTopic, MessageId)
-            = (node, api, topic, payload, direction, responseTopic, messageId);
+        => (Node, Api, Topic, Payload, Direction, TimeToLive, ResponseTopic, MessageId)
+            = (node, api, topic, payload, direction, timeToLive, responseTopic, messageId);
 }

@@ -26,7 +26,7 @@ public sealed record NodeFilter(
     string Kind,
     string Id)
 {
-    public static readonly string All = "+";
+    public const string All = "+";
 
     public NodeFilter(NodeDetails node)
         : this(node.Domain, node.Kind, node.Id.ToString())

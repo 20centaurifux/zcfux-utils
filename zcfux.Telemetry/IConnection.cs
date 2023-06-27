@@ -21,7 +21,7 @@
  ***************************************************************************/
 namespace zcfux.Telemetry;
 
-public interface IConnection : IDisposable
+public interface IConnection : IAsyncDisposable
 {
     event Func<EventArgs, Task>? ConnectedAsync;
     event Func<EventArgs, Task>? DisconnectedAsync;

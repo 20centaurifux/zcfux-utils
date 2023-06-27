@@ -57,7 +57,11 @@ public sealed class Connection : IConnection
     const long GracefulDisconnect = 2;
 
     readonly ILogger? _logger;
+
+    readonly Func<MqttApplicationMessage, Task<bool>>[] _applicationMessageProcessors;
+
     readonly CancellationTokenSource _cancellationTokenSource = new();
+
     readonly MqttClientOptions _clientOptions;
     readonly IMqttClient _client;
 
@@ -93,6 +97,15 @@ public sealed class Connection : IConnection
     public Connection(ConnectionOptions options)
     {
         _logger = options.Logger;
+
+        _applicationMessageProcessors = new[]
+        {
+            TryProcessDeviceStatusAsync,
+            TryProcessApiInfoAsync,
+            TryProcessApiMessageAsync,
+            TryProcessResponseAsync
+        };
+
         _messageQueue = options.MessageQueue;
         _cleanupRetainedMessages = options.CleanupRetainedMessages;
         _reconnect = options.Reconnect;
@@ -123,10 +136,7 @@ public sealed class Connection : IConnection
 
         if (options.Tls)
         {
-            builder = builder.WithTls(o =>
-            {
-                o.AllowUntrustedCertificates = options.AllowUntrustedCertificates;
-            });
+            builder = builder.WithTls(o => { o.AllowUntrustedCertificates = options.AllowUntrustedCertificates; });
         }
 
         if (options.Credentials is { } credentials)
@@ -151,22 +161,49 @@ public sealed class Connection : IConnection
     {
         _logger?.Debug("Connecting client `{0}'.", ClientId);
 
-        await _client.ConnectAsync(_clientOptions, cancellationToken);
+        var waitForConnectedEventTask = WaitForConnectedEventAsync();
+
+        await Task.WhenAll(
+            waitForConnectedEventTask,
+            _client.ConnectAsync(_clientOptions, cancellationToken));
+    }
+
+    async Task WaitForConnectedEventAsync()
+    {
+        var tcs = new TaskCompletionSource();
+
+        Task Handler(MqttClientConnectedEventArgs _)
+        {
+            tcs.SetResult();
+
+            return Task.CompletedTask;
+        }
+
+        _client.ConnectedAsync += Handler;
+
+        try
+        {
+            await tcs.Task;
+        }
+        finally
+        {
+            _client.ConnectedAsync -= Handler;
+        }
     }
 
     public async Task DisconnectAsync(CancellationToken cancellationToken)
     {
         _logger?.Debug("Disconnecting client `{0}'.", ClientId);
 
-        _logger?.Debug("Client `{0}' flushes backlog.", ClientId);
-        
         while (_messageQueue.Count > 0)
         {
+            _logger?.Trace("Client `{0}' messages in backlog: {1}", ClientId, _messageQueue.Count);
+
             await Task.Delay(500, cancellationToken);
         }
-        
+
         _logger?.Debug("Client `{0}' cancels pending tasks and deletes retained messages.", ClientId);
-        
+
         await Task.WhenAny(CancelReconnectAsync(), DeleteRetainedMessagesAsync());
 
         Interlocked.Exchange(ref _connectivity, GracefulDisconnect);
@@ -174,7 +211,7 @@ public sealed class Connection : IConnection
         if (!string.IsNullOrEmpty(_clientOptions.WillTopic))
         {
             _logger?.Debug("Client `{0}' sends last will.", ClientId);
-            
+
             var builder = new MqttApplicationMessageBuilder()
                 .WithTopic(_clientOptions.WillTopic)
                 .WithPayload(_clientOptions.WillPayload)
@@ -186,11 +223,36 @@ public sealed class Connection : IConnection
             await _client.PublishAsync(lastWillMessage, cancellationToken);
         }
 
+        await CloseClientConnectionAsync(cancellationToken);
+    }
+
+    async Task CloseClientConnectionAsync(CancellationToken cancellationToken)
+    {
         var opts = Factory.CreateClientDisconnectOptionsBuilder()
             .WithReason(MqttClientDisconnectOptionsReason.DisconnectWithWillMessage)
             .Build();
 
-        await _client.DisconnectAsync(opts, cancellationToken);
+        var tcs = new TaskCompletionSource();
+
+        Task Handler(MqttClientDisconnectedEventArgs _)
+        {
+            tcs.SetResult();
+
+            return Task.CompletedTask;
+        }
+
+        _client.DisconnectedAsync += Handler;
+
+        try
+        {
+            await Task.WhenAll(
+                _client.DisconnectAsync(opts, cancellationToken),
+                tcs.Task);
+        }
+        finally
+        {
+            _client.DisconnectedAsync -= Handler;
+        }
     }
 
     async Task DeleteRetainedMessagesAsync()
@@ -215,7 +277,7 @@ public sealed class Connection : IConnection
         {
             if (ConnectedAsync is not null)
             {
-                await ConnectedAsync.Invoke(EventArgs.Empty);
+                await ConnectedAsync(EventArgs.Empty);
             }
         }
         catch (Exception ex)
@@ -230,7 +292,7 @@ public sealed class Connection : IConnection
         TimeSpan? expiryInterval = null;
         Stopwatch stopwatch = new();
 
-        while (!cancellationToken.IsCancellationRequested)
+        for (; ; )
         {
             try
             {
@@ -269,11 +331,14 @@ public sealed class Connection : IConnection
                         message.Topic,
                         message.PayloadSegment.Count);
 
-                    _logger?.Trace(
-                        "Sending message (client=`{0}', topic=`{1}'): `{2}'",
-                        ClientId,
-                        message.Topic,
-                        message.ConvertPayloadToString());
+                    if (_logger?.Verbosity == ESeverity.Trace)
+                    {
+                        _logger?.Trace(
+                            "Sending message (client=`{0}', topic=`{1}'): `{2}'",
+                            ClientId,
+                            message.Topic,
+                            message.ConvertPayloadToString());
+                    }
 
                     await _client.PublishAsync(message, cancellationToken);
 
@@ -286,11 +351,11 @@ public sealed class Connection : IConnection
                     await Task.Delay(_retrySendingInterval, cancellationToken);
                 }
             }
-            catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+            catch (Exception ex) when (ex is not TaskCanceledException)
             {
                 _logger?.Warn(ex);
 
-                await Task.Delay(_retrySendingInterval, CancellationToken.None);
+                await Task.Delay(_retrySendingInterval, cancellationToken);
             }
         }
     }
@@ -305,7 +370,7 @@ public sealed class Connection : IConnection
         {
             if (DisconnectedAsync is not null)
             {
-                await DisconnectedAsync.Invoke(EventArgs.Empty);
+                await DisconnectedAsync(EventArgs.Empty);
             }
         }
         catch (Exception ex)
@@ -386,20 +451,32 @@ public sealed class Connection : IConnection
 
     async Task ApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs e)
     {
-        _logger?.Trace(
-            "Client `{0}' received message in `{1}' (size={2}): `{3}'",
-            ClientId,
-            e.ApplicationMessage.Topic,
-            e.ApplicationMessage.PayloadSegment.Count,
-            (e.ApplicationMessage.PayloadSegment.Count > 0)
-                ? e.ApplicationMessage.ConvertPayloadToString()
-                : string.Empty);
+        if (_logger?.Verbosity == ESeverity.Trace)
+        {
+            _logger?.Trace(
+                "Client `{0}' received message in `{1}' (size={2}): `{3}'",
+                ClientId,
+                e.ApplicationMessage.Topic,
+                e.ApplicationMessage.PayloadSegment.Count,
+                (e.ApplicationMessage.PayloadSegment.Count > 0)
+                    ? e.ApplicationMessage.ConvertPayloadToString()
+                    : string.Empty);
+        }
 
-        await Task.WhenAny(
-            TryProcessDeviceStatusAsync(e.ApplicationMessage),
-            TryProcessApiInfoAsync(e.ApplicationMessage),
-            TryProcessApiMessageAsync(e.ApplicationMessage),
-            TryProcessResponseAsync(e.ApplicationMessage));
+        try
+        {
+            foreach (var p in _applicationMessageProcessors)
+            {
+                if (await p(e.ApplicationMessage))
+                {
+                    break;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger?.Error(ex);
+        }
     }
 
     async Task<bool> TryProcessDeviceStatusAsync(MqttApplicationMessage message)
@@ -414,7 +491,7 @@ public sealed class Connection : IConnection
             {
                 try
                 {
-                    await StatusReceivedAsync.Invoke(new NodeStatusEventArgs(
+                    await StatusReceivedAsync(new NodeStatusEventArgs(
                         new NodeDetails(
                             m.Groups[1].Value,
                             m.Groups[2].Value,
@@ -445,7 +522,7 @@ public sealed class Connection : IConnection
             {
                 try
                 {
-                    await ApiInfoReceivedAsync.Invoke(new ApiInfoEventArgs(
+                    await ApiInfoReceivedAsync(new ApiInfoEventArgs(
                         new NodeDetails(
                             m.Groups[1].Value,
                             m.Groups[2].Value,
@@ -497,7 +574,7 @@ public sealed class Connection : IConnection
             {
                 try
                 {
-                    await ApiMessageReceivedAsync.Invoke(new ApiMessageEventArgs(
+                    await ApiMessageReceivedAsync(new ApiMessageEventArgs(
                         new NodeDetails(
                             m.Groups[1].Value,
                             m.Groups[2].Value,
@@ -508,6 +585,7 @@ public sealed class Connection : IConnection
                         (m.Groups[5].Value == ">")
                             ? EDirection.Out
                             : EDirection.In,
+                        TimeSpan.FromSeconds(message.MessageExpiryInterval),
                         responseTopic,
                         messageId));
                 }
@@ -557,7 +635,7 @@ public sealed class Connection : IConnection
                 {
                     try
                     {
-                        await ResponseReceivedAsync.Invoke(new ResponseEventArgs(
+                        await ResponseReceivedAsync(new ResponseEventArgs(
                             new NodeDetails(
                                 m.Groups[1].Value,
                                 m.Groups[2].Value,
@@ -612,7 +690,7 @@ public sealed class Connection : IConnection
             .WithRetainFlag();
 
         var json = Serializer.Serialize(apis);
-        
+
         await _client.PublishAsync(
             builder
                 .WithPayload(json)
@@ -714,20 +792,29 @@ public sealed class Connection : IConnection
         return _messageQueue.EnqueueAsync(mqttMessage, 60 * 5, cancellationToken);
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
         try
         {
-            DeleteRetainedMessagesAsync().Wait();
+            await DeleteRetainedMessagesAsync();
         }
         catch (Exception ex)
         {
             _logger?.Error(ex);
         }
 
-        _client.Dispose();
-
         CancelSendTask();
+
+        try
+        {
+            await _client.DisconnectAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger?.Warn(ex);
+        }
+
+        _client.Dispose();
     }
 
     void CancelSendTask()

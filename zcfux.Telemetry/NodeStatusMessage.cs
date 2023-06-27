@@ -23,10 +23,4 @@ namespace zcfux.Telemetry;
 
 public sealed record NodeStatusMessage(
     NodeDetails Node,
-    ENodeStatus Status)
-{
-    public NodeStatusMessage(string domain, string kind, int id, ENodeStatus status)
-        : this(new NodeDetails(domain, kind, id), status)
-    {
-    }
-}
+    ENodeStatus Status);

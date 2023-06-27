@@ -28,11 +28,10 @@ namespace zcfux.Telemetry.MQTT;
 public sealed class MemoryMessageQueue : IMessageQueue
 {
     readonly BlockingCollection<Task<MqttApplicationMessage>> _queue;
-    readonly int _limit;
     readonly SemaphoreSlim _semaphore = new(0);
 
     public MemoryMessageQueue(int limit)
-        => (_queue, _limit) = (new BlockingCollection<Task<MqttApplicationMessage>>(limit), limit);
+        => _queue = new BlockingCollection<Task<MqttApplicationMessage>>(limit);
 
     public Task EnqueueAsync(
         MqttApplicationMessage message,
@@ -48,7 +47,7 @@ public sealed class MemoryMessageQueue : IMessageQueue
             if (!_queue.TryAdd(queuedTask))
             {
                 queuedTask.Dispose();
-                
+
                 throw new InvalidOperationException("Queue limit reached.");
             }
 
@@ -78,7 +77,7 @@ public sealed class MemoryMessageQueue : IMessageQueue
             if (secondsToLive > 0
                 && elapsedSeconds > secondsToLive)
             {
-                throw new TaskCanceledException();
+                throw new TimeoutException();
             }
 
             message.MessageExpiryInterval -= elapsedSeconds;
@@ -92,16 +91,26 @@ public sealed class MemoryMessageQueue : IMessageQueue
     public async Task<MqttApplicationMessage> DequeueAsync(
         CancellationToken cancellationToken)
     {
-        while (true)
+        try
         {
-            await _semaphore.WaitAsync(cancellationToken);
-
-            if (_queue.TryTake(out var task))
+            while (true)
             {
-                task.Start();
+                await _semaphore.WaitAsync(cancellationToken);
 
-                return await task;
+                if (_queue.TryTake(out var task))
+                {
+                    if (!task.IsCanceled)
+                    {
+                        task.Start();
+
+                        return await task;
+                    }
+                }
             }
+        }
+        catch(OperationCanceledException)
+        {
+            throw new TaskCanceledException();
         }
     }
 
